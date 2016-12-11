@@ -290,6 +290,9 @@ namespace Book
 				// スレッド数(これは、USIのsetoptionで与えられる)
 				u32 multi_pv = Options["MultiPV"];
 
+				// 合法手チェック用
+				Position pos_;
+
 				// 思考する局面をsfensに突っ込んで、この局面数をg_loop_maxに代入しておき、この回数だけ思考する。
 				MultiThinkBook multi_think(depth, book);
 
@@ -307,7 +310,9 @@ namespace Book
 					{
 						auto& bp = it->second;
 						if (bp[0].depth < depth // 今回の探索depthのほうが深い
-							|| (bp[0].depth == depth && bp.size() < multi_pv) // 探索深さは同じだが今回のMultiPVのほうが大きい
+							|| (bp[0].depth == depth && bp.size() < multi_pv && // 探索深さは同じだが今回のMultiPVのほうが大きい
+							    bp.size() < MoveList<LEGAL_ALL>((pos_.set(s), pos_)).size() // かつ、合法手の数のほうが大きい
+							    )
 							)
 							sfens_.push_back(s);
 					}
