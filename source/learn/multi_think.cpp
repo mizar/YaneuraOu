@@ -11,8 +11,20 @@ extern void is_ready();
 // いまのところ、やねうら王2016Mid/Lateしか、このスタブを持っていない。
 namespace Learner
 {
-  extern pair<Value, vector<Move> >  search(Position& pos, Value alpha, Value beta, int depth);
-  extern pair<Value, vector<Move> > qsearch(Position& pos, Value alpha, Value beta);
+  extern pair<Value, vector<Move> >  search(Position& pos, int depth);
+  extern pair<Value, vector<Move> > qsearch(Position& pos);
+}
+
+// 通常探索をして、その結果を返す。		
+pair<Value, vector<Move> >  MultiThink::search(Position& pos, int depth)
+{
+	return Learner::search(pos, depth);
+}
+
+// 静止探索をして、その結果を返す。		
+pair<Value, vector<Move> > MultiThink::qsearch(Position& pos)
+{
+	return Learner::qsearch(pos);
 }
 
 void MultiThink::go_think()

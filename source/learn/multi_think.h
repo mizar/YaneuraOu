@@ -48,10 +48,10 @@ struct MultiThink
   }
 
   // [ASYNC] 通常探索をして、その結果を返す。
-  std::pair<Value, std::vector<Move> >  search(Position& pos, Value alpha, Value beta, int depth);
+  std::pair<Value, std::vector<Move> >  search(Position& pos, int depth);
 
   // [ASYNC] 静止探索をして、その結果を返す。
-  std::pair<Value, std::vector<Move> > qsearch(Position& pos, Value alpha, Value beta);
+  std::pair<Value, std::vector<Move> > qsearch(Position& pos);
 
   // worker threadがI/Oにアクセスするときのmutex
   Mutex io_mutex;

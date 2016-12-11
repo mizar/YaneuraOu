@@ -25,7 +25,7 @@ namespace Book
 	// ----------------------------------
 
 	// 局面を与えて、その局面で思考させるために、やねうら王2016Midが必要。
-#if defined(EVAL_LEARN) && (defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE))
+#if defined(EVAL_LEARN) && (defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE) || defined(YANEURAOU_2017_EARLY_ENGINE))
 	struct MultiThinkBook: public MultiThink
 	{
 		MultiThinkBook(int search_depth_, MemoryBook & book_)
@@ -66,7 +66,7 @@ namespace Book
 				continue;
 
 			// depth手読みの評価値とPV(最善応手列)
-			search(pos, -VALUE_INFINITE, VALUE_INFINITE, search_depth);
+			search(pos, search_depth);
 
 			// MultiPVで局面を足す、的な
 
@@ -115,10 +115,10 @@ namespace Book
 		// 定跡のsort
 		bool book_sort = token == "sort";
 
-#if !defined(EVAL_LEARN) || !(defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE))
+#if !defined(EVAL_LEARN) || !(defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE) || defined(YANEURAOU_2017_EARLY_ENGINE))
 		if (from_thinking)
 		{
-			cout << "Error!:define EVAL_LEARN and ( YANEURAOU_2016_MID_ENGINE or LATE_ENGINE) " << endl;
+			cout << "Error!:define EVAL_LEARN and ( YANEURAOU_2016_MID_ENGINE or LATE_ENGINE or 2017_EARLY_ENGINE) " << endl;
 			return;
 		}
 #endif
@@ -282,7 +282,7 @@ namespace Book
 			}
 			cout << "done." << endl;
 
-#if defined(EVAL_LEARN) && (defined(YANEURAOU_2016_MID_ENGINE)||defined(YANEURAOU_2016_LATE_ENGINE))
+#if defined(EVAL_LEARN) && (defined(YANEURAOU_2016_MID_ENGINE)||defined(YANEURAOU_2016_LATE_ENGINE)||defined(YANEURAOU_2017_EARLY_ENGINE))
 
 			if (from_thinking)
 			{
