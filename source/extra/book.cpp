@@ -311,7 +311,7 @@ namespace Book
 						auto& bp = it->second;
 						if (bp[0].depth < depth // 今回の探索depthのほうが深い
 							|| (bp[0].depth == depth && bp.size() < multi_pv && // 探索深さは同じだが今回のMultiPVのほうが大きい
-							    bp.size() < MoveList<LEGAL_ALL>((pos_.set(s), pos_)).size() // かつ、合法手の数のほうが大きい
+							    bp.size() < MoveList<LEGAL>((pos_.set(s), pos_)).size() // かつ、合法手の数のほうが大きい
 							    )
 							)
 							sfens_.push_back(s);
