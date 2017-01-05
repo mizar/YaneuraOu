@@ -114,6 +114,8 @@ namespace Book
 		bool book_merge = token == "merge";
 		// 定跡のsort
 		bool book_sort = token == "sort";
+		// 定跡からsfenを生成する
+		bool to_sfen = token == "to_sfen";
 
 #if !defined(EVAL_LEARN) || !(defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE) || defined(YANEURAOU_2017_EARLY_ENGINE))
 		if (from_thinking)
@@ -355,7 +357,7 @@ namespace Book
 					if (multi_think.appended)
 					{
 						write_book(book_name, book);
-						cout << 'S' << endl;
+						cout << 'S' << multi_think.get_remain_loop_count() << endl;
 						multi_think.appended = false;
 					} else {
 						// 追加されていないときは小文字のsマークを表示して
