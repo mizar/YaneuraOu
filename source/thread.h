@@ -21,7 +21,7 @@
 struct Thread
 {
 	// slaveは、main threadから
-	// for(auto th : Threads.slavle) th->start_searching();のようにされると
+	// for(auto th : Threads.slave) th->start_searching();のようにされると
 	// この関数が呼び出される。
 	// MainThread::search()はvirtualになっていてthink()が呼び出されるので、MainThread::think()から
 	// この関数を呼び出したいときは、Thread::search()とすること。
