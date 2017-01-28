@@ -1,4 +1,4 @@
-﻿
+
 // Windows環境下でのプロセッサグループの割当関係
 #ifdef _WIN32
 #if _WIN32_WINNT < 0x0601
@@ -153,7 +153,7 @@ void start_logger(bool b) { Logger::start(b); }
 // --------------------
 
 // ファイルを丸読みする。ファイルが存在しなくともエラーにはならない。空行はスキップする。
-int read_all_lines(std::string filename, std::vector<std::string>& lines)
+int read_all_lines(std::string filename, std::deque<std::string>& lines)
 {
   fstream fs(filename,ios::in);
   if (fs.fail())

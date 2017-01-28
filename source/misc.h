@@ -1,7 +1,8 @@
-﻿#ifndef _MISC_H_
+#ifndef _MISC_H_
 #define _MISC_H_
 
 #include <chrono>
+#include <deque>
 #include <thread>
 #include <mutex>
 #include <vector>
@@ -46,7 +47,7 @@ extern void start_logger(bool b);
 // --------------------
 
 // ファイルを丸読みする。ファイルが存在しなくともエラーにはならない。空行はスキップする。
-extern int read_all_lines(std::string filename, std::vector<std::string>& lines);
+extern int read_all_lines(std::string filename, std::deque<std::string>& lines);
 
 
 

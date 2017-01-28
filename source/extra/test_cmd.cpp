@@ -6,6 +6,7 @@
 #ifdef ENABLE_TEST_CMD
 
 #include "all.h"
+#include <deque>
 #include <unordered_set>
 
 extern void is_ready();
@@ -1513,7 +1514,7 @@ void bench_cmd(Position& pos, istringstream& is)
 {
   string token;
   Search::LimitsType limits;
-  vector<string> fens;
+  std::deque<std::string> fens;
 
   // →　デフォルト1024にしておかないと置換表あふれるな。
   string ttSize = (is >> token) ? token : "1024";
@@ -1557,7 +1558,7 @@ void bench_cmd(Position& pos, istringstream& is)
   // テスト用の局面
   // "default"=デフォルトの局面、"current"=現在の局面、それ以外 = ファイル名とみなしてそのsfenファイルを読み込む
   if (fenFile == "default")
-    fens.assign(BenchSfen, BenchSfen + 3);
+    fens.assign(BenchSfen, std::end(BenchSfen));
   else if (fenFile == "current")
     fens.push_back(pos.sfen());
   else
@@ -1577,13 +1578,14 @@ void bench_cmd(Position& pos, istringstream& is)
   Timer time;
   time.reset();
   
-  for (size_t i = 0; i < fens.size(); ++i)
+  for (size_t i = 1; !fens.empty(); ++i)
   {
     Position pos;
-    pos.set(fens[i]);
+    pos.set(fens.front());
+    fens.pop_front();
     pos.set_this_thread(Threads.main());
     
-    sync_cout << "\nPosition: " << (i + 1) << '/' << fens.size() << sync_endl;
+    sync_cout << "\nPosition: " << i << '/' << (i + fens.size()) << sync_endl;
 
     // 探索時にnpsが表示されるが、それはこのglobalなTimerに基づくので探索ごとにリセットを行なうようにする。
     Time.reset();

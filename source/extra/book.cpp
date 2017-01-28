@@ -1,4 +1,4 @@
-﻿#include "../shogi.h"
+#include "../shogi.h"
 
 #include <fstream>
 #include <sstream>
@@ -178,7 +178,7 @@ namespace Book
 					<< " , depth = " << depth
 					<< " , cluster = " << cluster_id << "/" << cluster_num << endl;
 
-			vector<string> sfens;
+			std::deque<string> sfens;
 			read_all_lines(sfen_name, sfens);
 
 			cout << "..done" << endl;
@@ -205,9 +205,10 @@ namespace Book
 			unordered_set<string> thinking_sfens;
 
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
-			for (size_t k = 0; k < sfens.size(); ++k)
+			for(size_t k = 1; !sfens.empty(); ++k)
 			{
-				auto sfen = sfens[k];
+				auto sfen = std::move(sfens.front());
+				sfens.pop_front();
 
 				if (sfen.length() == 0)
 					continue;
@@ -246,7 +247,7 @@ namespace Book
 					// illigal moveであるとMOVE_NONEが返る。
 					if (move == MOVE_NONE)
 					{
-						cout << "illegal move : line = " << (k + 1) << " , " << sfen << " , move = " << token << endl;
+						cout << "illegal move : line = " << k << " , " << sfen << " , move = " << token << endl;
 						break;
 					}
 
@@ -379,6 +380,47 @@ namespace Book
 			write_book(book_name, book);
 			cout << "finished." << endl;
 
+		} else if (to_sfen) {
+			// 定跡からsfenを生成する(書きかけ)
+
+			// 定跡ファイル名
+			string book_name;
+			is >> book_name;
+
+			// sfenファイル名
+			string sfen_name;
+			is >> sfen_name;
+			
+			int moves = 256;
+			int evaldiff = Options["BookEvalDiff"];
+			int evalblacklimit = Options["BookEvalBlackLimit"];
+			int evalwhitelimit = Options["BookEvalWhiteLimit"];
+
+			while (true)
+			{
+				token = "";
+				is >> token;
+				if (token == "")
+					break;
+				if (token == "moves")
+					is >> moves;
+				else if (token == "evaldiff")
+					is >> evaldiff;
+				else if (token == "evalblacklimit")
+					is >> evalblacklimit;
+				else if (token == "evalwhitelimit")
+					is >> evalwhitelimit;
+				else
+				{
+					cout << "Error! : Illigal token = " << token << endl;
+					return;
+				}
+			}
+
+			MemoryBook book;
+			if (read_book(book_name, book) != 0)
+				return;
+			// まだ書きかけ
 		} else if (book_merge) {
 
 			// 定跡のマージ
@@ -476,6 +518,7 @@ namespace Book
 			cout << "> makebook think book.sfen book.db moves 16 depth 18" << endl;
 			cout << "> makebook merge book_src1.db book_src2.db book_merged.db" << endl;
 			cout << "> makebook sort book_src.db book_sorted.db" << endl;
+			cout << "> makebook to_sfen book.db book.sfen moves 24" << endl;
 		}
 	}
 #endif
@@ -509,7 +552,7 @@ namespace Book
 			return 0;
 		}
 
-		vector<string> lines;
+		std::deque<string> lines;
 		if (read_all_lines(filename, lines))
 		{
 			cout << "info string Error! : can't read " + filename << endl;
@@ -529,8 +572,11 @@ namespace Book
 			num_sum = 0;
 		};
 
-		for (auto line : lines)
+		while (!lines.empty())
 		{
+			auto line = std::move(lines.front());
+			lines.pop_front();
+
 			// バージョン識別文字列(とりあえず読み飛ばす)
 			if (line.length() >= 1 && line[0] == '#')
 				continue;

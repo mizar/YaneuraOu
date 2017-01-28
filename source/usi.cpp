@@ -1,5 +1,5 @@
 ﻿#include <sstream>
-#include <queue>
+#include <deque>
 
 #include "shogi.h"
 #include "position.h"
@@ -554,19 +554,13 @@ void USI::loop(int argc, char* argv[])
 	string cmd, token;
 
 	// 先行入力されているコマンド
-	// コマンドは前から取り出すのでqueueを用いる。
-	queue<string> cmds;
+	// コマンドは前から取り出すのでdequeを用いる。
+	std::deque<string> cmds;
 
 	// ファイルからコマンドの指定
 	if (argc >= 3 && string(argv[1]) == "file")
 	{
-		vector<string> cmds0;
-		read_all_lines(argv[2], cmds0);
-
-		// queueに変換する。
-		for (auto c : cmds0)
-			cmds.push(c);
-
+		read_all_lines(argv[2], cmds);
 	} else {
 
 		// 引数として指定されたものを一つのコマンドとして実行する機能
@@ -584,12 +578,12 @@ void USI::loop(int argc, char* argv[])
 				cmd += s + " ";
 			else
 			{
-				cmds.push(cmd);
+				cmds.push_back(cmd);
 				cmd = "";
 			}
 		}
 		if (cmd.size() != 0)
-			cmds.push(cmd);
+			cmds.push_back(cmd);
 	}
 
 	do
@@ -606,7 +600,7 @@ void USI::loop(int argc, char* argv[])
 			// YaneuraOu-mid.exe bench,quit
 			// のようなことは出来るのでPGOの役には立ちそうである。
 			cmd = cmds.front();
-			cmds.pop();
+			cmds.pop_front();
 		}
 
 		istringstream is(cmd);
