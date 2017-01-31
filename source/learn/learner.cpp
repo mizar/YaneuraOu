@@ -335,12 +335,12 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 			if (pos.game_ply() <= book_ply)
 			{
 				auto it = book.find(pos);
-				if (it != book.end() && it->second.size() != 0)
+				if (it != book.end() && it->move_list.size() != 0)
 				{
-					// 定跡にhitした。it->second->size()!=0をチェックしておかないと
+					// 定跡にhitした。it->move_list->size()!=0をチェックしておかないと
 					// 指し手のない定跡が登録されていたときに困る。
 
-					const auto& move_list = it->second;
+					const auto& move_list = it->move_list;
 
 					const auto& move = move_list[rand(move_list.size())];
 					auto bestMove = move.bestMove;

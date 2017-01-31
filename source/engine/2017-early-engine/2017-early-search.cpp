@@ -2664,11 +2664,11 @@ void MainThread::think()
 		if (rootPos.game_ply() <= book_ply)
 		{
 			auto it = book.find(rootPos);
-			if (it != book.end() && it->second.size() != 0) {
+			if (it != book.end() && it->move_list.size() != 0) {
 				// 定跡にhitした。逆順で出力しないと将棋所だと逆順にならないという問題があるので逆順で出力する。
 				// また、it->second->size()!=0をチェックしておかないと指し手のない定跡が登録されていたときに困る。
 
-				const auto& move_list = it->second;
+				const auto& move_list = it->move_list;
 
 				// 1) やねうら標準定跡のように評価値なしの定跡DBにおいては
 				// 出現頻度の高い順で並んでいることが保証されている。

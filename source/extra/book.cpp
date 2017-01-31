@@ -1,4 +1,4 @@
-#include "../shogi.h"
+﻿#include "../shogi.h"
 
 #include <fstream>
 #include <sstream>
@@ -88,7 +88,8 @@ namespace Book
 			{
 				std::unique_lock<Mutex> lk(io_mutex);
 				// 前のエントリーは上書きされる。
-				book.book_body[sfen] = move_list;
+				BookEntry be(sfen, move_list);
+				book.add(be, true);
 
 				// 新たなエントリーを追加したのでフラグを立てておく。
 				appended = true;
@@ -185,6 +186,9 @@ namespace Book
 
 			MemoryBook book;
 
+			// この時点で評価関数を読み込まないとKPPTはPositionのset()が出来ないので…。
+			is_ready();
+
 			if (from_thinking)
 			{
 				cout << "read book..";
@@ -196,16 +200,13 @@ namespace Book
 					cout << "..done" << endl;
 			}
 
-			// この時点で評価関数を読み込まないとKPPTはPositionのset()が出来ないので…。
-			is_ready();
-
 			cout << "parse..";
 
 			// 思考すべき局面のsfen
 			unordered_set<string> thinking_sfens;
 
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
-			for(size_t k = 1; !sfens.empty(); ++k)
+			for (size_t k = 1; !sfens.empty(); ++k)
 			{
 				auto sfen = std::move(sfens.front());
 				sfens.pop_front();
@@ -270,7 +271,7 @@ namespace Book
 					{
 						// この場合、m[i + 1]が必要になるので、m.size()-1までしかループできない。
 						BookPos bp(m[i], m[i + 1], VALUE_ZERO, 32, 1);
-						insert_book_pos(book, sf[i], bp);
+						book.insert_book_pos(sf[i], bp);
 					} else if (from_thinking)
 					{
 						// posの局面で思考させてみる。(あとでまとめて)
@@ -304,19 +305,20 @@ namespace Book
 				{
 
 					// この局面のいま格納されているデータを比較して、この局面を再考すべきか判断する。
-					auto it = book.book_body.find(s);
+					auto it = book.intl_find(s);
 
 					// MemoryBookにエントリーが存在しないなら無条件で、この局面について思考して良い。
-					if (it == book.book_body.end())
+					if (it == book.end())
 						sfens_.push_back(s);
 					else
 					{
-						auto& bp = it->second;
-						if (bp[0].depth < depth // 今回の探索depthのほうが深い
-							|| (bp[0].depth == depth && bp.size() < multi_pv && // 探索深さは同じだが今回のMultiPVのほうが大きい
-							    bp.size() < MoveList<LEGAL>((pos_.set(s), pos_)).size() // かつ、合法手の数のほうが大きい
-							    )
+						auto& bp = it->move_list;
+						if (bp[0].depth < depth || // 今回の探索depthのほうが深い
+							(
+								bp[0].depth == depth && bp.size() < multi_pv && // 探索深さは同じだが今回のMultiPVのほうが大きい
+								bp.size() < MoveList<LEGAL>((pos_.set(s), pos_)).size() // かつ、合法手の数のほうが大きい
 							)
+						)
 							sfens_.push_back(s);
 					}
 				}
@@ -395,6 +397,7 @@ namespace Book
 			int evaldiff = Options["BookEvalDiff"];
 			int evalblacklimit = Options["BookEvalBlackLimit"];
 			int evalwhitelimit = Options["BookEvalWhiteLimit"];
+			int depthlimit = Options["BookDepthLimit"];
 
 			while (true)
 			{
@@ -410,6 +413,8 @@ namespace Book
 					is >> evalblacklimit;
 				else if (token == "evalwhitelimit")
 					is >> evalwhitelimit;
+				else if (token == "depthlimit")
+					is >> depthlimit;
 				else
 				{
 					cout << "Error! : Illigal token = " << token << endl;
@@ -417,6 +422,7 @@ namespace Book
 				}
 			}
 
+			is_ready();
 			MemoryBook book;
 			if (read_book(book_name, book) != 0)
 				return;
@@ -435,81 +441,84 @@ namespace Book
 			cout << "book merge from " << book_name[0] << " and " << book_name[1] << " to " << book_name[2] << endl;
 			for (int i = 0; i < 2; ++i)
 			{
+				cout << "reading book" << i << ".";
 				if (read_book(book_name[i], book[i]) != 0)
 					return;
+				cout << ".done." << endl;
 			}
 
 			// 読み込めたので合体させる。
 			cout << "merge..";
 
 			// 同一nodeと非同一nodeの統計用
-			// diffrent_nodes1 = book0側にのみあったnodeの数
-			// diffrent_nodes2 = book1側にのみあったnodeの数
+			// diffrent_nodes0 = book0側にのみあったnodeの数
+			// diffrent_nodes1 = book1側にのみあったnodeの数
 			u64 same_nodes = 0;
-			u64 diffrent_nodes1 = 0, diffrent_nodes2 = 0;
+			u64 diffrent_nodes0 = 0, diffrent_nodes1 = 0;
+			// 領域圧縮頻度しきい値、時々入力側の占有領域を整理してあげる。
+			const u64 shrink_threshold = 65536;
+			u64 b0_shrink_count = 0, b1_shrink_count = 0;
 
-			// 1) 探索が深いほうを採用。
-			// 2) 同じ探索深さであれば、MultiPVの大きいほうを採用。
-			for (auto& it0 : book[0].book_body)
-			{
-				auto sfen = it0.first;
-				// このエントリーがbook1のほうにないかを調べる。
-				auto it1_ = book[1].book_body.find(sfen);
-				auto& it1 = *it1_;
-				if (it1_ != book[1].book_body.end())
-				{
+			// マージ
+			while (!book[0].book_body.empty() && !book[1].book_body.empty()) {
+				auto& b0front = book[0].book_body.front();
+				auto& b1front = book[1].book_body.front();
+				if (b0front == b1front) {
+					// 同じ局面があったので、良いほうをbook2に突っ込む。
 					same_nodes++;
-
-					// あったので、良いほうをbook2に突っ込む。
-					// 1) 登録されている候補手の数がゼロならこれは無効なのでもう片方を登録
-					// 2) depthが深いほう
-					// 3) depthが同じならmulti pvが大きいほう(登録されている候補手が多いほう)
-					if (it0.second.size() == 0)
-						book[2].book_body.insert(it1);
-					else if (it1.second.size() == 0)
-						book[2].book_body.insert(it0);
-					else if (it0.second[0].depth > it1.second[0].depth)
-						book[2].book_body.insert(it0);
-					else if (it0.second[0].depth < it1.second[0].depth)
-						book[2].book_body.insert(it1);
-					else if (it0.second.size() >= it1.second.size())
-						book[2].book_body.insert(it0);
-					else
-						book[2].book_body.insert(it1);
+					book[2].add(b0front + b1front);
+					book[0].book_body.pop_front();
+					if (++b0_shrink_count >= shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+					book[1].book_body.pop_front();
+					if (++b1_shrink_count >= shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
+				} else if (b0front < b1front) {
+					// book0からbook2に突っ込む
+					diffrent_nodes0++;
+					book[2].add(b0front);
+					book[0].book_body.pop_front();
+					if (++b0_shrink_count >= shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
 				} else {
-					// なかったので無条件でbook2に突っ込む。
-					book[2].book_body.insert(it0);
+					// book1からbook2に突っ込む
 					diffrent_nodes1++;
+					book[2].add(b1front);
+					book[1].book_body.pop_front();
+					if (++b1_shrink_count >= shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
 				}
 			}
-			// book0の精査が終わったので、book1側で、まだ突っ込んでいないnodeを探して、それをbook2に突っ込む
-			for (auto& it1 : book[1].book_body)
-			{
-				if (book[2].book_body.find(it1.first) == book[2].book_body.end())
-				{
-					book[2].book_body.insert(it1);
-					diffrent_nodes2++;
-				}
+			// book0側でまだ突っ込んでいないnodeを、book2に突っ込む
+			while (!book[0].book_body.empty()) {
+				diffrent_nodes0++;
+				book[2].add(book[0].book_body.front());
+				book[0].book_body.pop_front();
+				if (++b0_shrink_count >= shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+			}
+			// book1側でまだ突っ込んでいないnodeを、book2に突っ込む
+			while (!book[1].book_body.empty()) {
+				diffrent_nodes1++;
+				book[2].add(book[1].book_body.front());
+				book[1].book_body.pop_front();
+				if (++b1_shrink_count >= shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
 			}
 			cout << "..done" << endl;
 
 			cout << "same nodes = " << same_nodes
-				<< " , different nodes =  " << diffrent_nodes1 << " + " << diffrent_nodes2 << endl;
+				<< " , different nodes =  " << diffrent_nodes0 << " + " << diffrent_nodes1 << endl;
 
 			cout << "write..";
 			write_book(book_name[2], book[2]);
 			cout << "..done!" << endl;
 
 		} else if (book_sort) {
-			// 定跡のsort
+			// 定跡のsort, normalization(n11n)
 			MemoryBook book;
 			string book_src, book_dst;
 			is >> book_src >> book_dst;
+			is_ready();
 			cout << "book sort from " << book_src << " , write to " << book_dst << endl;
-			Book::read_book(book_src, book);
+			Book::read_book(book_src, book, false, true);
 
 			cout << "write..";
-			write_book(book_dst, book, true);
+			write_book(book_dst, book);
 			cout << "..done!" << endl;
 
 		} else {
@@ -524,7 +533,7 @@ namespace Book
 #endif
 
 	// 定跡ファイルの読み込み(book.db)など。
-	int read_book(const std::string& filename, MemoryBook& book, bool on_the_fly)
+	int read_book(const std::string& filename, MemoryBook& book, bool on_the_fly, bool sfen_n11n)
 	{
 		// 読み込み済であるかの判定
 		if (book.book_name == filename)
@@ -532,7 +541,7 @@ namespace Book
 
 		// 別のファイルを開こうとしているなら前回メモリに丸読みした定跡をクリアしておかないといけない。
 		if (book.book_name != "")
-			book.book_body.clear();
+			book.clear();
 
 		// ファイルだけオープンして読み込んだことにする。
 		if (on_the_fly)
@@ -560,22 +569,25 @@ namespace Book
 			return 1; // 読み込み失敗
 		}
 
-		uint64_t num_sum = 0;
 		string sfen;
+		BookEntry be;
+		Position pos;
 
-		auto calc_prob = [&] {
-			auto& move_list = book.book_body[sfen];
-			std::stable_sort(move_list.begin(), move_list.end());
-			num_sum = std::max(num_sum, UINT64_C(1)); // ゼロ除算対策
-			for (auto& bp : move_list)
-				bp.prob = float(bp.num) / num_sum;
-			num_sum = 0;
-		};
+		// 入力バッファの領域を縮小させる頻度のしきい値
+		const u64 shrink_threshold = 1048576;
+		u64 shrink_count = 0;
 
 		while (!lines.empty())
 		{
 			auto line = std::move(lines.front());
 			lines.pop_front();
+
+			// 入力バッファの縮小
+			if (++shrink_count >= shrink_threshold)
+			{
+				lines.shrink_to_fit();
+				shrink_count = 0;
+			}
 
 			// バージョン識別文字列(とりあえず読み飛ばす)
 			if (line.length() >= 1 && line[0] == '#')
@@ -590,53 +602,40 @@ namespace Book
 			{
 				// ひとつ前のsfen文字列に対応するものが終わったということなので採択確率を計算して、かつ、採択回数でsortしておく
 				// (sortはされてるはずだが他のソフトで生成した定跡DBではそうとも限らないので)。
-				calc_prob();
+				be.calc_prob();
+				if (!be.move_list.empty()) { book.add(be); }
 
 				sfen = line.substr(5, line.length() - 5); // 新しいsfen文字列を"sfen "を除去して格納
+
+				// sfen文字列は手駒の表記に揺れがある。
+				// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)
+				// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
+				if (sfen_n11n) { pos.set(sfen); sfen = pos.sfen(); }
+
+				BookEntry be_(sfen);
+				be = be_;
+
 				continue;
 			}
 
-			Move best, next;
-			int value;
-			int depth;
-
-			istringstream is(line);
-			string bestMove, nextMove;
-			uint64_t num;
-			is >> bestMove >> nextMove >> value >> depth >> num;
-
-#if 0
-			// 思考した指し手に対しては指し手の出現頻度のところを強制的にエンジンバージョンを100倍したものに変更する。
-			// この#ifを有効にして、makebook mergeコマンドを叩いて、別のファイルに書き出すなどするときに便利。
-			num = int(atof(ENGINE_VERSION) * 100);
-#endif
-
-			// 起動時なので変換に要するオーバーヘッドは最小化したいので合法かのチェックはしない。
-			if (bestMove == "none" || bestMove == "resign")
-				best = MOVE_NONE;
-			else
-				best = move_from_usi(bestMove);
-
-			if (nextMove == "none" || nextMove == "resign")
-				next = MOVE_NONE;
-			else
-				next = move_from_usi(nextMove);
-
-			BookPos bp(best, next, value, depth, num);
-			insert_book_pos(book, sfen, bp);
-			num_sum += num;
+			BookPos bp(line);
+			be.insert_book_pos(bp);
 		}
-		// ファイルが終わるときにも最後の局面に対するcalc_probが必要。
-		calc_prob();
+		// ファイルが終わるときにも最後の局面に対するcalc_prob,book.addが必要。
+		be.calc_prob();
+		if (!be.move_list.empty()) { book.add(be); }
 
 		// 読み込んだファイル名を保存しておく。二度目のread_book()はskipする。
 		book.book_name = filename;
+
+		// 全体のソート、重複局面の除去
+		book.intl_uniq();
 
 		return 0;
 	}
 
 	// 定跡ファイルの書き出し
-	int write_book(const std::string& filename, const MemoryBook& book, bool sort)
+	int write_book(const std::string& filename, MemoryBook& book)
 	{
 		fstream fs;
 		fs.open(filename, ios::out);
@@ -644,110 +643,22 @@ namespace Book
 		// バージョン識別用文字列
 		fs << "#YANEURAOU-DB2016 1.00" << endl;
 
-		vector<pair<string, vector<BookPos>> > vectored_book;
-		for (auto& it : book.book_body)
+		// 全体のソートと重複局面の除去
+		book.intl_uniq();
+
+		for (BookEntry be : book.book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
-			if (it.second.size() == 0)
-				continue;
-			vectored_book.push_back(it);
-		}
-
-		if (sort)
-		{
-			// sfen文字列は手駒の表記に揺れがある。
-			// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)
-			// sortするタイミングで、一度すべての局面を読み込み、sfen()化しなおすことで
-			// やねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
-
-			{
-				// Position::set()で評価関数の読み込みが必要。
-				is_ready();
-				Position pos;
-
-				// std::vectorにしてあるのでit.firstを書き換えてもitは無効にならないはず。
-				for (auto& it : vectored_book)
-				{
-					pos.set(it.first);
-					it.first = pos.sfen();
-				}
-			}
-
-
-			// ここvectored_bookが、sfen文字列でsortされていて欲しいのでsortする。
-			// アルファベットの範囲ではlocaleの影響は受けない…はず…。
-			std::sort(vectored_book.begin(), vectored_book.end(),
-				[](const pair<string, vector<BookPos>>&lhs, const pair<string, vector<BookPos>>&rhs) {
-				return lhs.first < rhs.first;
-			});
-		}
-
-		for (auto& it : vectored_book)
-		{
-			fs << "sfen " << it.first /* is sfen string */ << endl; // sfen
-
-			auto& move_list = it.second;
-
+			if (be.move_list.size() == 0) continue;
 			// 採択回数でソートしておく。
-			std::stable_sort(move_list.begin(), move_list.end());
+			be.sort_pos();
 
-			for (auto& bp : move_list)
-				fs << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << " " << bp.depth << " " << bp.num << endl;
-			// 指し手、相手の応手、そのときの評価値、探索深さ、採択回数
+			fs << be;
 		}
 
 		fs.close();
 
 		return 0;
-	}
-
-	void insert_book_pos(MemoryBook& book, const std::string sfen, const BookPos& bp)
-	{
-		auto it = book.book_body.find(sfen);
-		if (it == book.end())
-		{
-			// 存在しないので要素を作って追加。
-			vector<BookPos> move_list;
-			move_list.push_back(bp);
-			book.book_body[sfen] = move_list;
-		} else {
-			// この局面での指し手のリスト
-			auto& move_list = it->second;
-			// すでに格納されているかも知れないので同じ指し手がないかをチェックして、なければ追加
-			for (auto& b : move_list)
-				if (b == bp)
-				{
-					// すでに存在していたのでエントリーを置換。ただし採択回数はインクリメント
-					auto num = b.num;
-					b = bp;
-					b.num += num;
-					goto FOUND_THE_SAME_MOVE;
-				}
-
-			move_list.push_back(bp);
-
-		FOUND_THE_SAME_MOVE:;
-		}
-
-	}
-
-	// sfen文字列から末尾のゴミを取り除いて返す。
-	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
-	string trim_sfen(string sfen)
-	{
-		string s = sfen;
-		int cur = (int)s.length() - 1;
-		while (cur >= 0)
-		{
-			char c = s[cur];
-			// 改行文字、スペース、数字(これはgame ply)ではないならループを抜ける。
-			// これらの文字が出現しなくなるまで末尾を切り詰める。
-			if (c != '\r' && c != '\n' && c != ' ' && !('0' <= c && c <= '9'))
-				break;
-			cur--;
-		}
-		s.resize((int)(cur + 1));
-		return s;
 	}
 
 	MemoryBook::BookType::iterator MemoryBook::find(const Position& pos)
@@ -763,7 +674,7 @@ namespace Book
 		{
 			// ディスクから読み込むなら、いずれにせよ、book_bodyをクリアして、
 			// ディスクから読み込んだエントリーをinsertしてそのiteratorを返すべき。
-			book_body.clear();
+			clear();
 
 			// 末尾の手数は取り除いておく。
 			// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
@@ -845,16 +756,7 @@ namespace Book
 
 			// read_bookとほとんど同じ読み込み処理がここに必要。辛い。
 
-			uint64_t num_sum = 0;
-
-			auto calc_prob = [&] {
-				auto& move_list = book_body[sfen];
-				std::stable_sort(move_list.begin(), move_list.end());
-				num_sum = std::max(num_sum, UINT64_C(1)); // ゼロ除算対策
-				for (auto& bp : move_list)
-					bp.prob = float(bp.num) / num_sum;
-				num_sum = 0;
-			};
+			BookEntry be(sfen);
 
 			while (!fs.eof())
 			{
@@ -875,49 +777,81 @@ namespace Book
 					break;
 				}
 
-				Move best, next;
-				int value;
-				int depth;
+				BookPos bp(line);
 
-				istringstream is(line);
-				string bestMove, nextMove;
-				uint64_t num;
-				is >> bestMove >> nextMove >> value >> depth >> num;
+				be.insert_book_pos(bp);
 
-				// 起動時なので変換に要するオーバーヘッドは最小化したいので合法かのチェックはしない。
-				if (bestMove == "none" || bestMove == "resign")
-					best = MOVE_NONE;
-				else
-					best = move_from_usi(bestMove);
-
-				if (nextMove == "none" || nextMove == "resign")
-					next = MOVE_NONE;
-				else
-					next = move_from_usi(nextMove);
-
-				BookPos bp(best, next, value, depth, num);
-				insert_book_pos(*this, sfen, bp);
-				num_sum += num;
 			}
 			// ファイルが終わるときにも最後の局面に対するcalc_probが必要。
-			calc_prob();
+			be.calc_prob();
+
+			add(be);
 
 			it = book_body.begin();
 
 		} else {
 
 			// on the flyではない場合
-			it = book_body.find(sfen);
+			it = intl_find(sfen);
 		}
 
 
 		if (it != book_body.end())
 		{
 			// 定跡のMoveは16bitであり、rootMovesは32bitのMoveであるからこのタイミングで補正する。
-			for (auto& m : it->second)
+			for (auto& m : it->move_list)
 				m.bestMove = pos.move16_to_move(m.bestMove);
 		}
 		return it;
+	}
+
+	// 出力ストリーム
+	std::ostream& operator << (std::ostream& os, const BookPos& bp) {
+		os << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << ' ' << bp.depth << ' ' << bp.num << std::endl;
+		return os;
+	}
+	std::ostream& operator << (std::ostream& os, const BookEntry& be) {
+		os << "sfen " << be.sfenPos << " " << be.ply << std::endl;
+		for (auto& bp : be.move_list) {	os << bp; }
+		return os;
+	}
+
+	// sfen文字列のゴミを除いた長さ
+	const std::size_t trimlen_sfen(const std::string sfen)
+	{
+		auto cur = sfen.length();
+		while (cur > 0)
+		{
+			char c = sfen[cur - 1];
+			// 改行文字、スペース、数字(これはgame ply)ではないならループを抜ける。
+			// これらの文字が出現しなくなるまで末尾を切り詰める。
+			if (c != '\r' && c != '\n' && c != ' ' && !('0' <= c && c <= '9'))
+				break;
+			cur--;
+		}
+		return cur;
+	}
+
+	// sfen文字列から末尾のゴミを取り除いて返す。
+	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
+	const std::string trim_sfen(const std::string sfen)
+	{
+		std::string s = sfen;
+		s.resize(trimlen_sfen(sfen));
+		return s;
+	}
+
+	// sfen文字列の手数分離
+	const std::pair<const std::string, const int> split_sfen(const std::string sfen)
+	{
+		auto cur = trimlen_sfen(sfen);
+		std::string s = sfen;
+		s.resize(cur);
+		std::istringstream ss(sfen);
+		int ply;
+		ss.seekg(cur);
+		ss >> ply;
+		return std::make_pair(s, ply);
 	}
 
 }

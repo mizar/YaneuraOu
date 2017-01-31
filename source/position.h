@@ -190,10 +190,9 @@ struct Position
 	// ※ USIプロトコルにおいては不要な機能ではあるが、デバッグのために局面を標準出力に出力して
 	// 　その局面から開始させたりしたいときに、sfenで現在の局面を出力出来ないと困るので用意してある。
 	const std::string sfen(bool trimply) const;
+	const std::string sfen() const { return sfen(false); }
 	// 末尾の手数を省略したsfen文字列
-	const std::string trimedsfen() const {
-		return sfen(true);
-	}
+	const std::string trimedsfen() const { return sfen(true); }
 
 	// 平手の初期盤面を設定する。
 	void set_hirate() { set(SFEN_HIRATE); }

@@ -1,4 +1,4 @@
-
+﻿
 // Windows環境下でのプロセッサグループの割当関係
 #ifdef _WIN32
 #if _WIN32_WINNT < 0x0601

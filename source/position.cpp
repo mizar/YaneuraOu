@@ -287,7 +287,7 @@ void Position::set(std::string sfen)
 
 // 局面のsfen文字列を取得する。
 // Position::set()の逆変換。
-const std::string Position::sfen(bool trim_ply = false) const
+const std::string Position::sfen(bool trim_ply) const
 {
 	std::ostringstream ss;
 
@@ -357,8 +357,6 @@ const std::string Position::sfen(bool trim_ply = false) const
 
 	return ss.str();
 }
-
-const std::string Position::trimed_sfen() const { return sfen(true); }
 
 void Position::set_state(StateInfo* si) const {
 
