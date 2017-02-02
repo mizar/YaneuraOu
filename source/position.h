@@ -189,8 +189,7 @@ struct Position
 	// 局面のsfen文字列を取得する
 	// ※ USIプロトコルにおいては不要な機能ではあるが、デバッグのために局面を標準出力に出力して
 	// 　その局面から開始させたりしたいときに、sfenで現在の局面を出力出来ないと困るので用意してある。
-	const std::string sfen(bool trimply) const;
-	const std::string sfen() const { return sfen(false); }
+	const std::string sfen(bool trimply = false) const;
 	// 末尾の手数を省略したsfen文字列
 	const std::string trimedsfen() const { return sfen(true); }
 

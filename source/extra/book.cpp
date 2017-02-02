@@ -179,19 +179,14 @@ namespace Book
 					<< " , depth = " << depth
 					<< " , cluster = " << cluster_id << "/" << cluster_num << endl;
 
-			std::deque<string> sfens;
-			read_all_lines(sfen_name, sfens);
-
 			cout << "..done" << endl;
 
 			MemoryBook book;
 
-			// この時点で評価関数を読み込まないとKPPTはPositionのset()が出来ないので…。
-			is_ready();
-
 			if (from_thinking)
 			{
 				cout << "read book..";
+
 				// 初回はファイルがないので読み込みに失敗するが無視して続行。
 				if (read_book(book_name, book) != 0)
 				{
@@ -200,10 +195,22 @@ namespace Book
 					cout << "..done" << endl;
 			}
 
+			// この時点で評価関数を読み込まないとKPPTはPositionのset()が出来ないので…。
+			is_ready();
+
+			std::deque<string> sfens;
+			read_all_lines(sfen_name, sfens);
+
 			cout << "parse..";
 
 			// 思考すべき局面のsfen
 			unordered_set<string> thinking_sfens;
+
+			// 入力が空でも初期局面は含めるように
+			if (from_thinking && start_moves == 1) {
+				pos.set_hirate();
+				thinking_sfens.insert(pos.sfen());
+			}
 
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
 			for (size_t k = 1; !sfens.empty(); ++k)
@@ -383,7 +390,7 @@ namespace Book
 			cout << "finished." << endl;
 
 		} else if (to_sfen) {
-			// 定跡からsfenを生成する(書きかけ)
+			// 定跡からsfenを生成する
 
 			// 定跡ファイル名
 			string book_name;
@@ -393,6 +400,7 @@ namespace Book
 			string sfen_name;
 			is >> sfen_name;
 			
+			// 探索オプション
 			int moves = 256;
 			int evaldiff = Options["BookEvalDiff"];
 			int evalblacklimit = Options["BookEvalBlackLimit"];
@@ -422,13 +430,92 @@ namespace Book
 				}
 			}
 
-			is_ready();
+			cout << "read book..";
 			MemoryBook book;
 			if (read_book(book_name, book) != 0)
 				return;
-			// まだ書きかけ
-		} else if (book_merge) {
+			cout << "..done" << endl;
 
+			is_ready();
+
+			fstream fs;
+			fs.open(sfen_name, ios::out);
+
+			cout << "export sfens :"
+				<< " moves " << moves
+				<< " evaldiff " << evaldiff
+				<< " evalblacklimit " << evalblacklimit
+				<< " evalwhitelimit " << evalwhitelimit
+				<< " depthlimit " << depthlimit
+				<< endl;
+
+			vector<string> sf;	// sfen指し手文字列格納用
+
+			StateInfo si[258];
+
+			pos.set_hirate();
+
+			// カウンタ
+			const u64 count_sfens_threshold = 10000;
+			u64 count_sfens = 0, count_sfens_part = 0;
+			// 再帰探索
+			function<bool()> to_sfen_func;
+			to_sfen_func = [&]() {
+				auto it = book.find(pos);
+				// この局面が定跡登録されてなければ戻る。
+				if (it == book.end()) { return false; }
+				auto& be = *it;
+				if (
+					be.ply == 0 || // 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
+					be.move_list.size() == 0 // move_listが空なら戻る
+				) { return false; }
+				// 到達済み局面のフラグ立て
+				be.ply = 0;
+				// 最善手が駄目なら戻る
+				auto& bp0 = be.move_list[0];
+				int evallimit = ~pos.side_to_move() ? evalblacklimit : evalwhitelimit;
+				if (bp0.depth < depthlimit || bp0.value < evallimit) { return false; }
+				// 最善手以外に何番目の候補手まで探索するか
+				size_t imax = 1;
+				for (;
+					imax < be.move_list.size() &&
+					be.move_list[imax].value >= evallimit &&
+					be.move_list[imax].value + evaldiff >= bp0.value;
+					++imax) {}
+				// 先の局面を探索
+				int ply = pos.game_ply();
+				for (size_t i = 0; i < imax; ++i) {
+					auto& bp = be.move_list[i];
+					// 探索スタック積み
+					sf.push_back(to_usi_string(bp.bestMove));
+					pos.do_move(bp.bestMove, si[ply]);
+					// 先の局面で駄目出しされたら、その局面までの手順を出力
+					if (ply >= moves || !to_sfen_func()) {
+						fs << "startpos moves";
+						for (auto& s : sf) { fs << " " << s; }
+						fs << endl;
+						// 出力行数のカウントアップ
+						++count_sfens;
+						if (++count_sfens_part >= count_sfens_threshold) {
+							cout << '.';
+							count_sfens_part = 0;
+						}
+					}
+					// 探索スタック崩し
+					pos.undo_move(bp.bestMove);
+					sf.pop_back();
+				}
+				// 手順出力済みのフラグ
+				return true;
+			};
+			// 探索開始
+			to_sfen_func();
+			// 探索終了
+			fs.close();
+			cout << ".finished!" << endl;
+			cout << count_sfens << " sfens exported." << endl;
+
+		} else if (book_merge) {
 			// 定跡のマージ
 			MemoryBook book[3];
 			string book_name[3];
@@ -456,7 +543,7 @@ namespace Book
 			u64 same_nodes = 0;
 			u64 diffrent_nodes0 = 0, diffrent_nodes1 = 0;
 			// 領域圧縮頻度しきい値、時々入力側の占有領域を整理してあげる。
-			const u64 shrink_threshold = 65536;
+			const u64 merge_shrink_threshold = 65536;
 			u64 b0_shrink_count = 0, b1_shrink_count = 0;
 
 			// マージ
@@ -468,21 +555,21 @@ namespace Book
 					same_nodes++;
 					book[2].add(b0front + b1front);
 					book[0].book_body.pop_front();
-					if (++b0_shrink_count >= shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+					if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
 					book[1].book_body.pop_front();
-					if (++b1_shrink_count >= shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
+					if (++b1_shrink_count >= merge_shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
 				} else if (b0front < b1front) {
 					// book0からbook2に突っ込む
 					diffrent_nodes0++;
 					book[2].add(b0front);
 					book[0].book_body.pop_front();
-					if (++b0_shrink_count >= shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+					if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
 				} else {
 					// book1からbook2に突っ込む
 					diffrent_nodes1++;
 					book[2].add(b1front);
 					book[1].book_body.pop_front();
-					if (++b1_shrink_count >= shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
+					if (++b1_shrink_count >= merge_shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
 				}
 			}
 			// book0側でまだ突っ込んでいないnodeを、book2に突っ込む
@@ -490,14 +577,14 @@ namespace Book
 				diffrent_nodes0++;
 				book[2].add(book[0].book_body.front());
 				book[0].book_body.pop_front();
-				if (++b0_shrink_count >= shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+				if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
 			}
 			// book1側でまだ突っ込んでいないnodeを、book2に突っ込む
 			while (!book[1].book_body.empty()) {
 				diffrent_nodes1++;
 				book[2].add(book[1].book_body.front());
 				book[1].book_body.pop_front();
-				if (++b1_shrink_count >= shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
+				if (++b1_shrink_count >= merge_shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
 			}
 			cout << "..done" << endl;
 
@@ -527,7 +614,7 @@ namespace Book
 			cout << "> makebook think book.sfen book.db moves 16 depth 18" << endl;
 			cout << "> makebook merge book_src1.db book_src2.db book_merged.db" << endl;
 			cout << "> makebook sort book_src.db book_sorted.db" << endl;
-			cout << "> makebook to_sfen book.db book.sfen moves 24" << endl;
+			cout << "> makebook to_sfen book.db book.sfen moves 256 evaldiff 30 evalblacklimit 0 evalwhitelimit -140 depthlimit 16" << endl;
 		}
 	}
 #endif
@@ -574,7 +661,7 @@ namespace Book
 		Position pos;
 
 		// 入力バッファの領域を縮小させる頻度のしきい値
-		const u64 shrink_threshold = 1048576;
+		const u64 read_shrink_threshold = 1048576;
 		u64 shrink_count = 0;
 
 		while (!lines.empty())
@@ -583,7 +670,7 @@ namespace Book
 			lines.pop_front();
 
 			// 入力バッファの縮小
-			if (++shrink_count >= shrink_threshold)
+			if (++shrink_count >= read_shrink_threshold)
 			{
 				lines.shrink_to_fit();
 				shrink_count = 0;
@@ -621,6 +708,7 @@ namespace Book
 			BookPos bp(line);
 			be.insert_book_pos(bp);
 		}
+
 		// ファイルが終わるときにも最後の局面に対するcalc_prob,book.addが必要。
 		be.calc_prob();
 		if (!be.move_list.empty()) { book.add(be); }
