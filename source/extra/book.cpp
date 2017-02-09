@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_set>
+#include <iomanip>
 
 #include "book.h"
 #include "../position.h"
@@ -117,6 +118,10 @@ namespace Book
 		bool book_sort = token == "sort";
 		// 定跡からsfenを生成する
 		bool to_sfen = token == "to_sfen";
+		// 定跡から棋譜文字列を生成する
+		bool to_kif1 = token == "to_kif1";
+		bool to_kif2 = token == "to_kif2";
+		bool to_csa1 = token == "to_csa1";
 
 #if !defined(EVAL_LEARN) || !(defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE) || defined(YANEURAOU_2017_EARLY_ENGINE))
 		if (from_thinking)
@@ -384,12 +389,13 @@ namespace Book
 			}
 
 #endif
+			if (from_sfen) {
+				cout << "write..";
+				write_book(book_name, book);
+				cout << "finished." << endl;
+			}
 
-			cout << "write..";
-			write_book(book_name, book);
-			cout << "finished." << endl;
-
-		} else if (to_sfen) {
+		} else if (to_sfen || to_kif1 || to_kif2 || to_csa1) {
 			// 定跡からsfenを生成する
 
 			// 定跡ファイル名
@@ -400,12 +406,15 @@ namespace Book
 			string sfen_name;
 			is >> sfen_name;
 			
-			// 探索オプション
+			// 探索・出力オプション
 			int moves = 256;
 			int evaldiff = Options["BookEvalDiff"];
 			int evalblacklimit = Options["BookEvalBlackLimit"];
 			int evalwhitelimit = Options["BookEvalWhiteLimit"];
 			int depthlimit = Options["BookDepthLimit"];
+			bool comment = false;
+			string opening = "";
+			SquareFormat sqfmt = SqFmt_ASCII;
 
 			while (true)
 			{
@@ -423,6 +432,12 @@ namespace Book
 					is >> evalwhitelimit;
 				else if (token == "depthlimit")
 					is >> depthlimit;
+				else if (token == "squareformat")
+					is >> sqfmt;
+				else if (token == "opening")
+					is >> quoted(opening);
+				else if (token == "comment")
+					comment = true;
 				else
 				{
 					cout << "Error! : Illigal token = " << token << endl;
@@ -438,43 +453,94 @@ namespace Book
 
 			is_ready();
 
+			// カウンタ
+			const u64 count_sfens_threshold = 10000;
+			u64 count_sfens = 0, count_sfens_part = 0;
+
+			vector<Move> m;
+			vector<string> sf;	// sfen指し手文字列格納用
+
+			StateInfo si[258];
+
 			fstream fs;
 			fs.open(sfen_name, ios::out);
 
-			cout << "export sfens :"
+			cout << "export " << (to_sfen ? "sfens" : to_kif1 ? "kif1" : to_kif2 ? "kif2" : to_csa1 ? "csa1" : "") << " :"
 				<< " moves " << moves
 				<< " evaldiff " << evaldiff
 				<< " evalblacklimit " << evalblacklimit
 				<< " evalwhitelimit " << evalwhitelimit
 				<< " depthlimit " << depthlimit
+				<< " opening " << quoted(opening)
 				<< endl;
 
-			vector<string> sf;	// sfen指し手文字列格納用
+			// 探索結果種別
+			enum BookRes {
+				BOOKRES_NONE,
+				BOOKRES_SUCCESS,
+				BOOKRES_DUPE,
+				BOOKRES_EMPTY,
+				BOOKRES_DEPTHLIMIT,
+				BOOKRES_EVALLIMIT,
+				BOOKRES_MOVELIMIT
+			};
 
-			StateInfo si[258];
+			// 文字列化
+			auto to_movestr = [&](Position& _pos, Move _m, Move _m_back = MOVE_NONE) {
+				return
+					to_sfen ? to_usi_string(_m) :
+					to_kif1 ? to_kif1_string(_m, _pos, _m_back, sqfmt) :
+					to_kif2 ? to_kif2_string(_m, _pos, _m_back, sqfmt) :
+					to_csa1 ? to_csa1_string(_m, _pos) :
+					"";
+			};
 
-			pos.set_hirate();
+			// 結果出力
+			auto printstack = [&](ostream& os, BookRes res) {
+				if (to_sfen) {
+					os << "startpos moves";
+					for (auto& s : sf) { os << " " << s; }
+				}
+				else if (to_kif1 || to_kif2 || to_csa1) {
+					for (auto& s : sf) { os << s; }
+				}
+				if (comment) {
+					switch (res) {
+					case BOOKRES_NONE:       os << "#NONE"; break;
+					case BOOKRES_DUPE:       os << "#DUPE"; break;
+					case BOOKRES_EMPTY:      os << "#EMPTY"; break;
+					case BOOKRES_DEPTHLIMIT: os << "#DEPTHLIMIT"; break;
+					case BOOKRES_EVALLIMIT:  os << "#EVALLIMIT"; break;
+					case BOOKRES_MOVELIMIT:  os << "#MOVELIMIT"; break;
+					}
+				}
+				os << endl;
+				// 出力行数のカウントアップ
+				++count_sfens;
+				if (++count_sfens_part >= count_sfens_threshold) {
+					cout << '.';
+					count_sfens_part = 0;
+				}
+			};
 
-			// カウンタ
-			const u64 count_sfens_threshold = 10000;
-			u64 count_sfens = 0, count_sfens_part = 0;
 			// 再帰探索
-			function<bool()> to_sfen_func;
+			function<BookRes()> to_sfen_func;
 			to_sfen_func = [&]() {
 				auto it = book.find(pos);
 				// この局面が定跡登録されてなければ戻る。
-				if (it == book.end()) { return false; }
+				if (it == book.end()) { return BOOKRES_NONE; }
 				auto& be = *it;
-				if (
-					be.ply == 0 || // 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
-					be.move_list.size() == 0 // move_listが空なら戻る
-				) { return false; }
+				// 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
+				if (be.ply == 0) { return BOOKRES_DUPE; }
+				// move_listが空なら戻る
+				if (be.move_list.size() == 0) { return BOOKRES_EMPTY; }
 				// 到達済み局面のフラグ立て
 				be.ply = 0;
 				// 最善手が駄目なら戻る
 				auto& bp0 = be.move_list[0];
 				int evallimit = ~pos.side_to_move() ? evalblacklimit : evalwhitelimit;
-				if (bp0.depth < depthlimit || bp0.value < evallimit) { return false; }
+				if (bp0.depth < depthlimit) { return BOOKRES_DEPTHLIMIT; }
+				if (bp0.value < evallimit) { return BOOKRES_EVALLIMIT; }
 				// 最善手以外に何番目の候補手まで探索するか
 				size_t imax = 1;
 				for (;
@@ -486,34 +552,57 @@ namespace Book
 				int ply = pos.game_ply();
 				for (size_t i = 0; i < imax; ++i) {
 					auto& bp = be.move_list[i];
+					Move nowMove = bp.bestMove;
 					// 探索スタック積み
-					sf.push_back(to_usi_string(bp.bestMove));
-					pos.do_move(bp.bestMove, si[ply]);
+					sf.push_back(to_movestr(pos, nowMove, m.empty() ? MOVE_NONE : m.back()));
+					m.push_back(nowMove);
+					pos.do_move(nowMove, si[ply]);
 					// 先の局面で駄目出しされたら、その局面までの手順を出力
-					if (ply >= moves || !to_sfen_func()) {
-						fs << "startpos moves";
-						for (auto& s : sf) { fs << " " << s; }
-						fs << endl;
-						// 出力行数のカウントアップ
-						++count_sfens;
-						if (++count_sfens_part >= count_sfens_threshold) {
-							cout << '.';
-							count_sfens_part = 0;
-						}
+					auto res = (ply >= moves) ? BOOKRES_MOVELIMIT : to_sfen_func();
+					if (res != BOOKRES_SUCCESS) {
+						printstack(fs, res);
 					}
 					// 探索スタック崩し
-					pos.undo_move(bp.bestMove);
+					pos.undo_move(nowMove);
+					m.pop_back();
 					sf.pop_back();
 				}
-				// 手順出力済みのフラグ
-				return true;
+				return BOOKRES_SUCCESS;
 			};
+
 			// 探索開始
-			to_sfen_func();
+			istringstream ssop(opening);
+			string opsfen;
+			getline(ssop, opsfen, ',');
+			do
+			{
+				pos.set_hirate();
+				sf.clear();
+				m.clear();
+				istringstream ssopsfen(opsfen);
+				while (true)
+				{
+					string movetoken = "";
+					ssopsfen >> movetoken;
+					if (movetoken == "")
+						break;
+					Move _mv = pos.move16_to_move(move_from_usi(movetoken));
+					if (!(is_ok(_mv) && pos.pseudo_legal(_mv) && pos.legal(_mv)))
+						break;
+					sf.push_back(to_movestr(pos, _mv, m.empty() ? MOVE_NONE : m.back()));
+					m.push_back(_mv);
+					pos.do_move(_mv, si[pos.game_ply()]);
+				}
+				BookRes res = to_sfen_func();
+				if (!sf.empty() && res != BOOKRES_SUCCESS) {
+					printstack(fs, res);
+				}
+			} while (getline(ssop, opsfen, ','));
+
 			// 探索終了
 			fs.close();
 			cout << ".finished!" << endl;
-			cout << count_sfens << " sfens exported." << endl;
+			cout << count_sfens << " lines exported." << endl;
 
 		} else if (book_merge) {
 			// 定跡のマージ

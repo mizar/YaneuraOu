@@ -51,6 +51,31 @@ std::string PieceToCharBW(" PLNSBRGK        plnsbrgk");
 std::string pretty(File f) { return pretty_jp ? std::string("１２３４５６７８９").substr((int32_t)f * 2, 2) : std::to_string((int32_t)f + 1); }
 std::string pretty(Rank r) { return pretty_jp ? std::string("一二三四五六七八九").substr((int32_t)r * 2, 2) : std::to_string((int32_t)r + 1); }
 
+std::string kif(File f, SquareFormat fmt)
+{
+	switch (fmt)
+	{
+	case SqFmt_FullWidthArabic:
+	case SqFmt_FullWidthMix:
+		return std::string("１２３４５６７８９").substr((int32_t)f * 2, 2);
+	default:
+		return std::to_string((int32_t)f + 1);
+	}
+}
+
+std::string kif(Rank r, SquareFormat fmt)
+{
+	switch (fmt)
+	{
+	case SqFmt_FullWidthArabic:
+		return std::string("１２３４５６７８９").substr((int32_t)r * 2, 2);
+	case SqFmt_FullWidthMix:
+		return std::string("一二三四五六七八九").substr((int32_t)r * 2, 2);
+	default:
+		return std::to_string((int32_t)r + 1);
+	}
+}
+
 std::string pretty(Move m)
 {
   if (is_drop(m))
@@ -104,7 +129,7 @@ std::ostream& operator<<(std::ostream& os, HandKind hk)
 
 std::string to_usi_string(Move m)
 {
-  std::stringstream ss;
+  std::ostringstream ss;
   if (!is_ok(m))
   {
     ss <<((m == MOVE_RESIGN) ? "resign" :
@@ -126,6 +151,242 @@ std::string to_usi_string(Move m)
       ss << '+';
   }
   return ss.str();
+}
+std::string to_kif1_string(Move m, Piece movedPieceType, Color c, Move prev_m, SquareFormat fmt)
+{
+	std::ostringstream ss;
+	if (~c) ss << "▲"; else ss << "△";
+	if (!is_ok(m))
+	{
+		switch (m) {
+		case MOVE_NONE: ss << "エラー"; break;
+		case MOVE_NULL: ss << "パス"; break;
+		case MOVE_RESIGN: ss << "投了"; break;
+		case MOVE_WIN: ss << "宣言勝ち"; break;
+		}
+	}
+	else
+	{
+		if (is_ok(prev_m) && move_to(prev_m) == move_to(m))
+			ss << "同" << kif(movedPieceType);
+		else
+			ss << kif(move_to(m), fmt) << kif(movedPieceType);
+		if (is_promote(m))
+			ss << "成";
+		if (is_drop(m))
+			ss << "打";
+		else
+			ss << "("
+			<< std::to_string((int32_t)(file_of(move_from(m))) + 1)
+			<< std::to_string((int32_t)(rank_of(move_from(m))) + 1)
+			<< ")";
+	}
+	return ss.str();
+}
+std::string to_kif1_string(Move m, Position& pos, Move prev_m, SquareFormat fmt)
+{
+	return to_kif1_string(m, pos.moved_piece_before(m), pos.side_to_move(), prev_m, fmt);
+}
+std::string to_kif2_string(Move m, Position& pos, Move prev_m, SquareFormat fmt)
+{
+	std::ostringstream ss;
+	Color c = pos.side_to_move();
+	ss << (~c ? "▲" : "△");
+	if (!is_ok(m))
+	{
+		switch (m) {
+		case MOVE_NONE: ss << "エラー"; break;
+		case MOVE_NULL: ss << "パス"; break;
+		case MOVE_RESIGN: ss << "投了"; break;
+		case MOVE_WIN: ss << "宣言勝ち"; break;
+		}
+	}
+	else
+	{
+		// 先後・成の属性を含めた駒種別
+		Piece p = pos.moved_piece_before(m);
+		// 先後の属性を排除した駒種別
+		Piece p_type = type_of(p);
+		// 金・銀・成金は直の表記が有り得る
+		bool is_like_goldsilver = (
+			p_type == SILVER || 
+			p_type == GOLD || 
+			p_type == PRO_PAWN || 
+			p_type == PRO_LANCE || 
+			p_type == PRO_KNIGHT || 
+			p_type == PRO_SILVER);
+		// 移動元・移動先の座標
+		Square fromSq = move_from(m), toSq = move_to(m);
+		File fromSqF = file_of(fromSq), toSqF = file_of(toSq);
+		Rank fromSqR = rank_of(fromSq), toSqR = rank_of(toSq);
+		// 移動先地点への同駒種の利き（駒打ちで無ければ指し手の駒も含む）
+		// Position.piecesの第2引数には先後の属性を含めてはいけない。
+		Bitboard b = (pos.attackers_to(c, toSq) & pos.pieces(c, p_type));
+		// 同駒種の利きの数
+		int b_pop = b.pop_count();
+
+		if (is_ok(prev_m) && move_to(prev_m) == toSq)
+			ss << "同" << kif(p);
+		else
+			ss << kif(toSq, fmt) << kif(p);
+
+		if (!is_drop(m)) {
+			if (b_pop > 1) {
+				if (fromSqR == toSqR) {
+					if ((b & RANK_BB[toSqR]).pop_count() == 1)
+						ss << "寄";
+					else if (fromSqF < toSqF) {
+						if ((b & InLeftBB[0][toSqF]).pop_count() == 1) {
+							if (~c) ss << "左"; else ss << "右";
+						}
+						else {
+							if (~c) ss << "左寄"; else ss << "右寄";
+						}
+					}
+					else if (fromSqF > toSqF) {
+						if ((b & InRightBB[0][toSqF]).pop_count() == 1) {
+							if (~c) ss << "左"; else ss << "右";
+						}
+						else {
+							if (~c) ss << "左寄"; else ss << "右寄";
+						}
+					}
+				}
+				else if (fromSqR < toSqR) {
+					if ((b & InFrontBB[0][toSqR]).pop_count() == 1) {
+						if (~c) ss << "引"; else ss << "上";
+					}
+					else if (fromSqF == toSqF) {
+						if (c && is_like_goldsilver)
+							ss << "直";
+						else if (b_pop - (b & InLeftBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "右"; else ss << "左";
+						}
+						else if (b_pop - (b & InRightBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "左"; else ss << "右";
+						}
+						else if ((b & InLeftBB[0][toSqF] & InFrontBB[0][fromSqR]) == ZERO_BB) {
+							if (~c) ss << "左引"; else ss << "右上";
+						}
+						else if ((b & InRightBB[0][toSqF] & InFrontBB[0][fromSqR]) == ZERO_BB) {
+							if (~c) ss << "右引"; else ss << "左上";
+						}
+					}
+					else if (fromSqF < toSqF) {
+						if ((b & OrRightBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "右"; else ss << "左";
+						}
+						else {
+							if (~c) ss << "右引"; else ss << "左上";
+						}
+					}
+					else if (fromSqF > toSqF) {
+						if ((b & OrLeftBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "左"; else ss << "右";
+						}
+						else {
+							if (~c) ss << "左引"; else ss << "右上";
+						}
+					}
+				}
+				else if (fromSqR > toSqR) {
+					if ((b & InBackBB[0][toSqR]).pop_count() == 1) {
+						if (~c) ss << "上"; else ss << "引";
+					}
+					else if (fromSqF == toSqF) {
+						if (~c && is_like_goldsilver)
+							ss << "直";
+						else if (b_pop - (b & InLeftBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "右"; else ss << "左";
+						}
+						else if (b_pop - (b & InRightBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "左"; else ss << "右";
+						}
+						else if ((b & InLeftBB[0][fromSqF] & InBackBB[0][toSqR]) == ZERO_BB) {
+							if (~c) ss << "左上"; else ss << "右引";
+						}
+						else if ((b & InRightBB[0][fromSqF] & InBackBB[0][toSqR]) == ZERO_BB) {
+							if (~c) ss << "右上"; else ss << "左引";
+						}
+					}
+					else if (fromSqF < toSqF) {
+						if ((b & OrRightBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "右"; else ss << "左";
+						}
+						else {
+							if (~c) ss << "右上"; else ss << "左引";
+						}
+					}
+					else if (fromSqF > toSqF) {
+						if ((b & OrLeftBB[0][fromSqF]).pop_count() == 1) {
+							if (~c) ss << "左"; else ss << "右";
+						}
+						else {
+							if (~c) ss << "左上"; else ss << "右引";
+						}
+					}
+				}
+			}
+			if (is_promote(m))
+				ss << "成";
+			else if (canPromote(c, fromSq, toSq))
+				ss << "不成";
+		}
+		else if (b_pop > 0)
+			ss << "打";
+	}
+	return ss.str();
+}
+std::string to_csa1_string(Move m, Piece movedPieceAfterType)
+{
+	if (!is_ok(m))
+		return "";
+	std::stringstream ss;
+	if (is_drop(m))
+		ss << "00";
+	else
+		ss
+		<< std::to_string((int32_t)(file_of(move_from(m))) + 1)
+		<< std::to_string((int32_t)(rank_of(move_from(m))) + 1);
+	ss
+		<< std::to_string((int32_t)(file_of(move_to(m))) + 1)
+		<< std::to_string((int32_t)(rank_of(move_to(m))) + 1)
+		<< csa(movedPieceAfterType);
+	return ss.str();
+}
+std::string to_csa1_string(Move m, Position& pos)
+{
+	return to_csa1_string(m, pos.moved_piece_after(m));
+}
+std::string to_csa_string(Move m, Piece movedPieceAfterType, Color c)
+{
+	switch (m)
+	{
+	case MOVE_NONE:
+	case MOVE_NULL:
+		return "%ERROR";
+	case MOVE_RESIGN:
+		return "%TORYO";
+	case MOVE_WIN:
+		return "%WIN";
+	}
+	std::stringstream ss;
+	ss << (~c ? "+" : "-");
+	if (is_drop(m))
+		ss << "00";
+	else
+		ss
+		<< std::to_string((int32_t)(file_of(move_from(m))) + 1)
+		<< std::to_string((int32_t)(rank_of(move_from(m))) + 1);
+	ss
+		<< std::to_string((int32_t)(file_of(move_to(m))) + 1)
+		<< std::to_string((int32_t)(rank_of(move_to(m))) + 1)
+		<< csa(movedPieceAfterType);
+	return ss.str();
+}
+std::string to_csa_string(Move m, Position& pos)
+{
+	return to_csa_string(m, pos.moved_piece_after(m), pos.side_to_move());
 }
 
 // ----------------------------------------
