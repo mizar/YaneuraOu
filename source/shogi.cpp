@@ -329,7 +329,7 @@ std::string to_kif2_string(Move m, Position& pos, Move prev_m, SquareFormat fmt)
 			}
 			if (is_promote(m))
 				ss << "成";
-			else if (canPromote(c, fromSq, toSq))
+			else if (p_type < GOLD && canPromote(c, fromSq, toSq))
 				ss << "不成";
 		}
 		else if (b_pop > 0)
