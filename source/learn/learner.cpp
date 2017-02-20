@@ -224,7 +224,7 @@ struct SfenWriter
 					sfen_write_count += ptr->size();
 
 					// 棋譜を書き出すごとに'.'を出力。
-					cout << ".";
+					cout << "." << flush;
 
 					// 40回×GEN_SFENS_TIMESTAMP_OUTPUT_INTERVALごとに処理した局面数を出力
 					if ((++time_stamp_count % (u64(40) * GEN_SFENS_TIMESTAMP_OUTPUT_INTERVAL)) == 0)

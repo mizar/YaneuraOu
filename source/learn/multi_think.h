@@ -42,6 +42,17 @@ struct MultiThink
     return loop_max - std::min(loop_count, loop_max);
   }
 
+  // 局面投入回数
+  u64 get_loop_count() {
+	std::unique_lock<Mutex> lk(loop_mutex);
+	return std::min(loop_count, loop_max);
+  }
+
+  // 局面最大投入回数
+  u64 get_loop_max() {
+	return loop_max;
+  }
+
   // [ASYNC] ループカウンターの値を取り出して、取り出し後にループカウンターを加算する。
   // もしループカウンターがloop_maxに達していたらUINT64_MAXを返す。
   // 局面を生成する場合などは、局面を生成するタイミングでこの関数を呼び出すようにしないと、

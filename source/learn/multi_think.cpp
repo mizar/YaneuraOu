@@ -91,7 +91,7 @@ FINISH:;
 	// 最後の保存。
 	if (callback_func)
 	{
-		cout << endl << "finalize..";
+		cout << "finalize.." << endl;
 		callback_func();
 	}
 

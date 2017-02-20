@@ -45,6 +45,9 @@ namespace Book
 
 		// 前回から新たな指し手が追加されたかどうかのフラグ。
 		bool appended;
+
+		// 進捗表示の出力形式。
+		int progress_type;
 	};
 
 
@@ -54,6 +57,8 @@ namespace Book
 	{
 		// g_loop_maxになるまで繰り返し
 		u64 id;
+		if (progress_type != 0)
+			cout << "info string progress " << get_loop_count() << " / " << get_loop_max() << endl;
 		while ((id = get_next_loop_count()) != UINT64_MAX)
 		{
 			auto sfen = sfens[id];
@@ -97,7 +102,10 @@ namespace Book
 			}
 
 			// 1局面思考するごとに'.'をひとつ出力する。
-			cout << '.' << flush;
+			if (progress_type == 0)
+				cout << "." << flush;
+			else
+				cout << "info string progress " << get_loop_count() << " / " << get_loop_max() << endl;
 		}
 	}
 #endif
@@ -156,6 +164,8 @@ namespace Book
 			int cluster_id = 1;
 			int cluster_num = 1;
 
+			int progress_type = 0;
+
 			while (true)
 			{
 				token = "";
@@ -170,6 +180,8 @@ namespace Book
 					is >> start_moves;
 				else if (from_thinking && token == "cluster")
 					is >> cluster_id >> cluster_num;
+				else if (token == "progresstype")
+					is >> progress_type;
 				else
 				{
 					cout << "Error! : Illigal token = " << token << endl;
@@ -190,7 +202,7 @@ namespace Book
 
 			if (from_thinking)
 			{
-				cout << "read book..";
+				cout << "read book.." << flush;
 
 				// 初回はファイルがないので読み込みに失敗するが無視して続行。
 				if (read_book(book_name, book) != 0)
@@ -206,7 +218,7 @@ namespace Book
 			std::deque<string> sfens;
 			read_all_lines(sfen_name, sfens);
 
-			cout << "parse..";
+			cout << "parse.." << flush;
 
 			// 思考すべき局面のsfen
 			unordered_set<string> thinking_sfens;
@@ -222,6 +234,10 @@ namespace Book
 			{
 				auto sfen = std::move(sfens.front());
 				sfens.pop_front();
+
+				size_t compos;
+				// "#"以降読み捨て
+				if ((compos = sfen.find("#")) < sfen.length()) { sfen.resize(compos); }
 
 				if (sfen.length() == 0)
 					continue;
@@ -294,7 +310,7 @@ namespace Book
 
 				// sfenから生成するモードの場合、1000棋譜処理するごとにドットを出力。
 				if ((k % 1000) == 0)
-					cout << '.';
+					cout << '.' << flush;
 			}
 			cout << "done." << endl;
 
@@ -311,6 +327,9 @@ namespace Book
 
 				// 思考する局面をsfensに突っ込んで、この局面数をg_loop_maxに代入しておき、この回数だけ思考する。
 				MultiThinkBook multi_think(depth, book);
+
+				// 進捗表示形式
+				multi_think.progress_type = progress_type;
 
 				auto& sfens_ = multi_think.sfens;
 				for (auto& s : thinking_sfens)
@@ -445,7 +464,7 @@ namespace Book
 				}
 			}
 
-			cout << "read book..";
+			cout << "read book.." << flush;
 			MemoryBook book;
 			if (read_book(book_name, book) != 0)
 				return;
@@ -476,10 +495,10 @@ namespace Book
 
 			// 探索結果種別
 			enum BookRes {
-				BOOKRES_NONE,
+				BOOKRES_UNFILLED,
 				BOOKRES_SUCCESS,
-				BOOKRES_DUPE,
-				BOOKRES_EMPTY,
+				BOOKRES_DUPEPOS,
+				BOOKRES_EMPTYLIST,
 				BOOKRES_DEPTHLIMIT,
 				BOOKRES_EVALLIMIT,
 				BOOKRES_MOVELIMIT
@@ -506,9 +525,9 @@ namespace Book
 				}
 				if (comment) {
 					switch (res) {
-					case BOOKRES_NONE:       os << "#NONE"; break;
-					case BOOKRES_DUPE:       os << "#DUPE"; break;
-					case BOOKRES_EMPTY:      os << "#EMPTY"; break;
+					case BOOKRES_UNFILLED:   os << "#UNFILLED"; break;
+					case BOOKRES_DUPEPOS:    os << "#DUPEPOS"; break;
+					case BOOKRES_EMPTYLIST:  os << "#EMPTYLIST"; break;
 					case BOOKRES_DEPTHLIMIT: os << "#DEPTHLIMIT"; break;
 					case BOOKRES_EVALLIMIT:  os << "#EVALLIMIT"; break;
 					case BOOKRES_MOVELIMIT:  os << "#MOVELIMIT"; break;
@@ -518,7 +537,7 @@ namespace Book
 				// 出力行数のカウントアップ
 				++count_sfens;
 				if (++count_sfens_part >= count_sfens_threshold) {
-					cout << '.';
+					cout << '.' << flush;
 					count_sfens_part = 0;
 				}
 			};
@@ -528,12 +547,12 @@ namespace Book
 			to_sfen_func = [&]() {
 				auto it = book.find(pos);
 				// この局面が定跡登録されてなければ戻る。
-				if (it == book.end()) { return BOOKRES_NONE; }
+				if (it == book.end()) { return BOOKRES_UNFILLED; }
 				auto& be = *it;
 				// 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
-				if (be.ply == 0) { return BOOKRES_DUPE; }
+				if (be.ply == 0) { return BOOKRES_DUPEPOS; }
 				// move_listが空なら戻る
-				if (be.move_list.size() == 0) { return BOOKRES_EMPTY; }
+				if (be.move_list.size() == 0) { return BOOKRES_EMPTYLIST; }
 				// 到達済み局面のフラグ立て
 				be.ply = 0;
 				// 最善手が駄目なら戻る
