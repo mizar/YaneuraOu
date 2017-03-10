@@ -62,9 +62,9 @@ namespace Book
 		}
 		// 局面比較
 		bool operator < (const BookEntry& rhs) const { return sfenPos < rhs.sfenPos; }
-		bool operator == (const BookEntry& rhs) { return sfenPos == rhs.sfenPos; }
+		bool operator == (const BookEntry& rhs) const { return sfenPos == rhs.sfenPos; }
 		// 同一局面の合成
-		BookEntry operator + (const BookEntry& rhs) {
+		BookEntry operator + (const BookEntry& rhs) const {
 			BookEntry ret = { sfenPos, ply, move_list };
 			if (sfenPos == rhs.sfenPos) { // 同一局面のみ合成、異なる局面ならば前者
 				if (rhs.ply > 0 && (ply > rhs.ply || ply < 1)) { ret.ply = rhs.ply; } // より早く出現する手数
@@ -138,10 +138,10 @@ namespace Book
 		const std::size_t MINRUN = 32;
 
 		// find()で見つからなかったときの値
-		const BookType::iterator end() { return book_body.end(); }
+		const iter_t end() { return book_body.end(); }
 
 		// book_body内の定跡を探索
-		BookType::iterator intl_find(BookEntry& be) {
+		iter_t intl_find(BookEntry& be) {
 			auto it0 = book_body.begin();
 			auto itr = book_run.begin();
 			while (true) {
@@ -153,11 +153,11 @@ namespace Book
 				it0 = it1;
 			}
 		}
-		BookType::iterator intl_find(Position pos) {
+		iter_t intl_find(Position pos) {
 			BookEntry be(pos);
 			return intl_find(be);
 		}
-		BookType::iterator intl_find(std::string sfen) {
+		iter_t intl_find(std::string sfen) {
 			BookEntry be(sfen);
 			return intl_find(be);
 		}
@@ -166,7 +166,7 @@ namespace Book
 		// readのときにon_the_flyが指定されていればファイルを調べに行く。
 		// (このとき、見つからなければthis::end()が返ってくる。
 		// ファイルに読み込みに行っていることを意識する必要はない。)
-		BookType::iterator find(const Position& pos);
+		iter_t find(const Position& pos);
 
 		// BookRun再構築
 		// 外部でbook_bodyに破壊的な操作を行った後に実行する
@@ -255,7 +255,7 @@ namespace Book
 		// 局面の追加
 		// 大量の局面を追加する場合、重複チェックは逐一行わず(dofind=false)に、後でintl_uniq()を行う事を推奨
 		void add(BookEntry& be, bool dofind = false) {
-			auto& it = intl_find(be);
+			auto it = intl_find(be);
 			if (dofind && it != end()) {
 				// 重複していたら合成して再登録
 				*it = *it + be;
@@ -289,7 +289,7 @@ namespace Book
 
 		// 局面・指し手の追加
 		void insert_book_pos(std::string sfen, BookPos& bp) {
-			auto& it = intl_find(sfen);
+			auto it = intl_find(sfen);
 			if (it == end()) {
 				// 存在しないので要素を作って追加。
 				std::vector<BookPos> move_list;

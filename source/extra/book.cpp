@@ -105,7 +105,7 @@ namespace Book
 			if (progress_type == 0)
 				cout << "." << flush;
 			else
-				cout << "info string progress " << get_loop_count() << " / " << get_loop_max() << endl;
+				cout << ("info string progress " + to_string(get_loop_count()) + " / " + to_string(get_loop_max()) + "\n") << flush;
 		}
 	}
 #endif
@@ -391,12 +391,12 @@ namespace Book
 					if (multi_think.appended)
 					{
 						write_book(book_name, book);
-						cout << 'S' << multi_think.get_remain_loop_count() << endl;
+						cout << ("S" + to_string(multi_think.get_remain_loop_count()) + "\n") << flush;
 						multi_think.appended = false;
 					} else {
 						// 追加されていないときは小文字のsマークを表示して
 						// ファイルへの書き出しは行わないように変更。
-						cout << 's' << endl;
+						cout << "s\n" << flush;
 					}
 
 					// 置換表が同じ世代で埋め尽くされるとまずいのでこのタイミングで世代カウンターを足しておく。
@@ -427,7 +427,8 @@ namespace Book
 			
 			// 探索・出力オプション
 			int moves = 256;
-			int evaldiff = Options["BookEvalDiff"];
+			int evalblackdiff = Options["BookEvalDiff"];
+			int evalwhitediff = Options["BookEvalDiff"];
 			int evalblacklimit = Options["BookEvalBlackLimit"];
 			int evalwhitelimit = Options["BookEvalWhiteLimit"];
 			int depthlimit = Options["BookDepthLimit"];
@@ -444,7 +445,14 @@ namespace Book
 				if (token == "moves")
 					is >> moves;
 				else if (token == "evaldiff")
-					is >> evaldiff;
+				{
+					is >> evalblackdiff;
+					evalwhitediff = evalblackdiff;
+				}
+				else if (token == "evalblackdiff")
+					is >> evalblackdiff;
+				else if (token == "evalwhitediff")
+					is >> evalwhitediff;
 				else if (token == "evalblacklimit")
 					is >> evalblacklimit;
 				else if (token == "evalwhitelimit")
@@ -486,7 +494,8 @@ namespace Book
 
 			cout << "export " << (to_sfen ? "sfens" : to_kif1 ? "kif1" : to_kif2 ? "kif2" : to_csa1 ? "csa1" : "") << " :"
 				<< " moves " << moves
-				<< " evaldiff " << evaldiff
+				<< " evalblackdiff " << evalblackdiff
+				<< " evalwhitediff " << evalwhitediff
 				<< " evalblacklimit " << evalblacklimit
 				<< " evalwhitelimit " << evalwhitelimit
 				<< " depthlimit " << depthlimit
@@ -557,6 +566,7 @@ namespace Book
 				be.ply = 0;
 				// 最善手が駄目なら戻る
 				auto& bp0 = be.move_list[0];
+				int evaldiff = ~pos.side_to_move() ? evalblackdiff : evalwhitediff;
 				int evallimit = ~pos.side_to_move() ? evalblacklimit : evalwhitelimit;
 				if (bp0.depth < depthlimit) { return BOOKRES_DEPTHLIMIT; }
 				if (bp0.value < evallimit) { return BOOKRES_EVALLIMIT; }
@@ -661,7 +671,8 @@ namespace Book
 				if (b0front == b1front) {
 					// 同じ局面があったので、良いほうをbook2に突っ込む。
 					same_nodes++;
-					book[2].add(b0front + b1front);
+					BookEntry be = b0front + b1front;
+					book[2].add(be);
 					book[0].book_body.pop_front();
 					if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
 					book[1].book_body.pop_front();
