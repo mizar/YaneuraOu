@@ -110,6 +110,36 @@ namespace Book
 	}
 #endif
 
+	// 棋譜文字列ストリームから初期局面を抽出して設定
+	string fetch_initialpos(Position& pos, istream& is)
+	{
+		string sfenpos, token;
+		auto ispos = is.tellg();
+		if (!(is >> token) || token == "moves")
+			sfenpos = SFEN_HIRATE;
+		else if (token != "position" && token != "sfen" && token != "startpos")
+		{
+			// 先頭句が予約語でないなら、いきなり平手からの指し手文字列が始まったと見なす
+			sfenpos = SFEN_HIRATE;
+			// シーク位置を戻す
+			is.seekg(ispos);
+		}
+		else do
+		{
+			if (token == "moves")
+				break;
+			else if (token == "startpos")
+				sfenpos = SFEN_HIRATE;
+			else if (token == "sfen")
+				sfenpos = "";
+			else if (token != "position")
+				sfenpos += token + " ";
+		} while (is >> token);
+		// 初期局面を設定
+		pos.set(sfenpos);
+		return sfenpos;
+	}
+
 	// フォーマット等についてはdoc/解説.txt を見ること。
 	void makebook_cmd(Position& pos, istringstream& is)
 	{
@@ -226,12 +256,6 @@ namespace Book
 			// StateInfoのスタック
 			Search::StateStackPtr ssp;
 
-			// 入力が空でも初期局面は含めるように
-			if (from_thinking && start_moves == 1) {
-				pos.set_hirate();
-				thinking_sfens.insert(pos.sfen());
-			}
-
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
 			for (size_t k = 1; !sfens.empty(); ++k)
 			{
@@ -247,22 +271,11 @@ namespace Book
 					continue;
 
 				istringstream iss(sfen);
-				string sfenpos;
-
-				token = "";
-				while (iss >> token) {
-					if (token == "moves")
-						break;
-					else if (token == "startpos")
-						sfenpos = SFEN_HIRATE;
-					else if (token != "position" && token != "sfen")
-						sfenpos += token + " ";
-				}
+				fetch_initialpos(pos, iss);
 
 				vector<Move> m;    // 初手から(moves+1)手までの指し手格納用
 				vector<string> sf; // 初手から(moves+0)手までのsfen文字列格納用
 
-				pos.set(sfenpos);
 				int plyinit = pos.game_ply();
 				ssp = Search::StateStackPtr(new aligned_stack<StateInfo>);
 
@@ -322,6 +335,11 @@ namespace Book
 				// sfenから生成するモードの場合、1000棋譜処理するごとにドットを出力。
 				if ((k % 1000) == 0)
 					cout << '.' << flush;
+			}
+			// 入力が空でも初期局面は含めるように
+			if (from_thinking && start_moves == 1 && thinking_sfens.empty()) {
+				pos.set_hirate();
+				thinking_sfens.insert(pos.sfen());
 			}
 			cout << "done." << endl;
 
@@ -464,6 +482,11 @@ namespace Book
 					is >> evalblackdiff;
 				else if (token == "evalwhitediff")
 					is >> evalwhitediff;
+				else if (token == "evallimit")
+				{
+					is >> evalblacklimit;
+					evalwhitelimit = evalblacklimit;
+				}
 				else if (token == "evalblacklimit")
 					is >> evalblacklimit;
 				else if (token == "evalwhitelimit")
@@ -503,6 +526,8 @@ namespace Book
 			fstream fs;
 			fs.open(sfen_name, ios::out);
 
+			string inisfen;
+
 			cout << "export " << (to_sfen ? "sfens" : to_kif1 ? "kif1" : to_kif2 ? "kif2" : to_csa1 ? "csa1" : "") << " :"
 				<< " moves " << moves
 				<< " evalblackdiff " << evalblackdiff
@@ -514,7 +539,8 @@ namespace Book
 				<< endl;
 
 			// 探索結果種別
-			enum BookRes {
+			enum BookRes
+			{
 				BOOKRES_UNFILLED,
 				BOOKRES_SUCCESS,
 				BOOKRES_DUPEPOS,
@@ -525,7 +551,8 @@ namespace Book
 			};
 
 			// 文字列化
-			auto to_movestr = [&](Position& _pos, Move _m, Move _m_back = MOVE_NONE) {
+			auto to_movestr = [&](Position& _pos, Move _m, Move _m_back = MOVE_NONE)
+			{
 				return
 					to_sfen ? to_usi_string(_m) :
 					to_kif1 ? to_kif1_string(_m, _pos, _m_back, sqfmt) :
@@ -535,16 +562,26 @@ namespace Book
 			};
 
 			// 結果出力
-			auto printstack = [&](ostream& os, BookRes res) {
-				if (to_sfen) {
-					os << "startpos moves";
+			auto printstack = [&](ostream& os, BookRes res)
+			{
+				if (to_sfen)
+				{
+					if (inisfen != SFEN_HIRATE)
+						os << "sfen " << inisfen << "moves";
+					else
+						os << "startpos moves";
 					for (auto& s : sf) { os << " " << s; }
 				}
-				else if (to_kif1 || to_kif2 || to_csa1) {
+				else if (to_kif1 || to_kif2 || to_csa1)
+				{
+					if (inisfen != SFEN_HIRATE)
+						os << "sfen " << inisfen << "moves ";
 					for (auto& s : sf) { os << s; }
 				}
-				if (comment) {
-					switch (res) {
+				if (comment)
+				{
+					switch (res)
+					{
 					case BOOKRES_UNFILLED:   os << "#UNFILLED"; break;
 					case BOOKRES_DUPEPOS:    os << "#DUPEPOS"; break;
 					case BOOKRES_EMPTYLIST:  os << "#EMPTYLIST"; break;
@@ -556,7 +593,8 @@ namespace Book
 				os << endl;
 				// 出力行数のカウントアップ
 				++count_sfens;
-				if (++count_sfens_part >= count_sfens_threshold) {
+				if (++count_sfens_part >= count_sfens_threshold)
+				{
 					cout << '.' << flush;
 					count_sfens_part = 0;
 				}
@@ -616,16 +654,13 @@ namespace Book
 			getline(ssop, opsfen, ',');
 			do
 			{
-				pos.set_hirate();
 				sf.clear();
 				m.clear();
 				istringstream ssopsfen(opsfen);
-				while (true)
+				inisfen = fetch_initialpos(pos, ssopsfen);
+				string movetoken;
+				while (ssopsfen >> movetoken)
 				{
-					string movetoken = "";
-					ssopsfen >> movetoken;
-					if (movetoken == "")
-						break;
 					Move _mv = pos.move16_to_move(move_from_usi(movetoken));
 					if (!(is_ok(_mv) && pos.pseudo_legal(_mv) && pos.legal(_mv)))
 						break;
@@ -634,7 +669,7 @@ namespace Book
 					pos.do_move(_mv, si[pos.game_ply()]);
 				}
 				BookRes res = to_sfen_func();
-				if (!sf.empty() && res != BOOKRES_SUCCESS) {
+				if (res != BOOKRES_SUCCESS) {
 					printstack(fs, res);
 				}
 			} while (getline(ssop, opsfen, ','));
