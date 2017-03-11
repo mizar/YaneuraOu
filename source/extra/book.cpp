@@ -223,6 +223,9 @@ namespace Book
 			// 思考すべき局面のsfen
 			unordered_set<string> thinking_sfens;
 
+			// StateInfoのスタック
+			Search::StateStackPtr ssp;
+
 			// 入力が空でも初期局面は含めるように
 			if (from_thinking && start_moves == 1) {
 				pos.set_hirate();
@@ -236,6 +239,7 @@ namespace Book
 				sfens.pop_front();
 
 				size_t compos;
+
 				// "#"以降読み捨て
 				if ((compos = sfen.find("#")) < sfen.length()) { sfen.resize(compos); }
 
@@ -243,27 +247,30 @@ namespace Book
 					continue;
 
 				istringstream iss(sfen);
+				string sfenpos;
+
 				token = "";
-				do {
-					iss >> token;
-				} while (token == "startpos" || token == "moves");
+				while (iss >> token) {
+					if (token == "moves")
+						break;
+					else if (token == "startpos")
+						sfenpos = SFEN_HIRATE;
+					else if (token != "position" && token != "sfen")
+						sfenpos += token + " ";
+				}
 
 				vector<Move> m;    // 初手から(moves+1)手までの指し手格納用
 				vector<string> sf; // 初手から(moves+0)手までのsfen文字列格納用
 
-				StateInfo si[MAX_PLY];
-
-				pos.set_hirate();
+				pos.set(sfenpos);
+				int plyinit = pos.game_ply();
+				ssp = Search::StateStackPtr(new aligned_stack<StateInfo>);
 
 				// sfenから直接生成するときはponderのためにmoves + 1の局面まで調べる必要がある。
-				for (int i = 0; i < moves + (from_sfen ? 1 : 0); ++i)
+				for (int i = plyinit; i <= moves + (from_sfen ? 1 : 0); ++i)
 				{
-					// 初回は、↑でfeedしたtokenが入っているはず。
-					if (i != 0)
-					{
-						token = "";
-						iss >> token;
-					}
+					token = "";
+					iss >> token;
 					if (token == "")
 					{
 						// この局面、未知の局面なのでpushしないといけないのでは..
@@ -283,16 +290,20 @@ namespace Book
 					// MOVE_WIN,MOVE_RESIGNでは局面を進められないのでここで終了。
 					if (!is_ok(move))
 						break;
-
+					
 					sf.push_back(pos.sfen());
 					m.push_back(move);
 
-					pos.do_move(move, si[i]);
+					ssp->push(StateInfo());
+					if(move == MOVE_NULL)
+						pos.do_null_move(ssp->top());
+					else
+						pos.do_move(move, ssp->top());
 				}
 
 				for (int i = 0; i < (int)sf.size() - (from_sfen ? 1 : 0); ++i)
 				{
-					if (i < start_moves - 1)
+					if (i + plyinit < start_moves)
 						continue;
 
 					if (from_sfen)
