@@ -509,7 +509,7 @@ namespace Book
 			cout << "read book.." << flush;
 			MemoryBook book;
 			if (read_book(book_name, book) != 0)
-				return;
+				cout << "..but , create kifs." << endl;
 			cout << "..done" << endl;
 
 			is_ready();
