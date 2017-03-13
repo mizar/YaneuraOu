@@ -194,6 +194,11 @@ namespace Book
 			int cluster_id = 1;
 			int cluster_num = 1;
 
+			// 手番拘束
+			bool disableblack = false;
+			bool disablewhite = false;
+
+			// 進捗表示形式 0:通常 1:冗長
 			int progress_type = 0;
 
 			while (true)
@@ -210,7 +215,11 @@ namespace Book
 					is >> start_moves;
 				else if (from_thinking && token == "cluster")
 					is >> cluster_id >> cluster_num;
-				else if (token == "progresstype")
+				else if (from_thinking && token == "blackonly")
+					disablewhite = true;
+				else if (from_thinking && token == "whiteonly")
+					disableblack = true;
+				else if (from_thinking && token == "progresstype")
 					is >> progress_type;
 				else
 				{
@@ -304,7 +313,10 @@ namespace Book
 					if (!is_ok(move))
 						break;
 					
-					sf.push_back(pos.sfen());
+					if (~pos.side_to_move() ? disableblack : disablewhite)
+						sf.push_back("");
+					else
+						sf.push_back(pos.sfen());
 					m.push_back(move);
 
 					ssp->push(StateInfo());
@@ -316,7 +328,7 @@ namespace Book
 
 				for (int i = 0; i < (int)sf.size() - (from_sfen ? 1 : 0); ++i)
 				{
-					if (i + plyinit < start_moves)
+					if (i + plyinit < start_moves || sf[i] == "")
 						continue;
 
 					if (from_sfen)
