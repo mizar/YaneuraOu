@@ -1,4 +1,5 @@
-﻿# 定跡作成(makebook)拡張コマンドまとめ (2017Early-)
+﻿<!-- Markdown -->
+# 定跡作成(makebook)拡張コマンドまとめ (2017Early-)
 
 [./解説.txt](./解説.txt) もあわせて参照のこと。
 
@@ -51,7 +52,7 @@
 
 ```
 makebook from_sfen <sfen_filename> <book_filename> [moves <value>]
-makebook think <sfen_name> <book_name> [(options)...]
+makebook think <sfen_filename> <book_filename> [(options)...]
 options:
   [moves <value>] : 最大手数(default: 16)
   [depth <value>] : 探索深さ(default: 24)
@@ -95,7 +96,7 @@ options:
     "#DEPTHLIMIT" : 探索深さ制限
     "#EMPTYLIST" : 候補手未登録
 
-makebook merge <import_book0_name> <import_book1_name> <export_book_name>
+makebook merge <import_book0_filename> <import_book1_filename> <export_book_filename>
 
-makebook sort <import_book_name> <export_book_name>
+makebook sort <import_book_filename> <export_book_filename>
 ```
