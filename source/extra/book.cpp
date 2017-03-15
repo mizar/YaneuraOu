@@ -94,7 +94,7 @@ namespace Book
 			{
 				std::unique_lock<Mutex> lk(io_mutex);
 				// 前のエントリーは上書きされる。
-				BookEntry be(sfen, move_list);
+				BookEntry be(split_sfen(sfen), move_list);
 				book.add(be, true);
 
 				// 新たなエントリーを追加したのでフラグを立てておく。
@@ -729,7 +729,8 @@ namespace Book
 				if (b0front == b1front) {
 					// 同じ局面があったので、良いほうをbook2に突っ込む。
 					same_nodes++;
-					BookEntry be = b0front + b1front;
+					BookEntry be = b0front;
+					be.update(b1front);
 					book[2].add(be);
 					book[0].book_body.pop_front();
 					if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
@@ -834,7 +835,7 @@ namespace Book
 		}
 
 		string sfen;
-		BookEntry be;
+		BookEntry& be = BookEntry();
 		Position pos;
 
 		// 入力バッファの領域を縮小させる頻度のしきい値
@@ -876,7 +877,7 @@ namespace Book
 				// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
 				if (sfen_n11n) { pos.set(sfen); sfen = pos.sfen(); }
 
-				BookEntry be_(sfen);
+				BookEntry be_(split_sfen(sfen));
 				be = be_;
 
 				continue;
@@ -1021,7 +1022,7 @@ namespace Book
 
 			// read_bookとほとんど同じ読み込み処理がここに必要。辛い。
 
-			BookEntry be(sfen);
+			BookEntry be(split_sfen(sfen));
 
 			while (!fs.eof())
 			{

@@ -28,10 +28,10 @@ namespace Book
 		Move nextMove; // その指し手を指したときの予想される相手の指し手
 		int value;     // bestMoveを指したときの局面の評価値
 		int depth;     // bestMoveの探索深さ
-		uint64_t num;  // 何らかの棋譜集において、この指し手が採択された回数。
+		u64 num;  // 何らかの棋譜集において、この指し手が採択された回数。
 		float prob;    // ↑のnumをパーセンテージで表現したもの。(read_bookしたときには反映される。ファイルには書き出していない。)
 
-		BookPos(Move best, Move next, int v, int d, uint64_t n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
+		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
 		BookPos(std::string s) {
 			// BookFileの候補手行パース用
 			std::istringstream is(s);
@@ -53,31 +53,30 @@ namespace Book
 
 		// 初期化子
 		BookEntry() : sfenPos("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -"), ply(1), move_list({}) {}
-		BookEntry(const std::string sfen, int p, std::vector<BookPos> mlist = {}) : sfenPos(sfen), ply(p), move_list(mlist) {}
-		BookEntry(Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
-		BookEntry(const std::string sfen, std::vector<BookPos> mlist = {}) : move_list(mlist) {
-			auto s = split_sfen(sfen);
-			sfenPos = s.first;
-			ply = s.second;
-		}
+		BookEntry(const std::string sfen, const int p, std::vector<BookPos> mlist = {}) : sfenPos(sfen), ply(p), move_list(mlist) {}
+		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist = {}) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
+		BookEntry(const Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
 		// 局面比較
 		bool operator < (const BookEntry& rhs) const { return sfenPos < rhs.sfenPos; }
 		bool operator == (const BookEntry& rhs) const { return sfenPos == rhs.sfenPos; }
 		// 同一局面の合成
-		BookEntry operator + (const BookEntry& rhs) const {
-			BookEntry ret = { sfenPos, ply, move_list };
-			if (sfenPos == rhs.sfenPos) { // 同一局面のみ合成、異なる局面ならば前者
-				if (rhs.ply > 0 && (ply > rhs.ply || ply < 1)) { ret.ply = rhs.ply; } // より早く出現する手数
+		void update(const BookEntry& be) {
+			// 同一局面のみ合成
+			if (sfenPos == be.sfenPos) {
+				// 手数の少ない方に合わせる
+				if (be.ply > 0 && (ply > be.ply || ply < 1))
+					ply = be.ply;
 				if (
 					// 空では無い方
-					!rhs.move_list.empty() && (move_list.empty() ||
+					!be.move_list.empty() && (move_list.empty() ||
 					// depthが深い方
-					move_list[0].depth < rhs.move_list[0].depth ||
+					move_list[0].depth < be.move_list[0].depth ||
 					// depthが同じならMultiPVの多い方、それでも同じなら後者
-					move_list[0].depth == rhs.move_list[0].depth && move_list.size() <= rhs.move_list.size()
-				)) { ret.move_list = rhs.move_list; }
+					move_list[0].depth == be.move_list[0].depth &&
+					move_list.size() <= be.move_list.size()
+					))
+					move_list = be.move_list;
 			}
-			return ret;
 		}
 		// 候補手のソート
 		void sort_pos() {
@@ -99,11 +98,11 @@ namespace Book
 		// 候補手の選択率算出
 		void calc_prob () {
 			std::stable_sort(move_list.begin(), move_list.end());
-			uint64_t num_sum = 0;
+			u64 num_sum = 0;
 			for (auto& bp : move_list)
-			num_sum += bp.num;
+				num_sum += bp.num;
 			for (auto& bp : move_list)
-			bp.prob = float(bp.num) / num_sum;      
+				bp.prob = float(bp.num) / num_sum;      
 		}
 	};
 
@@ -158,7 +157,7 @@ namespace Book
 			return intl_find(be);
 		}
 		iter_t intl_find(std::string sfen) {
-			BookEntry be(sfen);
+			BookEntry be(split_sfen(sfen));
 			return intl_find(be);
 		}
 
@@ -243,7 +242,7 @@ namespace Book
 			std::size_t i = 1;
 			while (i < max) {
 				if (book_body[i - 1] == book_body[i]) {
-					book_body[i - 1] = book_body[i - 1] + book_body[i];
+					book_body[i - 1].update(book_body[i]);
 					book_body.erase(book_body.begin() + i);
 					max = book_body.size();
 				} else {
@@ -258,7 +257,7 @@ namespace Book
 			auto it = intl_find(be);
 			if (dofind && it != end()) {
 				// 重複していたら合成して再登録
-				*it = *it + be;
+				(*it).update(be);
 			} else if (book_body.empty() || !(be < book_body.back())) {
 				// 順序関係が保たれているなら単純に末尾に追加
 				book_body.push_back(be);
@@ -292,9 +291,8 @@ namespace Book
 			auto it = intl_find(sfen);
 			if (it == end()) {
 				// 存在しないので要素を作って追加。
-				std::vector<BookPos> move_list;
-				move_list.push_back(bp);
-				BookEntry be(sfen, move_list);
+				std::vector<BookPos> move_list{ bp };
+				BookEntry be(split_sfen(sfen), move_list);
 				add(be);
 			} else {
 				// この局面での指し手のリスト
