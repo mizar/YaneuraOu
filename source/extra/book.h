@@ -13,6 +13,8 @@
 // 定跡処理関係
 namespace Book
 {
+	// 手数を除いた平手初期局面のsfen文字列
+	const std::string SHORTSFEN_HIRATE = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -";
 	// sfen文字列のゴミを除いた長さ
 	const std::size_t trimlen_sfen(const std::string sfen);
 	// sfen文字列から末尾のゴミを取り除いて返す。
@@ -28,18 +30,24 @@ namespace Book
 		Move nextMove; // その指し手を指したときの予想される相手の指し手
 		int value;     // bestMoveを指したときの局面の評価値
 		int depth;     // bestMoveの探索深さ
-		u64 num;  // 何らかの棋譜集において、この指し手が採択された回数。
+		u64 num;       // 何らかの棋譜集において、この指し手が採択された回数。
 		float prob;    // ↑のnumをパーセンテージで表現したもの。(read_bookしたときには反映される。ファイルには書き出していない。)
 
 		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
-		BookPos(std::string s) {
-			// BookFileの候補手行パース用
-			std::istringstream is(s);
+		// BookFileの候補手行パース用
+		void set(std::istream& is) {
 			std::string best, next;
 			is >> best >> next >> value >> depth >> num;
 			bestMove = (best == "none" || best == "resign") ? MOVE_NONE : move_from_usi(best);
 			nextMove = (next == "none" || next == "resign") ? MOVE_NONE : move_from_usi(next);
 		}
+		void set(std::string s) {
+			std::istringstream is(s);
+			set(is);
+		}
+		BookPos(std::string s) { set(s); }
+		BookPos(std::istream& is) { set(is); }
+		// 比較
 		bool operator == (const BookPos& rhs) const { return bestMove == rhs.bestMove; }
 		bool operator < (const BookPos& rhs) const { return value > rhs.value || value == rhs.value && num > rhs.num; } // std::sortで降順ソートされて欲しいのでこう定義する。
 	};
@@ -52,10 +60,59 @@ namespace Book
 		std::vector<BookPos> move_list; // 候補手リスト
 
 		// 初期化子
-		BookEntry() : sfenPos("lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -"), ply(1), move_list({}) {}
+		BookEntry() : sfenPos(SHORTSFEN_HIRATE), ply(1), move_list({}) {}
 		BookEntry(const std::string sfen, const int p, std::vector<BookPos> mlist = {}) : sfenPos(sfen), ply(p), move_list(mlist) {}
 		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist = {}) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
 		BookEntry(const Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
+		// ストリームからの候補手読み込み
+		void incpos(std::istream& is) {
+			while (true) {
+				int c;
+				// 行頭が数字か英文字以外なら読み飛ばす
+				while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))) {
+					if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
+						return;
+				}
+				// 次のsfen文字列に到達していそうなら離脱
+				if (c == 's')
+					return;
+				// 候補手追加
+				BookPos bp(is);
+				is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				move_list.push_back(bp);
+			}
+		}
+		// ストリームからの局面読み込み
+		void set(std::istream& is, bool sfen_n11n = false) {
+			std::string line;
+			do {
+				int c;
+				// 先頭が's'になるまで行読み飛ばし
+				while ((c = is.peek()) != 's')
+					if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
+						return;
+				// 行読み込み
+				if (!std::getline(is, line))
+					return;
+				// 短すぎたり、sfenで始まらなかったりすればやり直し
+			} while (line.length() < 24 || line.compare(0, 5, "sfen ") != 0);
+			if (sfen_n11n) {
+				Position pos;
+				pos.set(line.substr(5));
+				sfenPos = pos.trimedsfen();
+				ply = pos.game_ply();
+			}
+			else {
+				auto sfen = split_sfen(line.substr(5));
+				sfenPos = sfen.first;
+				ply = sfen.second;
+			}
+			// 候補手読み込み
+			incpos(is);
+		}
+		BookEntry(std::istream& is, bool sfen_n11n = false) {
+			set(is, sfen_n11n);
+		}
 		// 局面比較
 		bool operator < (const BookEntry& rhs) const { return sfenPos < rhs.sfenPos; }
 		bool operator == (const BookEntry& rhs) const { return sfenPos == rhs.sfenPos; }
@@ -96,7 +153,7 @@ namespace Book
 			move_list.insert(std::upper_bound(move_list.begin(), move_list.end(), bp), bp);
 		}
 		// 候補手の選択率算出
-		void calc_prob () {
+		void calc_prob() {
 			std::stable_sort(move_list.begin(), move_list.end());
 			u64 num_sum = 0;
 			for (auto& bp : move_list)
@@ -254,8 +311,8 @@ namespace Book
 		// 局面の追加
 		// 大量の局面を追加する場合、重複チェックは逐一行わず(dofind=false)に、後でintl_uniq()を行う事を推奨
 		void add(BookEntry& be, bool dofind = false) {
-			auto it = intl_find(be);
-			if (dofind && it != end()) {
+			iter_t it;
+			if (dofind && (it = intl_find(be)) != end()) {
 				// 重複していたら合成して再登録
 				(*it).update(be);
 			} else if (book_body.empty() || !(be < book_body.back())) {

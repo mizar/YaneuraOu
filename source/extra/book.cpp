@@ -826,76 +826,24 @@ namespace Book
 			return 0;
 		}
 
-		std::deque<string> lines;
-		if (read_all_lines(filename, lines))
-		{
-			cout << "info string Error! : can't read " + filename << endl;
-			//      exit(EXIT_FAILURE);
-			return 1; // 読み込み失敗
+		ifstream is;
+		is.open(filename, ifstream::in | ifstream::binary);
+
+		while (is.good()) {
+			BookEntry be(is, sfen_n11n);
+			if (be.sfenPos.empty() || be.move_list.empty())
+				continue;
+			be.calc_prob();
+			book.add(be);
 		}
 
-		string sfen;
-		BookEntry& be = BookEntry();
-		Position pos;
-
-		// 入力バッファの領域を縮小させる頻度のしきい値
-		const u64 read_shrink_threshold = 1048576;
-		u64 shrink_count = 0;
-
-		while (!lines.empty())
-		{
-			auto line = std::move(lines.front());
-			lines.pop_front();
-
-			// 入力バッファの縮小
-			if (++shrink_count >= read_shrink_threshold)
-			{
-				lines.shrink_to_fit();
-				shrink_count = 0;
-			}
-
-			// バージョン識別文字列(とりあえず読み飛ばす)
-			if (line.length() >= 1 && line[0] == '#')
-				continue;
-
-			// コメント行(とりあえず読み飛ばす)
-			if (line.length() >= 2 && line.substr(0, 2) == "//")
-				continue;
-
-			// "sfen "で始まる行は局面のデータであり、sfen文字列が格納されている。
-			if (line.length() >= 5 && line.substr(0, 5) == "sfen ")
-			{
-				// ひとつ前のsfen文字列に対応するものが終わったということなので採択確率を計算して、かつ、採択回数でsortしておく
-				// (sortはされてるはずだが他のソフトで生成した定跡DBではそうとも限らないので)。
-				be.calc_prob();
-				if (!be.move_list.empty()) { book.add(be); }
-
-				sfen = line.substr(5, line.length() - 5); // 新しいsfen文字列を"sfen "を除去して格納
-
-				// sfen文字列は手駒の表記に揺れがある。
-				// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)
-				// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
-				if (sfen_n11n) { pos.set(sfen); sfen = pos.sfen(); }
-
-				BookEntry be_(split_sfen(sfen));
-				be = be_;
-
-				continue;
-			}
-
-			BookPos bp(line);
-			be.insert_book_pos(bp);
-		}
-
-		// ファイルが終わるときにも最後の局面に対するcalc_prob,book.addが必要。
-		be.calc_prob();
-		if (!be.move_list.empty()) { book.add(be); }
-
-		// 読み込んだファイル名を保存しておく。二度目のread_book()はskipする。
-		book.book_name = filename;
+		is.close();
 
 		// 全体のソート、重複局面の除去
 		book.intl_uniq();
+
+		// 読み込んだファイル名を保存しておく。二度目のread_book()はskipする。
+		book.book_name = filename;
 
 		return 0;
 	}
@@ -903,25 +851,26 @@ namespace Book
 	// 定跡ファイルの書き出し
 	int write_book(const std::string& filename, MemoryBook& book)
 	{
-		fstream fs;
-		fs.open(filename, ios::out);
+		// 全体のソートと重複局面の除去
+		book.intl_uniq();
+
+		ofstream fs;
+		fs.open(filename, ofstream::out);
 
 		// バージョン識別用文字列
 		fs << "#YANEURAOU-DB2016 1.00" << endl;
 
-		// 全体のソートと重複局面の除去
-		book.intl_uniq();
-
 		for (BookEntry be : book.book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
-			if (be.move_list.size() == 0) continue;
+			if (be.move_list.empty()) continue;
 			// 採択回数でソートしておく。
 			be.sort_pos();
 
 			fs << be;
 		}
 
+		fs.flush();
 		fs.close();
 
 		return 0;
@@ -933,7 +882,6 @@ namespace Book
 		if (!on_the_fly && book_body.size() == 0)
 			return book_body.end();
 
-		auto sfen = pos.sfen();
 		BookType::iterator it;
 
 		if (on_the_fly)
@@ -944,7 +892,7 @@ namespace Book
 
 			// 末尾の手数は取り除いておく。
 			// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
-			sfen = trim_sfen(sfen);
+			auto sfen = pos.trimedsfen();
 
 			// ファイル自体はオープンされてして、ファイルハンドルはfsだと仮定して良い。
 
@@ -1019,38 +967,9 @@ namespace Book
 
 			}
 			// 見つけた処理
-
-			// read_bookとほとんど同じ読み込み処理がここに必要。辛い。
-
-			BookEntry be(split_sfen(sfen));
-
-			while (!fs.eof())
-			{
-				string line;
-				getline(fs, line);
-
-				// バージョン識別文字列(とりあえず読み飛ばす)
-				if (line.length() >= 1 && line[0] == '#')
-					continue;
-
-				// コメント行(とりあえず読み飛ばす)
-				if (line.length() >= 2 && line.substr(0, 2) == "//")
-					continue;
-
-				// 次のsfenに遭遇したらこれにて終了。
-				if (line.length() >= 5 && line.substr(0, 5) == "sfen ")
-				{
-					break;
-				}
-
-				BookPos bp(line);
-
-				be.insert_book_pos(bp);
-
-			}
-			// ファイルが終わるときにも最後の局面に対するcalc_probが必要。
+			BookEntry be(sfen, pos.game_ply());
+			be.incpos(fs);
 			be.calc_prob();
-
 			add(be);
 
 			it = book_body.begin();
@@ -1058,7 +977,7 @@ namespace Book
 		} else {
 
 			// on the flyではない場合
-			it = intl_find(sfen);
+			it = intl_find(pos);
 		}
 
 
@@ -1072,12 +991,12 @@ namespace Book
 	}
 
 	// 出力ストリーム
-	std::ostream& operator << (std::ostream& os, const BookPos& bp) {
-		os << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << ' ' << bp.depth << ' ' << bp.num << std::endl;
+	ostream& operator << (ostream& os, const BookPos& bp) {
+		os << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << ' ' << bp.depth << ' ' << bp.num << "\n";
 		return os;
 	}
-	std::ostream& operator << (std::ostream& os, const BookEntry& be) {
-		os << "sfen " << be.sfenPos << " " << be.ply << std::endl;
+	ostream& operator << (ostream& os, const BookEntry& be) {
+		os << "sfen " << be.sfenPos << " " << be.ply << "\n";
 		for (auto& bp : be.move_list) {	os << bp; }
 		return os;
 	}
@@ -1113,10 +1032,8 @@ namespace Book
 		auto cur = trimlen_sfen(sfen);
 		std::string s = sfen;
 		s.resize(cur);
-		std::istringstream ss(sfen);
-		int ply;
-		ss.seekg(cur);
-		ss >> ply;
+		char* e = nullptr;
+		int ply = strtol(sfen.c_str() + cur, &e, 10);
 		return std::make_pair(s, ply);
 	}
 

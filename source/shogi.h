@@ -595,6 +595,8 @@ std::string pretty(Move m);
 // 移動させた駒がわかっているときに指し手をわかりやすい表示形式で表示する。
 std::string pretty(Move m, Piece movedPieceType);
 
+// USI形式の文字列を出力する。
+void to_usi_ostream(Move m, std::ostream& os);
 // USI形式の文字列にする。
 std::string to_usi_string(Move m);
 // KIF形式の文字列にする。
@@ -605,7 +607,7 @@ std::string to_csa1_string(Move m, Piece movedPieceAfterType);
 std::string to_csa_string(Move m, Piece movedPieceAfterType, Color c);
 
 // USI形式で指し手を表示する
-inline std::ostream& operator<<(std::ostream& os, Move m) { os << to_usi_string(m); return os; }
+inline std::ostream& operator<<(std::ostream& os, Move m) { to_usi_ostream(m, os); return os; }
 
 // --------------------
 //   拡張された指し手
