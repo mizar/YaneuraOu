@@ -833,6 +833,8 @@ namespace Book
 			BookEntry be(is, sfen_n11n);
 			if (be.sfenPos.empty() || be.move_list.empty())
 				continue;
+			// 採択確率を計算して、かつ、採択回数でsortしておく
+			// (sortはされてるはずだが他のソフトで生成した定跡DBではそうとも限らないので)。
 			be.calc_prob();
 			book.add(be);
 		}

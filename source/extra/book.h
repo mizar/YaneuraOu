@@ -87,16 +87,20 @@ namespace Book
 			std::string line;
 			do {
 				int c;
-				// 先頭が's'になるまで行読み飛ばし
+				// 行頭が's'になるまで読み飛ばす
 				while ((c = is.peek()) != 's')
 					if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
 						return;
 				// 行読み込み
 				if (!std::getline(is, line))
 					return;
-				// 短すぎたり、sfenで始まらなかったりすればやり直し
+				// "sfen "で始まる行は局面のデータであり、sfen文字列が格納されている。
+				// 短すぎたり、sfenで始まらなかったりした行ならばスキップ
 			} while (line.length() < 24 || line.compare(0, 5, "sfen ") != 0);
 			if (sfen_n11n) {
+				// sfen文字列は手駒の表記に揺れがある。		
+				// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)		
+				// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
 				Position pos;
 				pos.set(line.substr(5));
 				sfenPos = pos.trimedsfen();
