@@ -127,11 +127,12 @@ std::ostream& operator<<(std::ostream& os, HandKind hk)
   return os;
 }
 
-void to_usi_ostream(Move m, std::ostream& os)
+std::string to_usi_string(Move m)
 {
+  std::ostringstream ss;
   if (!is_ok(m))
   {
-    os <<((m == MOVE_RESIGN) ? "resign" :
+    ss <<((m == MOVE_RESIGN) ? "resign" :
           (m == MOVE_WIN   ) ? "win"    :
           (m == MOVE_NULL  ) ? "null"   :
           (m == MOVE_NONE  ) ? "none"   :
@@ -139,22 +140,17 @@ void to_usi_ostream(Move m, std::ostream& os)
   }
   else if (is_drop(m))
   {
-    os << move_dropped_piece(m);
-    os << '*';
-    os << move_to(m);
+    ss << move_dropped_piece(m);
+    ss << '*';
+    ss << move_to(m);
   }
   else {
-    os << move_from(m);
-    os << move_to(m);
+    ss << move_from(m);
+    ss << move_to(m);
     if (is_promote(m))
-      os << '+';
+      ss << '+';
   }
-}
-std::string to_usi_string(Move m)
-{
-	std::ostringstream ss;
-	to_usi_ostream(m, ss);
-	return ss.str();
+  return ss.str();
 }
 std::string to_kif1_string(Move m, Piece movedPieceType, Color c, Move prev_m, SquareFormat fmt)
 {
