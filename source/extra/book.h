@@ -35,18 +35,59 @@ namespace Book
 
 		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
 		// BookFileの候補手行パース用
-		void set(std::istream& is) {
+		void set(std::istream& is, char* _buffer, const size_t _buffersize) {
+			auto _mvparse = [](char* p)->Move {
+				char c0 = *p++;
+				if (c0 >= '1' && c0 <= '9') {
+					char c1 = *p++; if (c1 < 'a' || c1 > 'i') return MOVE_NONE;
+					char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
+					char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
+					char c4 = *p++;
+					if (c4 == '+')
+						return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+					else
+						return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+				}
+				else if (c0 >= 'A' && c0 <= 'Z') {
+					char c1 = *p++; if (c1 != '*') return MOVE_NONE;
+					char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
+					char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
+					for (int i = 1; i <= 7; ++i)
+						if (PieceToCharBW[i] == c0)
+							return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
+				}
+				else if (c0 == '0' || c0 >= 'a' && c0 <= 'z') {
+					if (!memcmp(p, "win", 3)) return MOVE_WIN;
+					if (!memcmp(p, "null", 4)) return MOVE_NULL;
+					if (!memcmp(p, "pass", 4)) return MOVE_NULL;
+					if (!memcmp(p, "0000", 4)) return MOVE_NULL;
+				}
+				return MOVE_NONE;
+			};
+
+			// 行読み込み
+			is.getline(_buffer, _buffersize - 8); // memcmp用の余裕
+			// バッファから溢れたら行末まで読み捨て
+			if (is.fail()) {
+				is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				is.clear(is.rdstate() & ~std::ios_base::failbit);
+			}
+			char* p = _buffer;
+			if (*p == NULL) return;
+			bestMove = _mvparse(p); while (*p++ != ' ') if (*p == NULL) return;
+			nextMove = _mvparse(p); while (*p++ != ' ') if (*p == NULL) return;
+			value = strtol(p, NULL, 10); while (*p++ != ' ') if (*p == NULL) return;
+			depth = strtol(p, NULL, 10); while (*p++ != ' ') if (*p == NULL) return;
+			num = strtoull(p, NULL, 10);
+			/*
 			std::string best, next;
 			is >> best >> next >> value >> depth >> num;
+			is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			bestMove = (best == "none" || best == "resign") ? MOVE_NONE : move_from_usi(best);
 			nextMove = (next == "none" || next == "resign") ? MOVE_NONE : move_from_usi(next);
+			*/
 		}
-		void set(std::string s) {
-			std::istringstream is(s);
-			set(is);
-		}
-		BookPos(std::string s) { set(s); }
-		BookPos(std::istream& is) { set(is); }
+		BookPos(std::istream& is, char* _buffer, const size_t _buffersize) { set(is, _buffer, _buffersize); }
 		// 比較
 		bool operator == (const BookPos& rhs) const { return bestMove == rhs.bestMove; }
 		bool operator < (const BookPos& rhs) const { return value > rhs.value || value == rhs.value && num > rhs.num; } // std::sortで降順ソートされて欲しいのでこう定義する。
@@ -65,25 +106,24 @@ namespace Book
 		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist = {}) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
 		BookEntry(const Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
 		// ストリームからの候補手読み込み
-		void incpos(std::istream& is) {
+		void incpos(std::istream& is, char* _buffer, const size_t _buffersize) {
 			while (true) {
 				int c;
-				// 行頭が数字か英文字以外なら読み飛ばす
+				// 行頭が数字か英文字以外なら行末文字まで読み飛ばす
 				while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))) {
 					if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
 						return;
 				}
-				// 次のsfen文字列に到達していそうなら離脱
+				// 次のsfen文字列に到達していそうなら離脱（指し手文字列で's'から始まるものは無い）
 				if (c == 's')
 					return;
 				// 候補手追加
-				BookPos bp(is);
-				is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				BookPos bp(is, _buffer, _buffersize);
 				move_list.push_back(bp);
 			}
 		}
 		// ストリームからの局面読み込み
-		void set(std::istream& is, bool sfen_n11n = false) {
+		void set(std::istream& is, char* _buffer, const size_t _buffersize, bool sfen_n11n = false) {
 			std::string line;
 			do {
 				int c;
@@ -112,10 +152,10 @@ namespace Book
 				ply = sfen.second;
 			}
 			// 候補手読み込み
-			incpos(is);
+			incpos(is, _buffer, _buffersize);
 		}
-		BookEntry(std::istream& is, bool sfen_n11n = false) {
-			set(is, sfen_n11n);
+		BookEntry(std::istream& is, char* _buffer, const size_t _buffersize, bool sfen_n11n = false) {
+			set(is, _buffer, _buffersize, sfen_n11n);
 		}
 		// 局面比較
 		bool operator < (const BookEntry& rhs) const { return sfenPos < rhs.sfenPos; }

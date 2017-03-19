@@ -4,6 +4,7 @@
 #include <sstream>
 #include <unordered_set>
 #include <iomanip>
+#include <inttypes.h>
 
 #include "book.h"
 #include "../position.h"
@@ -826,11 +827,14 @@ namespace Book
 			return 0;
 		}
 
+		const size_t _buffersize = 256;
+		char* _buffer = new char[_buffersize];
+
 		ifstream is;
 		is.open(filename, ifstream::in | ifstream::binary);
 
 		while (is.good()) {
-			BookEntry be(is, sfen_n11n);
+			BookEntry be(is, _buffer, _buffersize, sfen_n11n);
 			if (be.sfenPos.empty() || be.move_list.empty())
 				continue;
 			// 採択確率を計算して、かつ、採択回数でsortしておく
@@ -840,6 +844,8 @@ namespace Book
 		}
 
 		is.close();
+
+		delete[] _buffer;
 
 		// 全体のソート、重複局面の除去
 		book.intl_uniq();
@@ -856,6 +862,62 @@ namespace Book
 		// 全体のソートと重複局面の除去
 		book.intl_uniq();
 
+		// char[]へBookEntryの書き出し
+		const size_t _bufsize = 65536;
+		char *_buffer = new char[_bufsize];
+		auto _render_be = [&_buffer](const BookEntry& be) {
+			char* p = _buffer;
+			// Moveの書き出し
+			auto _render_move = [&p](const Move m) {
+				if (!is_ok(m))
+				{
+					// 頻度が低いのでstringで手抜き
+					string str;
+					switch (m) {
+					case MOVE_RESIGN:
+						str = "resign";
+					case MOVE_WIN:
+						str = "win";
+					case MOVE_NULL:
+						str = "null";
+					case MOVE_NONE:
+						str = "none";
+					}
+					char_traits<char>::copy(p, str.c_str(), str.size());
+					p += str.size();
+				}
+				else if (is_drop(m))
+				{
+					Square sq_to = move_to(m);
+					*p++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
+					*p++ = '*';
+					*p++ = (char)('1' + file_of(sq_to));
+					*p++ = (char)('a' + rank_of(sq_to));
+				}
+				else {
+					Square sq_from = move_from(m), sq_to = move_to(m);
+					*p++ = (char)('1' + file_of(sq_from));
+					*p++ = (char)('a' + rank_of(sq_from));
+					*p++ = (char)('1' + file_of(sq_to));
+					*p++ = (char)('a' + rank_of(sq_to));
+					if (is_promote(m)) {
+						*p++ = '+';
+					}
+				}
+			};
+			// 1行256文字を超える事は無いはず
+			p += max(sprintf_s(p, 256, "sfen %s %" PRIi32 "\n", be.sfenPos.c_str(), be.ply), 0);
+			// be.move_list.size() < 600 なら _buffer (64kB) を食い尽くすことは無いはず
+			for (auto& bp : be.move_list) {
+				_render_move(bp.bestMove);
+				*p++ = ' ';
+				_render_move(bp.nextMove);
+				// これ以降で48文字を超える事は無いはず
+				p += max(sprintf_s(p, 48, " %" PRIi32 " %" PRIi32 " %" PRIu64 "\n", bp.value, bp.depth, bp.num), 0);
+			}
+			*p = '\0'; // 念のためNULL文字出力
+		};
+
 		ofstream fs;
 		fs.open(filename, ofstream::out);
 
@@ -868,12 +930,14 @@ namespace Book
 			if (be.move_list.empty()) continue;
 			// 採択回数でソートしておく。
 			be.sort_pos();
-
-			fs << be;
+			// 出力
+			_render_be(be); fs << _buffer; // fs << be;
 		}
 
 		fs.flush();
 		fs.close();
+
+		delete[] _buffer;
 
 		return 0;
 	}
@@ -969,12 +1033,18 @@ namespace Book
 
 			}
 			// 見つけた処理
+
+			const size_t _buffersize = 256;
+			char* _buffer = new char[_buffersize];
+
 			BookEntry be(sfen, pos.game_ply());
-			be.incpos(fs);
+			be.incpos(fs, _buffer, _buffersize);
 			be.calc_prob();
 			add(be);
 
 			it = book_body.begin();
+
+			delete[] _buffer;
 
 		} else {
 
