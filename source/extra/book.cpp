@@ -862,12 +862,12 @@ namespace Book
 		// 全体のソートと重複局面の除去
 		book.intl_uniq();
 
-		// char[]へBookEntryの書き出し
+		// 文字列バッファ char[] に BookEntry を書き出し
 		const size_t _bufsize = 65536;
-		char *_buffer = new char[_bufsize];
+		char* _buffer = new char[_bufsize];
 		auto _render_be = [&_buffer](const BookEntry& be) {
 			char* p = _buffer;
-			// Moveの書き出し
+			// Move を書き出し
 			auto _render_move = [&p](const Move m) {
 				if (!is_ok(m))
 				{
@@ -900,22 +900,26 @@ namespace Book
 					*p++ = (char)('a' + rank_of(sq_from));
 					*p++ = (char)('1' + file_of(sq_to));
 					*p++ = (char)('a' + rank_of(sq_to));
-					if (is_promote(m)) {
+					if (is_promote(m))
 						*p++ = '+';
-					}
 				}
+				*p = NULL; // 念のためNULL文字出力
 			};
 			// 1行256文字を超える事は無いはず
 			p += max(sprintf_s(p, 256, "sfen %s %" PRIi32 "\n", be.sfenPos.c_str(), be.ply), 0);
-			// be.move_list.size() < 600 なら _buffer (64kB) を食い尽くすことは無いはず
-			for (auto& bp : be.move_list) {
-				_render_move(bp.bestMove);
-				*p++ = ' ';
-				_render_move(bp.nextMove);
-				// これ以降で48文字を超える事は無いはず
-				p += max(sprintf_s(p, 48, " %" PRIi32 " %" PRIi32 " %" PRIu64 "\n", bp.value, bp.depth, bp.num), 0);
-			}
-			*p = '\0'; // 念のためNULL文字出力
+			// be.move_list.size() <= 600 なら64kBの _buffer を食い尽くすことは無いはず
+			// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
+			// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
+			// be.move_list.size() > 600 なら安全のため出力しない
+			if (be.move_list.size() <= 600)
+				for (auto& bp : be.move_list) {
+					_render_move(bp.bestMove);
+					*p++ = ' ';
+					_render_move(bp.nextMove);
+					// これ以降で48文字を超える事は無いはず
+					p += max(sprintf_s(p, 48, " %" PRIi32 " %" PRIi32 " %" PRIu64 "\n", bp.value, bp.depth, bp.num), 0);
+				}
+			*p = NULL; // 念のためNULL文字出力
 		};
 
 		ofstream fs;
@@ -931,7 +935,7 @@ namespace Book
 			// 採択回数でソートしておく。
 			be.sort_pos();
 			// 出力
-			_render_be(be); fs << _buffer; // fs << be;
+			_render_be(be); fs << _buffer; // fs << be; とだいたい同じ
 		}
 
 		fs.flush();
@@ -940,6 +944,120 @@ namespace Book
 		delete[] _buffer;
 
 		return 0;
+	}
+
+	// ストリームからの BookEntry 読み込み
+	void BookEntry::set(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n)
+	{
+		std::string line;
+		do {
+			int c;
+			// 行頭が's'になるまで読み飛ばす
+			while ((c = is.peek()) != 's')
+				if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
+					return;
+			// 行読み込み
+			if (!std::getline(is, line))
+				return;
+			// "sfen "で始まる行は局面のデータであり、sfen文字列が格納されている。
+			// 短すぎたり、sfenで始まらなかったりした行ならばスキップ
+		} while (line.length() < 24 || line.compare(0, 5, "sfen ") != 0);
+		if (sfen_n11n) {
+			// sfen文字列は手駒の表記に揺れがある。		
+			// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)		
+			// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
+			Position pos;
+			pos.set(line.substr(5));
+			sfenPos = pos.trimedsfen();
+			ply = pos.game_ply();
+		}
+		else {
+			auto sfen = split_sfen(line.substr(5));
+			sfenPos = sfen.first;
+			ply = sfen.second;
+		}
+		// 候補手読み込み
+		incpos(is, _buffer, _buffersize);
+	}
+
+	// ストリームから BookEntry への BookPos 順次読み込み
+	void BookEntry::incpos(std::istream& is, char* _buffer, const size_t _buffersize)
+	{
+		while (true) {
+			int c;
+			// 次の BookPos を追加できるかどうかを判断するため、
+			// 不要行を読み飛ばす操作は BookPos::set ではなく、 BookEntry::incpos の側で行う。
+			// 行頭が数字か英文字以外なら行末文字まで読み飛ばす
+			while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))) {
+				if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
+					return;
+			}
+			// 次のsfen文字列に到達していそうなら離脱（指し手文字列で's'から始まるものは無い）
+			if (c == 's')
+				return;
+			// BookPos 読み込み
+			BookPos bp(is, _buffer, _buffersize);
+			move_list.push_back(bp);
+		}
+	}
+
+	// ストリームからの BookPos 読み込み
+	// BookEntry::incpos から呼び出される事を企図しているため、
+	// 不要行の読み飛ばしは BookPos::set 側では行わない。
+	void BookPos::set(std::istream& is, char* _buffer, const size_t _buffersize)
+	{
+		auto _mvparse = [](char* p)->Move {
+			char c0 = *p++;
+			if (c0 >= '1' && c0 <= '9') {
+				char c1 = *p++; if (c1 < 'a' || c1 > 'i') return MOVE_NONE;
+				char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
+				char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
+				char c4 = *p++;
+				if (c4 == '+')
+					return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+				else
+					return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+			}
+			else if (c0 >= 'A' && c0 <= 'Z') {
+				char c1 = *p++; if (c1 != '*') return MOVE_NONE;
+				char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
+				char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
+				for (int i = 1; i <= 7; ++i)
+					if (PieceToCharBW[i] == c0)
+						return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
+			}
+			else if (c0 == '0' || c0 >= 'a' && c0 <= 'z') {
+				if (!memcmp(p, "win", 3)) return MOVE_WIN;
+				if (!memcmp(p, "null", 4)) return MOVE_NULL;
+				if (!memcmp(p, "pass", 4)) return MOVE_NULL;
+				if (!memcmp(p, "0000", 4)) return MOVE_NULL;
+			}
+			return MOVE_NONE;
+		};
+
+		// 行読み込み
+		is.getline(_buffer, _buffersize - 8); // memcmp用の余裕
+
+		// バッファから溢れたら行末まで読み捨て
+		if (is.fail()) {
+			is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			is.clear(is.rdstate() & ~std::ios_base::failbit);
+		}
+
+		char* p = _buffer;
+		if (*p == NULL) return;
+		bestMove = _mvparse(p); while (*p++ != ' ') if (*p == NULL) return;
+		nextMove = _mvparse(p); while (*p++ != ' ') if (*p == NULL) return;
+		value = strtol(p, NULL, 10); while (*p++ != ' ') if (*p == NULL) return;
+		depth = strtol(p, NULL, 10); while (*p++ != ' ') if (*p == NULL) return;
+		num = strtoull(p, NULL, 10);
+		/* // 以下のコードとだいたい同じ
+		std::string best, next;
+		is >> best >> next >> value >> depth >> num;
+		is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		bestMove = (best == "none" || best == "resign") ? MOVE_NONE : move_from_usi(best);
+		nextMove = (next == "none" || next == "resign") ? MOVE_NONE : move_from_usi(next);
+		*/
 	}
 
 	MemoryBook::BookType::iterator MemoryBook::find(const Position& pos)
@@ -1063,6 +1181,7 @@ namespace Book
 	}
 
 	// 出力ストリーム
+	// write_book では最適化のため現在使われていない
 	ostream& operator << (ostream& os, const BookPos& bp) {
 		os << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << ' ' << bp.depth << ' ' << bp.num << "\n";
 		return os;
