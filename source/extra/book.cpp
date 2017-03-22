@@ -246,9 +246,8 @@ namespace Book
 
 				// 初回はファイルがないので読み込みに失敗するが無視して続行。
 				if (read_book(book_name, book) != 0)
-				{
 					cout << "..but , create new file." << endl;
-				} else
+				else
 					cout << "..done" << endl;
 			}
 
@@ -272,10 +271,10 @@ namespace Book
 				auto sfen = std::move(sfens.front());
 				sfens.pop_front();
 
-				size_t compos;
-
 				// "#"以降読み捨て
-				if ((compos = sfen.find("#")) < sfen.length()) { sfen.resize(compos); }
+				size_t compos;
+				if ((compos = sfen.find("#")) < sfen.length())
+					sfen.resize(compos);
 
 				if (sfen.length() == 0)
 					continue;
@@ -350,7 +349,8 @@ namespace Book
 					cout << '.' << flush;
 			}
 			// 入力が空でも初期局面は含めるように
-			if (from_thinking && start_moves == 1 && thinking_sfens.empty()) {
+			if (from_thinking && start_moves == 1 && thinking_sfens.empty())
+			{
 				pos.set_hirate();
 				thinking_sfens.insert(pos.sfen());
 			}
@@ -435,7 +435,8 @@ namespace Book
 						write_book(book_name, book);
 						cout << ("S" + to_string(multi_think.get_remain_loop_count()) + "\n") << flush;
 						multi_think.appended = false;
-					} else {
+					} else
+					{
 						// 追加されていないときは小文字のsマークを表示して
 						// ファイルへの書き出しは行わないように変更。
 						cout << "s\n" << flush;
@@ -450,13 +451,15 @@ namespace Book
 			}
 
 #endif
-			if (from_sfen) {
+			if (from_sfen)
+			{
 				cout << "write..";
 				write_book(book_name, book);
 				cout << "finished." << endl;
 			}
 
-		} else if (to_sfen || to_kif1 || to_kif2 || to_csa1) {
+		} else if (to_sfen || to_kif1 || to_kif2 || to_csa1)
+		{
 			// 定跡からsfenを生成する
 
 			// 定跡ファイル名
@@ -583,7 +586,8 @@ namespace Book
 						os << "sfen " << inisfen << "moves";
 					else
 						os << "startpos moves";
-					for (auto& s : sf) { os << " " << s; }
+					for (auto& s : sf)
+						os << " " << s;
 				}
 				else if (to_kif1 || to_kif2 || to_csa1)
 				{
@@ -615,33 +619,40 @@ namespace Book
 
 			// 再帰探索
 			function<BookRes()> to_sfen_func;
-			to_sfen_func = [&]() {
+			to_sfen_func = [&]()
+			{
 				auto it = book.find(pos);
 				// この局面が定跡登録されてなければ戻る。
-				if (it == book.end()) { return BOOKRES_UNFILLED; }
+				if (it == book.end())
+					return BOOKRES_UNFILLED;
 				auto& be = *it;
 				// 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
-				if (be.ply == 0) { return BOOKRES_DUPEPOS; }
+				if (be.ply == 0)
+					return BOOKRES_DUPEPOS;
 				// move_listが空なら戻る
-				if (be.move_list.size() == 0) { return BOOKRES_EMPTYLIST; }
+				if (be.move_list.size() == 0)
+					return BOOKRES_EMPTYLIST;
 				// 到達済み局面のフラグ立て
 				be.ply = 0;
 				// 最善手が駄目なら戻る
 				auto& bp0 = be.move_list[0];
 				int evaldiff = ~pos.side_to_move() ? evalblackdiff : evalwhitediff;
 				int evallimit = ~pos.side_to_move() ? evalblacklimit : evalwhitelimit;
-				if (bp0.depth < depthlimit) { return BOOKRES_DEPTHLIMIT; }
-				if (bp0.value < evallimit) { return BOOKRES_EVALLIMIT; }
+				if (bp0.depth < depthlimit)
+					return BOOKRES_DEPTHLIMIT;
+				if (bp0.value < evallimit)
+					return BOOKRES_EVALLIMIT;
 				// 最善手以外に何番目の候補手まで探索するか
 				size_t imax = 1;
 				for (;
 					imax < be.move_list.size() &&
 					be.move_list[imax].value >= evallimit &&
 					be.move_list[imax].value + evaldiff >= bp0.value;
-					++imax) {}
+					++imax);
 				// 先の局面を探索
 				int ply = pos.game_ply();
-				for (size_t i = 0; i < imax; ++i) {
+				for (size_t i = 0; i < imax; ++i)
+				{
 					auto& bp = be.move_list[i];
 					Move nowMove = bp.bestMove;
 					// 探索スタック積み
@@ -650,9 +661,8 @@ namespace Book
 					pos.do_move(nowMove, si[ply]);
 					// 先の局面で駄目出しされたら、その局面までの手順を出力
 					auto res = (ply >= moves) ? BOOKRES_MOVELIMIT : to_sfen_func();
-					if (res != BOOKRES_SUCCESS) {
+					if (res != BOOKRES_SUCCESS)
 						printstack(fs, res);
-					}
 					// 探索スタック崩し
 					pos.undo_move(nowMove);
 					m.pop_back();
@@ -682,9 +692,8 @@ namespace Book
 					pos.do_move(_mv, si[pos.game_ply()]);
 				}
 				BookRes res = to_sfen_func();
-				if (res != BOOKRES_SUCCESS) {
+				if (res != BOOKRES_SUCCESS)
 					printstack(fs, res);
-				}
 			} while (getline(ssop, opsfen, ','));
 
 			// 探索終了
@@ -692,7 +701,8 @@ namespace Book
 			cout << ".finished!" << endl;
 			cout << count_sfens << " lines exported." << endl;
 
-		} else if (book_merge) {
+		} else if (book_merge)
+		{
 			// 定跡のマージ
 			MemoryBook book[3];
 			string book_name[3];
@@ -724,46 +734,76 @@ namespace Book
 			u64 b0_shrink_count = 0, b1_shrink_count = 0;
 
 			// マージ
-			while (!book[0].book_body.empty() && !book[1].book_body.empty()) {
+			while (!book[0].book_body.empty() && !book[1].book_body.empty())
+			{
 				auto& b0front = book[0].book_body.front();
 				auto& b1front = book[1].book_body.front();
-				if (b0front == b1front) {
+				if (b0front == b1front)
+				{
 					// 同じ局面があったので、良いほうをbook2に突っ込む。
 					same_nodes++;
-					BookEntry be = b0front;
-					be.update(b1front);
+					BookEntry be = move(b0front);
+					be.update(move(b1front));
 					book[2].add(be);
 					book[0].book_body.pop_front();
-					if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+					if (++b0_shrink_count >= merge_shrink_threshold)
+					{
+						book[0].book_body.shrink_to_fit();
+						b0_shrink_count = 0;
+					}
 					book[1].book_body.pop_front();
-					if (++b1_shrink_count >= merge_shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
-				} else if (b0front < b1front) {
+					if (++b1_shrink_count >= merge_shrink_threshold)
+					{
+						book[1].book_body.shrink_to_fit();
+						b1_shrink_count = 0;
+					}
+				} else if (b0front < b1front)
+				{
 					// book0からbook2に突っ込む
 					diffrent_nodes0++;
-					book[2].add(b0front);
+					book[2].add(move(b0front));
 					book[0].book_body.pop_front();
-					if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
-				} else {
+					if (++b0_shrink_count >= merge_shrink_threshold)
+					{
+						book[0].book_body.shrink_to_fit();
+						b0_shrink_count = 0;
+					}
+				} else
+				{
 					// book1からbook2に突っ込む
 					diffrent_nodes1++;
-					book[2].add(b1front);
+					book[2].add(move(b1front));
 					book[1].book_body.pop_front();
-					if (++b1_shrink_count >= merge_shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
+					if (++b1_shrink_count >= merge_shrink_threshold)
+					{
+						book[1].book_body.shrink_to_fit();
+						b1_shrink_count = 0;
+					}
 				}
 			}
 			// book0側でまだ突っ込んでいないnodeを、book2に突っ込む
-			while (!book[0].book_body.empty()) {
+			while (!book[0].book_body.empty())
+			{
 				diffrent_nodes0++;
 				book[2].add(book[0].book_body.front());
 				book[0].book_body.pop_front();
-				if (++b0_shrink_count >= merge_shrink_threshold) { book[0].book_body.shrink_to_fit(); b0_shrink_count = 0; }
+				if (++b0_shrink_count >= merge_shrink_threshold)
+				{
+					book[0].book_body.shrink_to_fit();
+					b0_shrink_count = 0;
+				}
 			}
 			// book1側でまだ突っ込んでいないnodeを、book2に突っ込む
-			while (!book[1].book_body.empty()) {
+			while (!book[1].book_body.empty())
+			{
 				diffrent_nodes1++;
 				book[2].add(book[1].book_body.front());
 				book[1].book_body.pop_front();
-				if (++b1_shrink_count >= merge_shrink_threshold) { book[1].book_body.shrink_to_fit(); b1_shrink_count = 0; }
+				if (++b1_shrink_count >= merge_shrink_threshold)
+				{
+					book[1].book_body.shrink_to_fit();
+					b1_shrink_count = 0;
+				}
 			}
 			cout << "..done" << endl;
 
@@ -774,7 +814,8 @@ namespace Book
 			write_book(book_name[2], book[2]);
 			cout << "..done!" << endl;
 
-		} else if (book_sort) {
+		} else if (book_sort)
+		{
 			// 定跡のsort, normalization(n11n)
 			MemoryBook book;
 			string book_src, book_dst;
@@ -787,7 +828,8 @@ namespace Book
 			write_book(book_dst, book);
 			cout << "..done!" << endl;
 
-		} else {
+		} else
+		{
 			cout << "usage" << endl;
 			cout << "> makebook from_sfen book.sfen book.db moves 24" << endl;
 			cout << "> makebook think book.sfen book.db moves 16 depth 18" << endl;
@@ -827,13 +869,20 @@ namespace Book
 			return 0;
 		}
 
+		// 行バッファ
 		const size_t _buffersize = 256;
-		char* _buffer = new char[_buffersize];
+		char _buffer[_buffersize];
 
 		ifstream is;
 		is.open(filename, ifstream::in | ifstream::binary);
+		if (is.bad() || !is.is_open())
+		{
+			cout << "info string Error! : can't read " + filename << endl;
+			return 1;
+		}
 
-		while (is.good()) {
+		while (is.good())
+		{
 			BookEntry be(is, _buffer, _buffersize, sfen_n11n);
 			if (be.sfenPos.empty() || be.move_list.empty())
 				continue;
@@ -844,8 +893,6 @@ namespace Book
 		}
 
 		is.close();
-
-		delete[] _buffer;
 
 		// 全体のソート、重複局面の除去
 		book.intl_uniq();
@@ -862,86 +909,243 @@ namespace Book
 		// 全体のソートと重複局面の除去
 		book.intl_uniq();
 
+		// 1要素あたりの最大サイズ
+		const size_t _entrymaxsize = 65536; // 64kiB
+		// 領域確保係数
+		const size_t _bufmulti = 256;
+		// 最大バッファ領域サイズ
+		const size_t _bufmaxsize = _entrymaxsize * _bufmulti; // 16MiB
+		// バッファ領域サイズ
+		size_t _bufsize = _entrymaxsize * min(_bufmulti, book.book_body.size() + 1);
+		// バッファ払い出し閾値
+		size_t _bufth = _bufsize - _entrymaxsize;
+		// バッファ確保
+		char * _buf = new char[_bufsize];
+
 		// 文字列バッファ char[] に BookEntry を書き出し
-		const size_t _bufsize = 65536;
-		char* _buffer = new char[_bufsize];
-		auto _render_be = [&_buffer](const BookEntry& be) {
-			char* p = _buffer;
-			// Move を書き出し
-			auto _render_move = [&p](const Move m) {
+		// BookEntry 毎に書き出しを行う
+		size_t _p;
+		auto _render_be = [&](const BookEntry& be)
+		{
+			// Move 書き出し
+			auto _render_move = [&](const Move m)
+			{
 				if (!is_ok(m))
 				{
 					// 頻度が低いのでstringで手抜き
 					string str;
-					switch (m) {
+					switch (m)
+					{
 					case MOVE_RESIGN:
 						str = "resign";
+						break;
 					case MOVE_WIN:
 						str = "win";
+						break;
 					case MOVE_NULL:
 						str = "null";
+						break;
 					case MOVE_NONE:
 						str = "none";
+						break;
 					}
-					char_traits<char>::copy(p, str.c_str(), str.size());
-					p += str.size();
+					char_traits<char>::copy(_buf + _p, str.c_str(), str.size());
+					_p += str.size();
 				}
 				else if (is_drop(m))
 				{
 					Square sq_to = move_to(m);
-					*p++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
-					*p++ = '*';
-					*p++ = (char)('1' + file_of(sq_to));
-					*p++ = (char)('a' + rank_of(sq_to));
+					_buf[_p++] = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
+					_buf[_p++] = '*';
+					_buf[_p++] = (char)('1' + file_of(sq_to));
+					_buf[_p++] = (char)('a' + rank_of(sq_to));
 				}
-				else {
+				else
+				{
 					Square sq_from = move_from(m), sq_to = move_to(m);
-					*p++ = (char)('1' + file_of(sq_from));
-					*p++ = (char)('a' + rank_of(sq_from));
-					*p++ = (char)('1' + file_of(sq_to));
-					*p++ = (char)('a' + rank_of(sq_to));
+					_buf[_p++] = (char)('1' + file_of(sq_from));
+					_buf[_p++] = (char)('a' + rank_of(sq_from));
+					_buf[_p++] = (char)('1' + file_of(sq_to));
+					_buf[_p++] = (char)('a' + rank_of(sq_to));
 					if (is_promote(m))
-						*p++ = '+';
+						_buf[_p++] = '+';
 				}
-				*p = NULL; // 念のためNULL文字出力
 			};
-			// 1行256文字を超える事は無いはず
-			p += max(sprintf_s(p, 256, "sfen %s %" PRIi32 "\n", be.sfenPos.c_str(), be.ply), 0);
-			// be.move_list.size() <= 600 なら64kBの _buffer を食い尽くすことは無いはず
+			// 整数値書き出し
+			auto _render_u32_1 = [&](u32 i)
+			{
+				if(i > 9)
+					i %= 10;
+				_buf[_p++] = '0' + i;
+			};
+			auto _render_u32_2l = [&](u32 i)
+			{
+				_render_u32_1(i / 10);
+				_render_u32_1(i);
+			};
+			auto _render_u32_2u = [&](u32 i)
+			{
+				if(i > 99)
+					i %= 100;
+				if(i > 9)
+					_render_u32_1(i / 10);
+				_render_u32_1(i);
+			};
+			auto _render_u32_4l = [&](u32 i)
+			{
+				_render_u32_2l(i / 100);
+				_render_u32_2l(i);
+			};
+			auto _render_u32_4u = [&](u32 i)
+			{
+				if(i > 9999)
+					i %= 10000;
+				if(i > 99)
+				{
+					_render_u32_2u(i / 100);
+					_render_u32_2l(i);
+				}
+				else
+					_render_u32_2u(i);
+			};
+			auto _render_u32_8l = [&](u32 i)
+			{
+				_render_u32_4l(i / 10000);
+				_render_u32_4l(i);
+			};
+			auto _render_u32_8u = [&](u32 i)
+			{
+				if(i > 99999999)
+					i %= 100000000;
+				if(i > 9999)
+				{
+					_render_u32_4u(i / 10000);
+					_render_u32_4l(i);
+				}
+				else
+					_render_u32_4u(i);
+			};
+			auto _render_u64_16l = [&](u64 i)
+			{
+				if(i > 9999999999999999)
+					i %= 10000000000000000;
+				_render_u32_8l((u32)(i / 100000000));
+				_render_u32_8l((u32)(i % 100000000));
+			};
+			auto _render_u64_16u = [&](u64 i)
+			{
+				if(i > 9999999999999999)
+					i %= 10000000000000000;
+				if(i > 99999999)
+				{
+					_render_u32_8u((u32)(i / 100000000));
+					_render_u32_8l((u32)(i % 100000000));
+				}
+				else
+					_render_u32_8u((u32)i);
+			};
+			auto _render_u32 = [&](u32 i)
+			{
+				if (i > 99999999)
+				{
+					_render_u32_8u(i / 100000000);
+					_render_u32_8l(i);
+				}
+				else
+					_render_u32_8u(i);
+			};
+			auto _render_s32 = [&](s32 i)
+			{
+				if (i < 0)
+					_buf[_p++] = '-';
+				_render_u32((u32)(i < 0 ? -i : i));
+			};
+			auto _render_u64 = [&](u64 i)
+			{
+				if(i > 9999999999999999)
+				{
+					_render_u64_16u(i / 10000000000000000);
+					_render_u64_16l(i);
+				}
+				else
+					_render_u64_16u(i);
+			};
+			auto _render_s64 = [&](s64 i)
+			{
+				if (i < 0)
+					_buf[_p++] = '-';
+				_render_u64((u64)(i < 0 ? -i : i));
+			};
+			_buf[_p++] = 's';
+			_buf[_p++] = 'f';
+			_buf[_p++] = 'e';
+			_buf[_p++] = 'n';
+			_buf[_p++] = ' ';
+			// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
+			// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
+			// 128bytes を超えたら明らかにおかしいので抑止。
+			char_traits<char>::copy(_buf + _p, be.sfenPos.c_str(), min(be.sfenPos.size(), (size_t)128));
+			_p += min(be.sfenPos.size(), (size_t)128);
+			_buf[_p++] = ' ';
+			_render_s32(be.ply);
+			_buf[_p++] = '\n';
+			// BookPosは改行文字を含めても 62bytes を超えないので、
+			// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
 			// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
 			// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
-			// be.move_list.size() > 600 なら安全のため出力しない
-			if (be.move_list.size() <= 600)
-				for (auto& bp : be.move_list) {
+			// be.move_list.size() > 1000 なら安全のため出力しない
+			if (be.move_list.size() <= 1000)
+				for (auto& bp : be.move_list)
+				{
 					_render_move(bp.bestMove);
-					*p++ = ' ';
+					_buf[_p++] = ' ';
 					_render_move(bp.nextMove);
-					// これ以降で48文字を超える事は無いはず
-					p += max(sprintf_s(p, 48, " %" PRIi32 " %" PRIi32 " %" PRIu64 "\n", bp.value, bp.depth, bp.num), 0);
+					_buf[_p++] = ' ';
+					_render_s32(bp.value);
+					_buf[_p++] = ' ';
+					_render_s32(bp.depth);
+					_buf[_p++] = ' ';
+					_render_u64(bp.num);
+					_buf[_p++] = '\n';
 				}
-			*p = NULL; // 念のためNULL文字出力
+			_buf[_p] = NULL; // 念のためNULL文字出力
 		};
 
-		ofstream fs;
-		fs.open(filename, ofstream::out);
+		FILE * fp;
+		if ((fp = fopen(filename.c_str(), "w")) == NULL)
+		{
+			cout << "info string Error! : can't write " + filename << endl;
+			return 1;
+		}
 
 		// バージョン識別用文字列
-		fs << "#YANEURAOU-DB2016 1.00" << endl;
+		const char _headverstr[] = "#YANEURAOU-DB2016 1.00\n";
+		fwrite(_headverstr, sizeof(char), sizeof(_headverstr) - 1, fp);
 
-		for (BookEntry be : book.book_body)
+		_buf[_p = 0] = NULL;
+		for (BookEntry& be : book.book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
 			if (be.move_list.empty()) continue;
 			// 採択回数でソートしておく。
 			be.sort_pos();
 			// 出力
-			_render_be(be); fs << _buffer; // fs << be; とだいたい同じ
+			_render_be(be);
+			// _bufth (16,320kiB) 以上まで出力が溜まったらファイルに書き出し
+			if (_p > _bufth)
+			{
+				fwrite(_buf, sizeof(char), _p, fp);
+				_buf[_p = 0] = NULL;
+			}
 		}
+		// 残りの出力をファイルに書き出し
+		if (_p > 0)
+			fwrite(_buf, sizeof(char), _p, fp);
 
-		fs.flush();
-		fs.close();
+		fclose(fp);
 
-		delete[] _buffer;
+		// バッファ開放
+		delete[] _buf;
 
 		return 0;
 	}
@@ -950,7 +1154,9 @@ namespace Book
 	void BookEntry::set(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n)
 	{
 		std::string line;
-		do {
+
+		do
+		{
 			int c;
 			// 行頭が's'になるまで読み飛ばす
 			while ((c = is.peek()) != 's')
@@ -962,7 +1168,8 @@ namespace Book
 			// "sfen "で始まる行は局面のデータであり、sfen文字列が格納されている。
 			// 短すぎたり、sfenで始まらなかったりした行ならばスキップ
 		} while (line.length() < 24 || line.compare(0, 5, "sfen ") != 0);
-		if (sfen_n11n) {
+		if (sfen_n11n)
+		{
 			// sfen文字列は手駒の表記に揺れがある。		
 			// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)		
 			// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
@@ -970,8 +1177,8 @@ namespace Book
 			pos.set(line.substr(5));
 			sfenPos = pos.trimedsfen();
 			ply = pos.game_ply();
-		}
-		else {
+		} else
+		{
 			auto sfen = split_sfen(line.substr(5));
 			sfenPos = sfen.first;
 			ply = sfen.second;
@@ -983,15 +1190,15 @@ namespace Book
 	// ストリームから BookEntry への BookPos 順次読み込み
 	void BookEntry::incpos(std::istream& is, char* _buffer, const size_t _buffersize)
 	{
-		while (true) {
+		while (true)
+		{
 			int c;
 			// 次の BookPos を追加できるかどうかを判断するため、
 			// 不要行を読み飛ばす操作は BookPos::set ではなく、 BookEntry::incpos の側で行う。
 			// 行頭が数字か英文字以外なら行末文字まで読み飛ばす
-			while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))) {
+			while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z')))
 				if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
 					return;
-			}
 			// 次のsfen文字列に到達していそうなら離脱（指し手文字列で's'から始まるものは無い）
 			if (c == 's')
 				return;
@@ -1006,9 +1213,11 @@ namespace Book
 	// 不要行の読み飛ばしは BookPos::set 側では行わない。
 	void BookPos::set(std::istream& is, char* _buffer, const size_t _buffersize)
 	{
-		auto _mvparse = [](char* p)->Move {
+		auto _mvparse = [](char* p)->Move
+		{
 			char c0 = *p++;
-			if (c0 >= '1' && c0 <= '9') {
+			if (c0 >= '1' && c0 <= '9')
+			{
 				char c1 = *p++; if (c1 < 'a' || c1 > 'i') return MOVE_NONE;
 				char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
 				char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
@@ -1018,7 +1227,8 @@ namespace Book
 				else
 					return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
 			}
-			else if (c0 >= 'A' && c0 <= 'Z') {
+			else if (c0 >= 'A' && c0 <= 'Z')
+			{
 				char c1 = *p++; if (c1 != '*') return MOVE_NONE;
 				char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
 				char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
@@ -1026,7 +1236,8 @@ namespace Book
 					if (PieceToCharBW[i] == c0)
 						return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
 			}
-			else if (c0 == '0' || c0 >= 'a' && c0 <= 'z') {
+			else if (c0 == '0' || c0 >= 'a' && c0 <= 'z')
+			{
 				if (!memcmp(p, "win", 3)) return MOVE_WIN;
 				if (!memcmp(p, "null", 4)) return MOVE_NULL;
 				if (!memcmp(p, "pass", 4)) return MOVE_NULL;
@@ -1039,7 +1250,8 @@ namespace Book
 		is.getline(_buffer, _buffersize - 8); // memcmp用の余裕
 
 		// バッファから溢れたら行末まで読み捨て
-		if (is.fail()) {
+		if (is.fail())
+		{
 			is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			is.clear(is.rdstate() & ~std::ios_base::failbit);
 		}
@@ -1105,9 +1317,9 @@ namespace Book
 				// getlineはeof()を正しく反映させないのでgetline()の返し値を用いる必要がある。
 				while (getline(fs, line))
 				{
-					if (!line.compare(0, 4, "sfen"))
+					if (!line.compare(0, 5, "sfen "))
 						return trim_sfen(line.substr(5));
-					// "sfen"という文字列は取り除いたものを返す。
+					// "sfen "という文字列は取り除いたものを返す。
 					// 手数の表記も取り除いて比較したほうがいい。
 					// ios::binaryつけているので末尾に'\R'が付与されている。禿げそう。
 				}
@@ -1129,7 +1341,8 @@ namespace Book
 				} else if (sfen > sfen2)
 				{ // 右(それより大きいところ)を探す
 					s = u64(fs.tellg() - file_start);
-				} else {
+				} else
+				{
 					// 見つかった！
 					break;
 				}
@@ -1152,8 +1365,9 @@ namespace Book
 			}
 			// 見つけた処理
 
+			// 行バッファ確保
 			const size_t _buffersize = 256;
-			char* _buffer = new char[_buffersize];
+			char _buffer[_buffersize];
 
 			BookEntry be(sfen, pos.game_ply());
 			be.incpos(fs, _buffer, _buffersize);
@@ -1162,10 +1376,8 @@ namespace Book
 
 			it = book_body.begin();
 
-			delete[] _buffer;
-
-		} else {
-
+		} else
+		{
 			// on the flyではない場合
 			it = intl_find(pos);
 		}
@@ -1182,13 +1394,16 @@ namespace Book
 
 	// 出力ストリーム
 	// write_book では最適化のため現在使われていない
-	ostream& operator << (ostream& os, const BookPos& bp) {
+	ostream& operator << (ostream& os, const BookPos& bp)
+	{
 		os << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << ' ' << bp.depth << ' ' << bp.num << "\n";
 		return os;
 	}
-	ostream& operator << (ostream& os, const BookEntry& be) {
+	ostream& operator << (ostream& os, const BookEntry& be)
+	{
 		os << "sfen " << be.sfenPos << " " << be.ply << "\n";
-		for (auto& bp : be.move_list) {	os << bp; }
+		for (auto& bp : be.move_list)
+			os << bp;
 		return os;
 	}
 

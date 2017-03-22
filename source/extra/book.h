@@ -34,12 +34,15 @@ namespace Book
 		float prob;    // ↑のnumをパーセンテージで表現したもの。(read_bookしたときには反映される。ファイルには書き出していない。)
 
 		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
+
 		// ストリームからの BookPos 読み込み（通常は BookEntry::incpos から呼び出されるのみ）
 		void set(std::istream& is, char* _buffer, const size_t _buffersize);
 		BookPos(std::istream& is, char* _buffer, const size_t _buffersize) { set(is, _buffer, _buffersize); }
+
 		// 比較
 		bool operator == (const BookPos& rhs) const { return bestMove == rhs.bestMove; }
 		bool operator < (const BookPos& rhs) const { return value > rhs.value || value == rhs.value && num > rhs.num; } // std::sortで降順ソートされて欲しいのでこう定義する。
+
 	};
 
 	// 局面ごとの項目
@@ -53,20 +56,27 @@ namespace Book
 		BookEntry(const std::string sfen, const int p, std::vector<BookPos> mlist = {}) : sfenPos(sfen), ply(p), move_list(mlist) {}
 		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist = {}) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
 		BookEntry(const Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
+
 		// ストリームからの BookPos 順次読み込み
 		void incpos(std::istream& is, char* _buffer, const size_t _buffersize);
+
 		// ストリームからの BookEntry 読み込み
 		void set(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n);
-		BookEntry(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n = false) {
+		BookEntry(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n = false)
+		{
 			set(is, _buffer, _buffersize, sfen_n11n);
 		}
+
 		// 局面比較
 		bool operator < (const BookEntry& rhs) const { return sfenPos < rhs.sfenPos; }
 		bool operator == (const BookEntry& rhs) const { return sfenPos == rhs.sfenPos; }
+
 		// 同一局面の合成
-		void update(const BookEntry& be) {
+		void update(const BookEntry& be)
+		{
 			// 同一局面のみ合成
-			if (sfenPos == be.sfenPos) {
+			if (sfenPos == be.sfenPos)
+			{
 				// 手数の少ない方に合わせる
 				if (be.ply > 0 && (ply > be.ply || ply < 1))
 					ply = be.ply;
@@ -82,25 +92,28 @@ namespace Book
 					move_list = be.move_list;
 			}
 		}
+
 		// 候補手のソート
-		void sort_pos() {
-			std::stable_sort(move_list.begin(), move_list.end());
-		}
+		void sort_pos() { std::stable_sort(move_list.begin(), move_list.end()); }
+
 		// 候補手の追加
-		void insert_book_pos(const BookPos& bp) {
-			for (auto& b : move_list) {
-				if (b == bp) {
+		void insert_book_pos(const BookPos& bp)
+		{
+			for (auto& b : move_list)
+				if (b == bp)
+				{
 					auto num = b.num + bp.num;
 					b = bp;
 					b.num = num;
 					return;
 				}
-			}
 			// move_listがソート済みであると仮定して挿入
 			move_list.insert(std::upper_bound(move_list.begin(), move_list.end(), bp), bp);
 		}
+
 		// 候補手の選択率算出
-		void calc_prob() {
+		void calc_prob()
+		{
 			std::stable_sort(move_list.begin(), move_list.end());
 			u64 num_sum = 0;
 			for (auto& bp : move_list)
@@ -108,6 +121,7 @@ namespace Book
 			for (auto& bp : move_list)
 				bp.prob = float(bp.num) / num_sum;      
 		}
+
 	};
 
 	// メモリ上にある定跡ファイル
@@ -144,23 +158,31 @@ namespace Book
 		const iter_t end() { return book_body.end(); }
 
 		// book_body内の定跡を探索
-		iter_t intl_find(BookEntry& be) {
+		iter_t intl_find(BookEntry& be)
+		{
 			auto it0 = book_body.begin();
 			auto itr = book_run.begin();
-			while (true) {
+			while (true)
+			{
 				auto it1 = (itr != book_run.end()) ? book_body.begin() + *itr : book_body.end();
 				auto itf = std::lower_bound(it0, it1, be);
-				if (itf != it1 && *itf == be) { return itf; }
-				if (itr == book_run.end()) { return end(); }
+				if (itf != it1 && *itf == be)
+					return itf;
+				if (itr == book_run.end())
+					return end();
 				itr++;
 				it0 = it1;
 			}
 		}
-		iter_t intl_find(Position pos) {
+
+		iter_t intl_find(Position pos)
+		{
 			BookEntry be(pos);
 			return intl_find(be);
 		}
-		iter_t intl_find(std::string sfen) {
+
+		iter_t intl_find(std::string sfen)
+		{
 			BookEntry be(split_sfen(sfen));
 			return intl_find(be);
 		}
@@ -173,35 +195,41 @@ namespace Book
 
 		// BookRun再構築
 		// 外部でbook_bodyに破壊的な操作を行った後に実行する
-		void run_rebuild() {
+		void run_rebuild()
+		{
 			book_run.clear();
 			auto first = book_body.begin(), mid = first, last = book_body.end();
-			while ((mid = std::is_sorted_until(mid, last)) != last) {
+			while ((mid = std::is_sorted_until(mid, last)) != last)
 				book_run.push_back(std::distance(first, mid));
-			}
 		}
 
 		// マージソート(部分的)
 		// length[n-1] > length[n] && length[n-2] > (length[n-1] + length[n]) の状態を満たすまでマージソートを行う。
-		void intl_merge_part() {
+		void intl_merge_part()
+		{
 			bool f = !book_run.empty();
 			auto end_d = std::distance(book_body.begin(), book_body.end());
-			while (f) {
+			while (f)
+			{
 				f = false;
 				auto run_size = book_run.size();
-				switch (run_size) {
+				switch (run_size)
+				{
 				case 1:
-					if (book_run.front() <= end_d - book_run.front()) {
+					if (book_run.front() <= end_d - book_run.front())
+					{
 						std::inplace_merge(book_body.begin(), book_body.begin() + book_run.front(), book_body.end());
 						book_run.pop_back();
 					}
 					break;
 				case 2:
-					if (book_run.back() - book_run.front() <= end_d - book_run.back()) {
+					if (book_run.back() - book_run.front() <= end_d - book_run.back())
+					{
 						std::inplace_merge(book_body.begin() + book_run.front(), book_body.begin() + book_run.back(), book_body.end());
 						book_run.pop_back();
 						f = true;
-					} else if (book_run.front() <= end_d - book_run.front()) {
+					} else if (book_run.front() <= end_d - book_run.front())
+					{
 						std::inplace_merge(book_body.begin() + book_run.front(), book_body.begin() + book_run.back(), book_body.end());
 						book_run.pop_back();
 						std::inplace_merge(book_body.begin(), book_body.begin() + book_run.front(), book_body.end());
@@ -212,11 +240,12 @@ namespace Book
 					if (
 						book_run.back() - book_run[run_size - 2] <= end_d - book_run.back() ||
 						book_run[run_size - 2] - book_run[run_size - 3] <= end_d - book_run[run_size - 2]
-					) {
+					)
+					{
 						std::inplace_merge(
-						book_body.begin() + book_run[run_size - 2],
-						book_body.begin() + book_run.back(),
-						book_body.end()
+							book_body.begin() + book_run[run_size - 2],
+							book_body.begin() + book_run.back(),
+							book_body.end()
 						);
 						book_run.pop_back();
 						f = true;
@@ -227,8 +256,10 @@ namespace Book
 		}
 
 		// マージソート(全体)
-		void intl_merge() {
-			while (!book_run.empty()) {
+		void intl_merge()
+		{
+			while (!book_run.empty())
+			{
 				auto d1 = book_run.back();
 				book_run.pop_back();
 				auto d0 = book_run.empty() ? std::distance(book_body.begin(), book_body.begin()) : book_run.back();
@@ -238,49 +269,59 @@ namespace Book
 
 		// 同一局面の整理
 		// 大量に局面登録する際、毎度重複チェックを行うと計算量が莫大になるのでまとめて処理
-		void intl_uniq() {
+		void intl_uniq()
+		{
 			// 予め全体をソートしておく
-			if (!book_run.empty()) { intl_merge(); }
+			if (!book_run.empty())
+				intl_merge();
 
 			auto max = book_body.size();
 			std::size_t i = 1;
-			while (i < max) {
-				if (book_body[i - 1] == book_body[i]) {
+			while (i < max)
+				if (book_body[i - 1] == book_body[i])
+				{
 					book_body[i - 1].update(book_body[i]);
 					book_body.erase(book_body.begin() + i);
 					max = book_body.size();
-				} else {
+				} else
 					++i;
-				}
-			}
 		}
 
 		// 局面の追加
 		// 大量の局面を追加する場合、重複チェックは逐一行わず(dofind=false)に、後でintl_uniq()を行う事を推奨
-		void add(BookEntry& be, bool dofind = false) {
+		void add(BookEntry& be, bool dofind = false)
+		{
 			iter_t it;
-			if (dofind && (it = intl_find(be)) != end()) {
+			if (dofind && (it = intl_find(be)) != end())
+			{
 				// 重複していたら合成して再登録
 				(*it).update(be);
-			} else if (book_body.empty() || !(be < book_body.back())) {
+			} else if (book_body.empty() || !(be < book_body.back()))
+			{
 				// 順序関係が保たれているなら単純に末尾に追加
 				book_body.push_back(be);
-			} else if (book_run.empty()) {
+			} else if (book_run.empty())
+			{
 				// 既に全体がソート済みの場合、全体の長さを見て
-				if (book_body.size() < MINRUN) {
+				if (book_body.size() < MINRUN)
+				{
 					// 短ければ、挿入ソート
 					book_body.insert(upper_bound(book_body.begin(), book_body.end(), be), be);
-				} else {
+				} else
+				{
 					// 長ければ、新しいソート済み範囲を追加
 					book_run.push_back(std::distance(book_body.begin(), book_body.end()));
 					book_body.push_back(be);
 				}
-			} else {
+			} else
+			{
 				// ソート済み範囲が区分化されている場合、末尾の範囲の長さを見て
-				if (std::distance(book_body.begin() + book_run.back(), book_body.end()) < (diff_t)MINRUN) {
+				if (std::distance(book_body.begin() + book_run.back(), book_body.end()) < (diff_t)MINRUN)
+				{
 					// 短ければ、挿入ソート
 					book_body.insert(std::upper_bound(book_body.begin() + book_run.back(), book_body.end(), be), be);
-				} else {
+				} else
+				{
 					// 長ければ、部分的なマージソートを試みてから
 					intl_merge_part();
 					// 新しいソート済み範囲を追加
@@ -291,21 +332,29 @@ namespace Book
 		}
 
 		// 局面・指し手の追加
-		void insert_book_pos(std::string sfen, BookPos& bp) {
+		void insert_book_pos(std::string sfen, BookPos& bp)
+		{
 			auto it = intl_find(sfen);
-			if (it == end()) {
+			if (it == end())
+			{
 				// 存在しないので要素を作って追加。
 				std::vector<BookPos> move_list{ bp };
 				BookEntry be(split_sfen(sfen), move_list);
 				add(be);
-			} else {
+			} else
+			{
 				// この局面での指し手のリスト
 				it->insert_book_pos(bp);
 			}
 		}
 
 		// 定跡のクリア
-		void clear() { book_body.clear(); book_run.clear(); }
+		void clear()
+		{
+			book_body.clear();
+			book_run.clear();
+		}
+
 	};
 
 	// 出力ストリーム
