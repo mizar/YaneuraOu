@@ -869,30 +869,128 @@ namespace Book
 			return 0;
 		}
 
-		// 行バッファ
-		const size_t _buffersize = 256;
-		char _buffer[_buffersize];
+		// OnTheFly を行わない場合、オーバーヘッド（2倍～数倍？）を極力抑えるために低レベルな処理を織り交ぜる
 
-		ifstream is;
-		is.open(filename, ifstream::in | ifstream::binary);
-		if (is.bad() || !is.is_open())
+		// ファイルハンドラ
+		FILE * _fp;
+		
+		// 読み込みバッファ
+		const size_t _buffersize = 16 * 1024 * 1024; // 16MiB
+		char * _buffer = new char[_buffersize];
+		// 読み込み範囲始点、読み込み範囲終点、バッファ内最終行始点、バッファ終点
+		size_t _p0 = 0, _p1 = 0, _lastheadp = 0, _endp = 0;
+		// バッファサイズ超過行フラグ
+		bool _nolf = false;
+
+		// バッファへの次ブロック読み込み
+		auto _readblock = [&]()
+		{
+			size_t _tmpp = 0, _remain = 0;
+			char * __p;
+			// バッファサイズを超過する行の先頭ブロックを読んだ後に呼ばれた場合は、行末まで読み捨てる
+			while(_nolf)
+			{
+				_endp = fread(_buffer, sizeof(char), _buffersize - 1, _fp);
+				_buffer[_endp] = NULL;
+				// そのままファイル終端に達したら終了
+				if (_endp == 0)
+					return;
+				// 行末が無いか探す、それでも無ければ次ブロックの読み込み
+				__p = _buffer;
+				for(_p0 = 0; _p0 < _endp; ++_p0)
+					if (*__p++ == '\n')
+					{
+						_nolf = false;
+						break;
+					}
+			}
+			// 読み残し領域を先頭にコピー
+			if (_p0 < _endp)
+				memcpy(_buffer, _buffer + _p0, _tmpp = _endp - _p0);
+			_p0 = _p1 = 0;
+			// バッファの残りサイズ
+			_remain = _buffersize - _tmpp;
+			// 1文字分の余裕を残して読み込み、空いた1文字はNULで埋める
+			_endp = _tmpp + (_remain > 1 ? fread(_buffer + _tmpp, sizeof(char), _remain - 1, _fp) : 0);
+			__p = _buffer + _endp;
+			*__p = NULL;
+			// 最終行の行頭位置検出
+			for (_lastheadp = _endp; _lastheadp > 0 && *--__p != '\n'; --_lastheadp);
+			// 全く改行文字が存在しなければ、次回は行末まで読み捨てる処理を行うのでフラグを立てる
+			if (_lastheadp == 0 && *_buffer != '\n')
+				_nolf = true;
+		};
+
+		// バッファ内の次行範囲探索、必要に応じてバッファへの次ブロック読み込み
+		auto _nextrange = [&]()
+		{
+			char * _p;
+			// 前回の終端を始点として調べ始める
+			_p0 = _p1;
+			// 次の行頭位置を調べる
+			_p = _buffer + _p0;
+			while (_p0 < _lastheadp && *_p++ == '\n') ++_p0;
+			// バッファを読み終わるなら次ブロックをバッファに読み込み
+			if (_p0 >= _lastheadp)
+				_readblock();
+			// 行末位置を調べる
+			_p1 = _p0;
+			_p = _buffer + _p1;
+			while (_p1 < _lastheadp && *_p++ != '\n') ++_p1;
+		};
+
+		_fp = fopen(filename.c_str(), "r");
+
+		if (_fp == NULL)
 		{
 			cout << "info string Error! : can't read " + filename << endl;
 			return 1;
 		}
 
-		while (is.good())
+		// 先頭行読み込み
+		_nextrange();
+		while (_p1 > 0)
 		{
-			BookEntry be(is, _buffer, _buffersize, sfen_n11n);
+			// "sfen " で始まる25バイト以上の行を見つける
+			if (memcmp(_buffer + _p0, "sfen ", 5) || _p0 + 24 > _p1)
+			{
+				_nextrange();
+				continue;
+			}
+			// BookEntry 構築
+			BookEntry be(_buffer + _p0 + 5, _p1 - _p0 - 5, sfen_n11n);
+			// BookEntry への BookPos要素充填
+			while (true)
+			{
+				_nextrange();
+				// ファイル終端に達したら終了
+				if (_p1 == 0)
+					break;
+				// 次の sfen が始まったら終了
+				if (!memcmp(_buffer + _p0, "sfen ", 5))
+					break;
+				// 行頭文字がおかしければスキップして次の行を調べる
+				char c = _buffer[_p0];
+				if ((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
+					continue;
+				// BookPos 構築
+				BookPos bp(_buffer + _p0);
+				// BookEntry に追加
+				be.move_list.push_back(bp);
+			}
+			// おかしければ登録せずに次へ
 			if (be.sfenPos.empty() || be.move_list.empty())
 				continue;
 			// 採択確率を計算して、かつ、採択回数でsortしておく
 			// (sortはされてるはずだが他のソフトで生成した定跡DBではそうとも限らないので)。
 			be.calc_prob();
+			// MemoryBook に登録
 			book.add(be);
 		}
 
-		is.close();
+		fclose(_fp);
+
+		delete[] _buffer;
 
 		// 全体のソート、重複局面の除去
 		book.intl_uniq();
@@ -908,6 +1006,8 @@ namespace Book
 	{
 		// 全体のソートと重複局面の除去
 		book.intl_uniq();
+
+		// オーバーヘッド（2倍～数倍？）を防ぐため、低レベルな処理も織り交ぜる
 
 		// 1要素あたりの最大サイズ
 		const size_t _entrymaxsize = 65536; // 64kiB
@@ -971,85 +1071,79 @@ namespace Book
 						_buf[_p++] = '+';
 				}
 			};
-			// 整数値書き出し
-			auto _render_u32_1 = [&](u32 i)
+			// 整数値書き出し(sprintf_s を使うとこのコードより2倍～数倍？重い)
+			auto _render_u16_1 = [&](u16 i)
 			{
-				if(i > 9)
-					i %= 10;
+				if(i > 9u)
+					i %= 10u;
 				_buf[_p++] = '0' + i;
 			};
-			auto _render_u32_2l = [&](u32 i)
+			auto _render_u16_2l = [&](u16 i)
 			{
-				_render_u32_1(i / 10);
-				_render_u32_1(i);
+				_render_u16_1(i / 10u);
+				_render_u16_1(i);
 			};
-			auto _render_u32_2u = [&](u32 i)
+			auto _render_u16_2u = [&](u16 i)
 			{
-				if(i > 99)
-					i %= 100;
-				if(i > 9)
-					_render_u32_1(i / 10);
-				_render_u32_1(i);
+				if(i > 9u)
+					_render_u16_1(i / 10u);
+				_render_u16_1(i);
 			};
-			auto _render_u32_4l = [&](u32 i)
+			auto _render_u16_4l = [&](u16 i)
 			{
-				_render_u32_2l(i / 100);
-				_render_u32_2l(i);
+				_render_u16_2l(i / 100u);
+				_render_u16_2l(i);
 			};
-			auto _render_u32_4u = [&](u32 i)
+			auto _render_u16_4u = [&](u16 i)
 			{
-				if(i > 9999)
-					i %= 10000;
-				if(i > 99)
+				if(i > 99u)
 				{
-					_render_u32_2u(i / 100);
-					_render_u32_2l(i);
+					_render_u16_2u(i / 100u);
+					_render_u16_2l(i);
 				}
 				else
-					_render_u32_2u(i);
+					_render_u16_2u(i);
 			};
 			auto _render_u32_8l = [&](u32 i)
 			{
-				_render_u32_4l(i / 10000);
-				_render_u32_4l(i);
+				if (i > 99999999ul)
+					i %= 100000000ul;
+				_render_u16_4l((u16)(i / 10000ul));
+				_render_u16_4l((u16)(i % 10000ul));
 			};
 			auto _render_u32_8u = [&](u32 i)
 			{
-				if(i > 99999999)
-					i %= 100000000;
-				if(i > 9999)
+				if(i > 9999ul)
 				{
-					_render_u32_4u(i / 10000);
-					_render_u32_4l(i);
+					_render_u16_4u((u16)(i / 10000ul));
+					_render_u16_4l((u16)(i % 10000ul));
 				}
 				else
-					_render_u32_4u(i);
+					_render_u16_4u((u16)i);
 			};
 			auto _render_u64_16l = [&](u64 i)
 			{
-				if(i > 9999999999999999)
-					i %= 10000000000000000;
-				_render_u32_8l((u32)(i / 100000000));
-				_render_u32_8l((u32)(i % 100000000));
+				if(i > 9999999999999999ull)
+					i %= 10000000000000000ull;
+				_render_u32_8l((u32)(i / 100000000ull));
+				_render_u32_8l((u32)(i % 100000000ull));
 			};
 			auto _render_u64_16u = [&](u64 i)
 			{
-				if(i > 9999999999999999)
-					i %= 10000000000000000;
-				if(i > 99999999)
+				if(i > 99999999ull)
 				{
-					_render_u32_8u((u32)(i / 100000000));
-					_render_u32_8l((u32)(i % 100000000));
+					_render_u32_8u((u32)(i / 100000000ull));
+					_render_u32_8l((u32)(i % 100000000ull));
 				}
 				else
 					_render_u32_8u((u32)i);
 			};
 			auto _render_u32 = [&](u32 i)
 			{
-				if (i > 99999999)
+				if (i > 99999999ul)
 				{
-					_render_u32_8u(i / 100000000);
-					_render_u32_8l(i);
+					_render_u32_8u(i / 100000000ul);
+					_render_u32_8l(i % 100000000ul);
 				}
 				else
 					_render_u32_8u(i);
@@ -1062,10 +1156,10 @@ namespace Book
 			};
 			auto _render_u64 = [&](u64 i)
 			{
-				if(i > 9999999999999999)
+				if(i > 9999999999999999ull)
 				{
-					_render_u64_16u(i / 10000000000000000);
-					_render_u64_16l(i);
+					_render_u64_16u(i / 10000000000000000ull);
+					_render_u64_16l(i % 10000000000000000ull);
 				}
 				else
 					_render_u64_16u(i);
@@ -1076,14 +1170,15 @@ namespace Book
 					_buf[_p++] = '-';
 				_render_u64((u64)(i < 0 ? -i : i));
 			};
+
+			// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
+			// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
+			// 128bytes を超えたら明らかにおかしいので抑止。
 			_buf[_p++] = 's';
 			_buf[_p++] = 'f';
 			_buf[_p++] = 'e';
 			_buf[_p++] = 'n';
 			_buf[_p++] = ' ';
-			// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
-			// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
-			// 128bytes を超えたら明らかにおかしいので抑止。
 			char_traits<char>::copy(_buf + _p, be.sfenPos.c_str(), min(be.sfenPos.size(), (size_t)128));
 			_p += min(be.sfenPos.size(), (size_t)128);
 			_buf[_p++] = ' ';
@@ -1131,7 +1226,7 @@ namespace Book
 			be.sort_pos();
 			// 出力
 			_render_be(be);
-			// _bufth (16,320kiB) 以上まで出力が溜まったらファイルに書き出し
+			// _bufth (16320kiB) 以上まで出力が溜まったらファイルに書き出し
 			if (_p > _bufth)
 			{
 				fwrite(_buf, sizeof(char), _p, fp);
@@ -1148,6 +1243,27 @@ namespace Book
 		delete[] _buf;
 
 		return 0;
+	}
+
+	// char文字列 の BookPos 化
+	void BookEntry::set(const char* sfen, const size_t length, const bool sfen_n11n)
+	{
+		if(sfen_n11n)
+		{
+			// sfen文字列は手駒の表記に揺れがある。		
+			// (USI原案のほうでは規定されているのだが、将棋所が採用しているUSIプロトコルではこの規定がない。)		
+			// sfen()化しなおすことでやねうら王が用いているsfenの手駒表記(USI原案)に統一されるようにする。
+			Position pos;
+			pos.set(string(sfen, length));
+			sfenPos = pos.trimedsfen();
+			ply = pos.game_ply();
+		}
+		else
+		{
+			auto cur = trimlen_sfen(sfen, length);
+			sfenPos = string(sfen, cur);
+			ply = strtol(sfen + cur, NULL, 10);
+		}
 	}
 
 	// ストリームからの BookEntry 読み込み
@@ -1183,8 +1299,6 @@ namespace Book
 			sfenPos = sfen.first;
 			ply = sfen.second;
 		}
-		// 候補手読み込み
-		incpos(is, _buffer, _buffersize);
 	}
 
 	// ストリームから BookEntry への BookPos 順次読み込み
@@ -1193,8 +1307,6 @@ namespace Book
 		while (true)
 		{
 			int c;
-			// 次の BookPos を追加できるかどうかを判断するため、
-			// 不要行を読み飛ばす操作は BookPos::set ではなく、 BookEntry::incpos の側で行う。
 			// 行頭が数字か英文字以外なら行末文字まで読み飛ばす
 			while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z')))
 				if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
@@ -1202,18 +1314,25 @@ namespace Book
 			// 次のsfen文字列に到達していそうなら離脱（指し手文字列で's'から始まるものは無い）
 			if (c == 's')
 				return;
+			// 行読み込み
+			is.getline(_buffer, _buffersize - 8);
+			// バッファから溢れたら行末まで読み捨て
+			if (is.fail())
+			{
+				is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+				is.clear(is.rdstate() & ~std::ios_base::failbit);
+			}
 			// BookPos 読み込み
-			BookPos bp(is, _buffer, _buffersize);
+			BookPos bp(_buffer);
 			move_list.push_back(bp);
 		}
 	}
 
-	// ストリームからの BookPos 読み込み
-	// BookEntry::incpos から呼び出される事を企図しているため、
-	// 不要行の読み飛ばしは BookPos::set 側では行わない。
-	void BookPos::set(std::istream& is, char* _buffer, const size_t _buffersize)
+	// バイト文字列からの BookPos 読み込み
+	void BookPos::set(char* p)
 	{
-		auto _mvparse = [](char* p)->Move
+		// 指し手解析部
+		auto _mvparse = [](char* p) -> Move
 		{
 			char c0 = *p++;
 			if (c0 >= '1' && c0 <= '9')
@@ -1246,30 +1365,19 @@ namespace Book
 			return MOVE_NONE;
 		};
 
-		// 行読み込み
-		is.getline(_buffer, _buffersize - 8); // memcmp用の余裕
-
-		// バッファから溢れたら行末まで読み捨て
-		if (is.fail())
-		{
-			is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			is.clear(is.rdstate() & ~std::ios_base::failbit);
-		}
-
-		char* p = _buffer;
-		if (*p == NULL) return;
-		bestMove = _mvparse(p); while (*p++ != ' ') if (*p == NULL) return;
-		nextMove = _mvparse(p); while (*p++ != ' ') if (*p == NULL) return;
-		value = strtol(p, NULL, 10); while (*p++ != ' ') if (*p == NULL) return;
-		depth = strtol(p, NULL, 10); while (*p++ != ' ') if (*p == NULL) return;
+		// 解析実行
+		// 0x00 - 0x1f, 0x21 - 0x29, 0x80 - 0xff の文字が現れ次第中止
+		// 特に、NULL, CR, LF 文字に反応する事を企図。TAB 文字でも中止。SP 文字連続でも中止。
+		if (*p < '*') return;
+		bestMove = _mvparse(p);
+		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
+		nextMove = _mvparse(p);
+		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
+		value = strtol(p, NULL, 10);
+		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
+		depth = strtol(p, NULL, 10);
+		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
 		num = strtoull(p, NULL, 10);
-		/* // 以下のコードとだいたい同じ
-		std::string best, next;
-		is >> best >> next >> value >> depth >> num;
-		is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		bestMove = (best == "none" || best == "resign") ? MOVE_NONE : move_from_usi(best);
-		nextMove = (next == "none" || next == "resign") ? MOVE_NONE : move_from_usi(next);
-		*/
 	}
 
 	MemoryBook::BookType::iterator MemoryBook::find(const Position& pos)
@@ -1408,9 +1516,9 @@ namespace Book
 	}
 
 	// sfen文字列のゴミを除いた長さ
-	const std::size_t trimlen_sfen(const std::string sfen)
+	const std::size_t trimlen_sfen(const char* sfen, const size_t length)
 	{
-		auto cur = sfen.length();
+		auto cur = length;
 		while (cur > 0)
 		{
 			char c = sfen[cur - 1];
@@ -1421,6 +1529,10 @@ namespace Book
 			cur--;
 		}
 		return cur;
+	}
+	const std::size_t trimlen_sfen(const std::string sfen)
+	{
+		return trimlen_sfen(sfen.c_str(), sfen.length());
 	}
 
 	// sfen文字列から末尾のゴミを取り除いて返す。
@@ -1438,8 +1550,7 @@ namespace Book
 		auto cur = trimlen_sfen(sfen);
 		std::string s = sfen;
 		s.resize(cur);
-		char* e = nullptr;
-		int ply = strtol(sfen.c_str() + cur, &e, 10);
+		int ply = strtol(sfen.c_str() + cur, NULL, 10);
 		return std::make_pair(s, ply);
 	}
 

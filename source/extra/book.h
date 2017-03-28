@@ -16,6 +16,7 @@ namespace Book
 	// 手数を除いた平手初期局面のsfen文字列
 	const std::string SHORTSFEN_HIRATE = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -";
 	// sfen文字列のゴミを除いた長さ
+	const std::size_t trimlen_sfen(const char* sfen, const size_t length);
 	const std::size_t trimlen_sfen(const std::string sfen);
 	// sfen文字列から末尾のゴミを取り除いて返す。
 	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
@@ -35,9 +36,9 @@ namespace Book
 
 		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
 
-		// ストリームからの BookPos 読み込み（通常は BookEntry::incpos から呼び出されるのみ）
-		void set(std::istream& is, char* _buffer, const size_t _buffersize);
-		BookPos(std::istream& is, char* _buffer, const size_t _buffersize) { set(is, _buffer, _buffersize); }
+		// バイト文字列からの BookPos 読み込み
+		void set(char* p);
+		BookPos(char* p) { set(p); }
 
 		// 比較
 		bool operator == (const BookPos& rhs) const { return bestMove == rhs.bestMove; }
@@ -56,6 +57,13 @@ namespace Book
 		BookEntry(const std::string sfen, const int p, std::vector<BookPos> mlist = {}) : sfenPos(sfen), ply(p), move_list(mlist) {}
 		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist = {}) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
 		BookEntry(const Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
+
+		// char文字列 の BookPos 化
+		void set(const char* sfen, const size_t length, const bool sfen_n11n);
+		BookEntry(const char* sfen, const size_t length, const bool sfen_n11n = false)
+		{
+			set(sfen, length, sfen_n11n);
+		}
 
 		// ストリームからの BookPos 順次読み込み
 		void incpos(std::istream& is, char* _buffer, const size_t _buffersize);
