@@ -79,7 +79,7 @@ namespace Book
 
 			vector<BookPos> move_list;
 
-			int multi_pv = std::min((int)Options["MultiPV"], (int)th->rootMoves.size());
+			int multi_pv = min((int)Options["MultiPV"], (int)th->rootMoves.size());
 			for (int i = 0; i < multi_pv; ++i)
 			{
 				// 出現頻度は、バージョンナンバーを100倍したものにしておく)
@@ -93,7 +93,7 @@ namespace Book
 			}
 
 			{
-				std::unique_lock<Mutex> lk(io_mutex);
+				unique_lock<Mutex> lk(io_mutex);
 				// 前のエントリーは上書きされる。
 				BookEntry be(split_sfen(sfen), move_list);
 				book.add(be, true);
@@ -254,7 +254,7 @@ namespace Book
 			// この時点で評価関数を読み込まないとKPPTはPositionのset()が出来ないので…。
 			is_ready();
 
-			std::deque<string> sfens;
+			deque<string> sfens;
 			read_all_lines(sfen_name, sfens);
 
 			cout << "parse.." << flush;
@@ -268,7 +268,7 @@ namespace Book
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
 			for (size_t k = 1; !sfens.empty(); ++k)
 			{
-				auto sfen = std::move(sfens.front());
+				auto sfen = move(sfens.front());
 				sfens.pop_front();
 
 				// "#"以降読み捨て
@@ -428,7 +428,7 @@ namespace Book
 				multi_think.callback_seconds = 30 * 60;
 				multi_think.callback_func = [&]()
 				{
-					std::unique_lock<Mutex> lk(multi_think.io_mutex);
+					unique_lock<Mutex> lk(multi_think.io_mutex);
 					// 前回書き出し時からレコードが追加された？
 					if (multi_think.appended)
 					{
@@ -729,15 +729,12 @@ namespace Book
 			// diffrent_nodes1 = book1側にのみあったnodeの数
 			u64 same_nodes = 0;
 			u64 diffrent_nodes0 = 0, diffrent_nodes1 = 0;
-			// 領域圧縮頻度しきい値、時々入力側の占有領域を整理してあげる。
-			const u64 merge_shrink_threshold = 65536;
-			u64 b0_shrink_count = 0, b1_shrink_count = 0;
 
 			// マージ
 			while (!book[0].book_body.empty() && !book[1].book_body.empty())
 			{
-				auto& b0front = book[0].book_body.front();
-				auto& b1front = book[1].book_body.front();
+				BookEntry& b0front = book[0].book_body.front();
+				BookEntry& b1front = book[1].book_body.front();
 				if (b0front == b1front)
 				{
 					// 同じ局面があったので、良いほうをbook2に突っ込む。
@@ -746,65 +743,37 @@ namespace Book
 					be.update(move(b1front));
 					book[2].add(be);
 					book[0].book_body.pop_front();
-					if (++b0_shrink_count >= merge_shrink_threshold)
-					{
-						book[0].book_body.shrink_to_fit();
-						b0_shrink_count = 0;
-					}
 					book[1].book_body.pop_front();
-					if (++b1_shrink_count >= merge_shrink_threshold)
-					{
-						book[1].book_body.shrink_to_fit();
-						b1_shrink_count = 0;
-					}
 				} else if (b0front < b1front)
 				{
 					// book0からbook2に突っ込む
 					diffrent_nodes0++;
 					book[2].add(move(b0front));
 					book[0].book_body.pop_front();
-					if (++b0_shrink_count >= merge_shrink_threshold)
-					{
-						book[0].book_body.shrink_to_fit();
-						b0_shrink_count = 0;
-					}
 				} else
 				{
 					// book1からbook2に突っ込む
 					diffrent_nodes1++;
 					book[2].add(move(b1front));
 					book[1].book_body.pop_front();
-					if (++b1_shrink_count >= merge_shrink_threshold)
-					{
-						book[1].book_body.shrink_to_fit();
-						b1_shrink_count = 0;
-					}
 				}
 			}
 			// book0側でまだ突っ込んでいないnodeを、book2に突っ込む
 			while (!book[0].book_body.empty())
 			{
 				diffrent_nodes0++;
-				book[2].add(book[0].book_body.front());
+				book[2].add(move(book[0].book_body.front()));
 				book[0].book_body.pop_front();
-				if (++b0_shrink_count >= merge_shrink_threshold)
-				{
-					book[0].book_body.shrink_to_fit();
-					b0_shrink_count = 0;
-				}
 			}
+			book[0].book_body.clear();
 			// book1側でまだ突っ込んでいないnodeを、book2に突っ込む
 			while (!book[1].book_body.empty())
 			{
 				diffrent_nodes1++;
-				book[2].add(book[1].book_body.front());
+				book[2].add(move(book[1].book_body.front()));
 				book[1].book_body.pop_front();
-				if (++b1_shrink_count >= merge_shrink_threshold)
-				{
-					book[1].book_body.shrink_to_fit();
-					b1_shrink_count = 0;
-				}
 			}
+			book[1].book_body.clear();
 			cout << "..done" << endl;
 
 			cout << "same nodes = " << same_nodes
@@ -822,7 +791,8 @@ namespace Book
 			is >> book_src >> book_dst;
 			is_ready();
 			cout << "book sort from " << book_src << " , write to " << book_dst << endl;
-			Book::read_book(book_src, book, false, true);
+			if (read_book(book_src, book, false, true) != 0)
+				return;
 
 			cout << "write..";
 			write_book(book_dst, book);
@@ -841,7 +811,7 @@ namespace Book
 #endif
 
 	// 定跡ファイルの読み込み(book.db)など。
-	int read_book(const std::string& filename, MemoryBook& book, bool on_the_fly, bool sfen_n11n)
+	int read_book(const string& filename, MemoryBook& book, bool on_the_fly, bool sfen_n11n)
 	{
 		// 読み込み済であるかの判定
 		if (book.book_name == filename)
@@ -869,112 +839,93 @@ namespace Book
 			return 0;
 		}
 
-		// OnTheFly を行わない場合、オーバーヘッド（2倍～数倍？）を極力抑えるために低レベルな処理を織り交ぜる
+		// 1行ごとの読み込みはオーバーヘッドが大きいので、作業領域を介して読み込む
 
 		// ファイルハンドラ
-		FILE * _fp;
+		ifstream fs;
 		
 		// 読み込みバッファ
-		const size_t _buffersize = 16 * 1024 * 1024; // 16MiB
-		char * _buffer = new char[_buffersize];
+		const size_t buffersize = 16 * 1024 * 1024; // 16MiB
+		char * buffer = new char[buffersize];
 		// 読み込み範囲始点、読み込み範囲終点、バッファ内最終行始点、バッファ終点
-		size_t _p0 = 0, _p1 = 0, _lastheadp = 0, _endp = 0;
-		// バッファサイズ超過行フラグ
-		bool _nolf = false;
+		size_t idx0 = 0, idx1 = 0, lastheadidx = 0, endidx = 0;
 
 		// バッファへの次ブロック読み込み
-		auto _readblock = [&]()
+		auto readblock = [&]()
 		{
-			size_t _tmpp = 0, _remain = 0;
-			char * __p;
-			// バッファサイズを超過する行の先頭ブロックを読んだ後に呼ばれた場合は、行末まで読み捨てる
-			while(_nolf)
-			{
-				_endp = fread(_buffer, sizeof(char), _buffersize - 1, _fp);
-				_buffer[_endp] = NULL;
-				// そのままファイル終端に達したら終了
-				if (_endp == 0)
-					return;
-				// 行末が無いか探す、それでも無ければ次ブロックの読み込み
-				__p = _buffer;
-				for(_p0 = 0; _p0 < _endp; ++_p0)
-					if (*__p++ == '\n')
-					{
-						_nolf = false;
-						break;
-					}
-			}
+			size_t _idx = 0, _remain = 0;
 			// 読み残し領域を先頭にコピー
-			if (_p0 < _endp)
-				memcpy(_buffer, _buffer + _p0, _tmpp = _endp - _p0);
-			_p0 = _p1 = 0;
+			if (idx0 < endidx)
+				memcpy(buffer, buffer + idx0, _idx = endidx - idx0);
+			idx0 = idx1 = 0;
 			// バッファの残りサイズ
-			_remain = _buffersize - _tmpp;
+			_remain = buffersize - _idx;
 			// 1文字分の余裕を残して読み込み、空いた1文字はNULで埋める
-			_endp = _tmpp + (_remain > 1 ? fread(_buffer + _tmpp, sizeof(char), _remain - 1, _fp) : 0);
-			__p = _buffer + _endp;
-			*__p = NULL;
+			endidx = _idx + (_remain > 1 ? fs.read(buffer + _idx, _remain - 1).gcount() : 0);
+			char * _p = buffer + endidx;
+			*_p = NULL;
 			// 最終行の行頭位置検出
-			for (_lastheadp = _endp; _lastheadp > 0 && *--__p != '\n'; --_lastheadp);
-			// 全く改行文字が存在しなければ、次回は行末まで読み捨てる処理を行うのでフラグを立てる
-			if (_lastheadp == 0 && *_buffer != '\n')
-				_nolf = true;
+			size_t _lastheadidx = endidx;
+			for (; _lastheadidx > 0 && *--_p != '\n'; --_lastheadidx);
+			// 全く改行文字が存在しなければ、行末まで読み捨てる
+			if (_lastheadidx == 0 && *buffer != '\n')
+				fs.ignore(numeric_limits<streamsize>::max(), '\n');
+			lastheadidx = _lastheadidx;
 		};
 
 		// バッファ内の次行範囲探索、必要に応じてバッファへの次ブロック読み込み
-		auto _nextrange = [&]()
+		auto nextrange = [&]()
 		{
-			char * _p;
-			// 前回の終端を始点として調べ始める
-			_p0 = _p1;
-			// 次の行頭位置を調べる
-			_p = _buffer + _p0;
-			while (_p0 < _lastheadp && *_p++ == '\n') ++_p0;
+			// 前回の終端を始点として次の行頭位置を調べる
+			size_t _idx0 = idx1, _lastheadp0 = lastheadidx;
+			char * _p0 = buffer + _idx0;
+			while (_idx0 < _lastheadp0 && *_p0++ == '\n') ++_idx0;
+			idx0 = _idx0;
 			// バッファを読み終わるなら次ブロックをバッファに読み込み
-			if (_p0 >= _lastheadp)
-				_readblock();
+			if (_idx0 >= _lastheadp0)
+				readblock();
 			// 行末位置を調べる
-			_p1 = _p0;
-			_p = _buffer + _p1;
-			while (_p1 < _lastheadp && *_p++ != '\n') ++_p1;
+			size_t _idx1 = idx0, _lastheadp1 = lastheadidx;
+			char * _p1 = buffer + _idx1;
+			while (_idx1 < _lastheadp1 && *_p1++ != '\n') ++_idx1;
+			idx1 = _idx1;
 		};
 
-		_fp = fopen(filename.c_str(), "r");
-
-		if (_fp == NULL)
+		fs.open(filename, ifstream::in | ifstream::binary);
+		if (fs.bad() || !fs.is_open())
 		{
 			cout << "info string Error! : can't read " + filename << endl;
 			return 1;
 		}
 
 		// 先頭行読み込み
-		_nextrange();
-		while (_p1 > 0)
+		nextrange();
+		while (idx1 > 0)
 		{
 			// "sfen " で始まる25バイト以上の行を見つける
-			if (memcmp(_buffer + _p0, "sfen ", 5) || _p0 + 24 > _p1)
+			if (memcmp(buffer + idx0, "sfen ", 5) || idx0 + 24 > idx1)
 			{
-				_nextrange();
+				nextrange();
 				continue;
 			}
 			// BookEntry 構築
-			BookEntry be(_buffer + _p0 + 5, _p1 - _p0 - 5, sfen_n11n);
+			BookEntry be(buffer + idx0 + 5, idx1 - idx0 - 5, sfen_n11n);
 			// BookEntry への BookPos要素充填
 			while (true)
 			{
-				_nextrange();
+				nextrange();
 				// ファイル終端に達したら終了
-				if (_p1 == 0)
+				if (idx1 == 0)
 					break;
 				// 次の sfen が始まったら終了
-				if (!memcmp(_buffer + _p0, "sfen ", 5))
+				if (!memcmp(buffer + idx0, "sfen ", 5))
 					break;
 				// 行頭文字がおかしければスキップして次の行を調べる
-				char c = _buffer[_p0];
+				char c = buffer[idx0];
 				if ((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
 					continue;
 				// BookPos 構築
-				BookPos bp(_buffer + _p0);
+				BookPos bp(buffer + idx0);
 				// BookEntry に追加
 				be.move_list.push_back(bp);
 			}
@@ -988,9 +939,9 @@ namespace Book
 			book.add(be);
 		}
 
-		fclose(_fp);
+		fs.close();
 
-		delete[] _buffer;
+		delete[] buffer;
 
 		// 全体のソート、重複局面の除去
 		book.intl_uniq();
@@ -1002,34 +953,35 @@ namespace Book
 	}
 
 	// 定跡ファイルの書き出し
-	int write_book(const std::string& filename, MemoryBook& book)
+	int write_book(const string& filename, MemoryBook& book)
 	{
 		// 全体のソートと重複局面の除去
 		book.intl_uniq();
 
-		// オーバーヘッド（2倍～数倍？）を防ぐため、低レベルな処理も織り交ぜる
+		// 1行ごとの書き出しはオーバーヘッドが大きいので、作業領域を介して書き出す
 
 		// 1要素あたりの最大サイズ
-		const size_t _entrymaxsize = 65536; // 64kiB
+		const size_t entrymaxsize = 65536; // 64kiB
 		// 領域確保係数
-		const size_t _bufmulti = 256;
+		const size_t renderbufmulti = 256;
 		// 最大バッファ領域サイズ
-		const size_t _bufmaxsize = _entrymaxsize * _bufmulti; // 16MiB
+		const size_t renderbufmaxsize = entrymaxsize * renderbufmulti; // 16MiB
 		// バッファ領域サイズ
-		size_t _bufsize = _entrymaxsize * min(_bufmulti, book.book_body.size() + 1);
+		size_t renderbufsize = entrymaxsize * min(renderbufmulti, book.book_body.size() + 1);
 		// バッファ払い出し閾値
-		size_t _bufth = _bufsize - _entrymaxsize;
+		size_t renderbufth = renderbufsize - entrymaxsize;
 		// バッファ確保
-		char * _buf = new char[_bufsize];
+		char * renderbuf = new char[renderbufsize];
 
 		// 文字列バッファ char[] に BookEntry を書き出し
 		// BookEntry 毎に書き出しを行う
-		size_t _p;
-		auto _render_be = [&](const BookEntry& be)
+		size_t idx;
+		auto render_be = [&](const BookEntry& be)
 		{
 			// Move 書き出し
-			auto _render_move = [&](const Move m)
+			auto render_move = [&](const Move m)
 			{
+				size_t _idx = idx;
 				if (!is_ok(m))
 				{
 					// 頻度が低いのでstringで手抜き
@@ -1049,141 +1001,142 @@ namespace Book
 						str = "none";
 						break;
 					}
-					char_traits<char>::copy(_buf + _p, str.c_str(), str.size());
-					_p += str.size();
+					char_traits<char>::copy(renderbuf + _idx, str.c_str(), str.size());
+					_idx += str.size();
 				}
 				else if (is_drop(m))
 				{
 					Square sq_to = move_to(m);
-					_buf[_p++] = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
-					_buf[_p++] = '*';
-					_buf[_p++] = (char)('1' + file_of(sq_to));
-					_buf[_p++] = (char)('a' + rank_of(sq_to));
+					renderbuf[_idx++] = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
+					renderbuf[_idx++] = '*';
+					renderbuf[_idx++] = (char)('1' + file_of(sq_to));
+					renderbuf[_idx++] = (char)('a' + rank_of(sq_to));
 				}
 				else
 				{
 					Square sq_from = move_from(m), sq_to = move_to(m);
-					_buf[_p++] = (char)('1' + file_of(sq_from));
-					_buf[_p++] = (char)('a' + rank_of(sq_from));
-					_buf[_p++] = (char)('1' + file_of(sq_to));
-					_buf[_p++] = (char)('a' + rank_of(sq_to));
+					renderbuf[_idx++] = (char)('1' + file_of(sq_from));
+					renderbuf[_idx++] = (char)('a' + rank_of(sq_from));
+					renderbuf[_idx++] = (char)('1' + file_of(sq_to));
+					renderbuf[_idx++] = (char)('a' + rank_of(sq_to));
 					if (is_promote(m))
-						_buf[_p++] = '+';
+						renderbuf[_idx++] = '+';
 				}
+				idx = _idx;
 			};
 			// 整数値書き出し(sprintf_s を使うとこのコードより2倍～数倍？重い)
-			auto _render_u16_1 = [&](u16 i)
+			auto render_u16_1 = [&](u16 i)
 			{
-				if(i > 9u)
-					i %= 10u;
-				_buf[_p++] = '0' + i;
+				if(i > (u16)9u)
+					i %= (u16)10u;
+				renderbuf[idx++] = '0' + (char)i;
 			};
-			auto _render_u16_2l = [&](u16 i)
+			auto render_u16_2l = [&](u16 i)
 			{
-				_render_u16_1(i / 10u);
-				_render_u16_1(i);
+				render_u16_1(i / (u16)10u);
+				render_u16_1(i);
 			};
-			auto _render_u16_2u = [&](u16 i)
+			auto render_u16_2u = [&](u16 i)
 			{
-				if(i > 9u)
-					_render_u16_1(i / 10u);
-				_render_u16_1(i);
+				if(i > (u16)9u)
+					render_u16_1(i / (u16)10u);
+				render_u16_1(i);
 			};
-			auto _render_u16_4l = [&](u16 i)
+			auto render_u16_4l = [&](u16 i)
 			{
-				_render_u16_2l(i / 100u);
-				_render_u16_2l(i);
+				render_u16_2l(i / (u16)100u);
+				render_u16_2l(i);
 			};
-			auto _render_u16_4u = [&](u16 i)
+			auto render_u16_4u = [&](u16 i)
 			{
 				if(i > 99u)
 				{
-					_render_u16_2u(i / 100u);
-					_render_u16_2l(i);
+					render_u16_2u(i / (u16)100u);
+					render_u16_2l(i);
 				}
 				else
-					_render_u16_2u(i);
+					render_u16_2u(i);
 			};
-			auto _render_u32_8l = [&](u32 i)
+			auto render_u32_8l = [&](u32 i)
 			{
-				if (i > 99999999ul)
-					i %= 100000000ul;
-				_render_u16_4l((u16)(i / 10000ul));
-				_render_u16_4l((u16)(i % 10000ul));
+				if (i > (u32)99999999ul)
+					i %= (u32)100000000ul;
+				render_u16_4l((u16)(i / (u16)10000u));
+				render_u16_4l((u16)(i % (u16)10000u));
 			};
-			auto _render_u32_8u = [&](u32 i)
+			auto render_u32_8u = [&](u32 i)
 			{
-				if(i > 9999ul)
+				if(i > (u32)9999ul)
 				{
-					_render_u16_4u((u16)(i / 10000ul));
-					_render_u16_4l((u16)(i % 10000ul));
+					render_u16_4u((u16)(i / (u16)10000u));
+					render_u16_4l((u16)(i % (u16)10000u));
 				}
 				else
-					_render_u16_4u((u16)i);
+					render_u16_4u((u16)i);
 			};
-			auto _render_u64_16l = [&](u64 i)
+			auto render_u64_16l = [&](u64 i)
 			{
-				if(i > 9999999999999999ull)
-					i %= 10000000000000000ull;
-				_render_u32_8l((u32)(i / 100000000ull));
-				_render_u32_8l((u32)(i % 100000000ull));
+				if(i > (u64)9999999999999999ull)
+					i %= (u64)10000000000000000ull;
+				render_u32_8l((u32)(i / (u32)100000000ul));
+				render_u32_8l((u32)(i % (u32)100000000ul));
 			};
-			auto _render_u64_16u = [&](u64 i)
+			auto render_u64_16u = [&](u64 i)
 			{
-				if(i > 99999999ull)
+				if(i > (u64)99999999ull)
 				{
-					_render_u32_8u((u32)(i / 100000000ull));
-					_render_u32_8l((u32)(i % 100000000ull));
+					render_u32_8u((u32)(i / (u32)100000000ul));
+					render_u32_8l((u32)(i % (u32)100000000ul));
 				}
 				else
-					_render_u32_8u((u32)i);
+					render_u32_8u((u32)i);
 			};
-			auto _render_u32 = [&](u32 i)
+			auto render_u32 = [&](u32 i)
 			{
-				if (i > 99999999ul)
+				if (i > (u32)99999999ul)
 				{
-					_render_u32_8u(i / 100000000ul);
-					_render_u32_8l(i % 100000000ul);
+					render_u32_8u(i / (u32)100000000ul);
+					render_u32_8l(i % (u32)100000000ul);
 				}
 				else
-					_render_u32_8u(i);
+					render_u32_8u(i);
 			};
-			auto _render_s32 = [&](s32 i)
+			auto render_s32 = [&](s32 i)
 			{
 				if (i < 0)
-					_buf[_p++] = '-';
-				_render_u32((u32)(i < 0 ? -i : i));
+					renderbuf[idx++] = '-';
+				render_u32((u32)(i < 0 ? -i : i));
 			};
-			auto _render_u64 = [&](u64 i)
+			auto render_u64 = [&](u64 i)
 			{
-				if(i > 9999999999999999ull)
+				if(i > (u64)9999999999999999ull)
 				{
-					_render_u64_16u(i / 10000000000000000ull);
-					_render_u64_16l(i % 10000000000000000ull);
+					render_u64_16u(i / (u64)10000000000000000ull);
+					render_u64_16l(i % (u64)10000000000000000ull);
 				}
 				else
-					_render_u64_16u(i);
+					render_u64_16u(i);
 			};
-			auto _render_s64 = [&](s64 i)
+			auto render_s64 = [&](s64 i)
 			{
 				if (i < 0)
-					_buf[_p++] = '-';
-				_render_u64((u64)(i < 0 ? -i : i));
+					renderbuf[idx++] = '-';
+				render_u64((u64)(i < 0 ? -i : i));
 			};
 
 			// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
 			// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
 			// 128bytes を超えたら明らかにおかしいので抑止。
-			_buf[_p++] = 's';
-			_buf[_p++] = 'f';
-			_buf[_p++] = 'e';
-			_buf[_p++] = 'n';
-			_buf[_p++] = ' ';
-			char_traits<char>::copy(_buf + _p, be.sfenPos.c_str(), min(be.sfenPos.size(), (size_t)128));
-			_p += min(be.sfenPos.size(), (size_t)128);
-			_buf[_p++] = ' ';
-			_render_s32(be.ply);
-			_buf[_p++] = '\n';
+			renderbuf[idx++] = 's';
+			renderbuf[idx++] = 'f';
+			renderbuf[idx++] = 'e';
+			renderbuf[idx++] = 'n';
+			renderbuf[idx++] = ' ';
+			char_traits<char>::copy(renderbuf + idx, be.sfenPos.c_str(), min(be.sfenPos.size(), (size_t)128));
+			idx += min(be.sfenPos.size(), (size_t)128);
+			renderbuf[idx++] = ' ';
+			render_s32(be.ply);
+			renderbuf[idx++] = '\n';
 			// BookPosは改行文字を含めても 62bytes を超えないので、
 			// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
 			// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
@@ -1192,32 +1145,32 @@ namespace Book
 			if (be.move_list.size() <= 1000)
 				for (auto& bp : be.move_list)
 				{
-					_render_move(bp.bestMove);
-					_buf[_p++] = ' ';
-					_render_move(bp.nextMove);
-					_buf[_p++] = ' ';
-					_render_s32(bp.value);
-					_buf[_p++] = ' ';
-					_render_s32(bp.depth);
-					_buf[_p++] = ' ';
-					_render_u64(bp.num);
-					_buf[_p++] = '\n';
+					render_move(bp.bestMove);
+					renderbuf[idx++] = ' ';
+					render_move(bp.nextMove);
+					renderbuf[idx++] = ' ';
+					render_s32(bp.value);
+					renderbuf[idx++] = ' ';
+					render_s32(bp.depth);
+					renderbuf[idx++] = ' ';
+					render_u64(bp.num);
+					renderbuf[idx++] = '\n';
 				}
-			_buf[_p] = NULL; // 念のためNULL文字出力
+			renderbuf[idx] = NULL; // 念のためNULL文字出力
 		};
 
-		FILE * fp;
-		if ((fp = fopen(filename.c_str(), "w")) == NULL)
+		ofstream fs;
+		fs.open(filename, ofstream::out);
+		if (fs.bad() || !fs.is_open())
 		{
 			cout << "info string Error! : can't write " + filename << endl;
 			return 1;
 		}
 
 		// バージョン識別用文字列
-		const char _headverstr[] = "#YANEURAOU-DB2016 1.00\n";
-		fwrite(_headverstr, sizeof(char), sizeof(_headverstr) - 1, fp);
+		fs << "#YANEURAOU-DB2016 1.00" << endl;
 
-		_buf[_p = 0] = NULL;
+		renderbuf[idx = 0] = NULL;
 		for (BookEntry& be : book.book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
@@ -1225,24 +1178,151 @@ namespace Book
 			// 採択回数でソートしておく。
 			be.sort_pos();
 			// 出力
-			_render_be(be);
-			// _bufth (16320kiB) 以上まで出力が溜まったらファイルに書き出し
-			if (_p > _bufth)
+			render_be(be);
+			// _bufth (16320kiB) を超えて出力が溜まったらファイルに書き出す
+			if (idx > renderbufth)
 			{
-				fwrite(_buf, sizeof(char), _p, fp);
-				_buf[_p = 0] = NULL;
+				fs.write(renderbuf, idx);
+				renderbuf[idx = 0] = NULL;
 			}
 		}
 		// 残りの出力をファイルに書き出し
-		if (_p > 0)
-			fwrite(_buf, sizeof(char), _p, fp);
+		if (idx > 0)
+			fs.write(renderbuf, idx);
 
-		fclose(fp);
+		fs.close();
 
 		// バッファ開放
-		delete[] _buf;
+		delete[] renderbuf;
 
 		return 0;
+	}
+
+	// 文字列 → Move
+	Move _atomove(const char **p)
+	{
+		const char * _p = *p;
+		char c0 = *_p;
+		if (c0 >= '1' && c0 <= '9')
+		{
+			char c1 = *++_p; if (c1 < 'a' || c1 > 'i') goto _atomove_none;
+			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
+			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
+			char c4 = *++_p;
+			if (c4 == '+')
+			{
+				*p = _p + 1;
+				return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+			}
+			else
+			{
+				*p = _p;
+				return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+			}
+		}
+		else if (c0 >= 'A' && c0 <= 'Z')
+		{
+			char c1 = *++_p; if (c1 != '*') goto _atomove_none;
+			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
+			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
+			*p = _p;
+			for (int i = 1; i <= 7; ++i)
+				if (PieceToCharBW[i] == c0)
+					return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
+		}
+		else if (c0 == '0' || c0 >= 'a' && c0 <= 'z')
+		{
+			if (!memcmp(_p, "win", 3)) { p += 3; return MOVE_WIN; }
+			if (!memcmp(_p, "null", 4)) { p += 4; return MOVE_NULL; }
+			if (!memcmp(_p, "pass", 4)) { p += 4; return MOVE_NULL; }
+			if (!memcmp(_p, "0000", 4)) { p += 4; return MOVE_NULL; }
+		}
+	_atomove_none:;
+		while (*_p >= '*') ++_p;
+		*p = _p;
+		return MOVE_NONE;
+	}
+
+	// 文字列 → s32整数 (strtolの代替)
+	s32 _atos32(const char **p)
+	{
+		const char * _p = *p;
+		s32 rs32 = 0;
+		bool minus = false;
+		char c = *_p;
+		while (c == ' ') c = *++_p;
+		if (c == '-')
+		{
+			minus = true;
+			c = *++_p;
+		}
+		else if (c == '+')
+			c = *++_p;
+		while (c == '0') c = *++_p;
+		if (c < '0' || c > '9') goto _atos32_rs32; else rs32 = (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32;
+		if (rs32 > (s32)214748364l) goto _atos32_limit; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if (rs32 < (s32)0l) goto _atos32_limit;
+		if ((c = *++_p) >= '0' && c <= '9') goto _atos32_limit;
+	_atos32_rs32:;
+		*p = _p;
+		return minus ? -rs32 : rs32;
+	_atos32_limit:;
+		while ((c = *++_p) >= '0' && c <= '9');
+		*p = _p;
+		return minus ? (INT32_MIN) : (INT32_MAX);
+	}
+
+	// 文字列 → u64整数 (strtoullの代替)
+	u64 _atou64(const char ** p)
+	{
+		const char * _p = *p;
+		u32 ru32 = 0;
+		char c = *_p;
+		while (c == ' ') c = *++_p;
+		while (c == '0') c = *++_p;
+		if (c < '0' || c > '9') goto _atou64_ru32; else ru32 = (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		u64 ru64 = (u64)ru32;
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64;
+		if (ru64 > (u64)1844674407370955161ull) goto _atou64_limit; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if (ru64 < (u64)(UINT32_MAX)) goto _atou64_limit;
+		if ((c = *++_p) >= '0' && c <= '9') goto _atou64_limit;
+	_atou64_ru64:;
+		*p = _p;
+		return ru64;
+	_atou64_ru32:;
+		*p = _p;
+		return (u64)ru32;
+	_atou64_limit:;
+		while ((c = *++_p) >= '0' && c <= '9');
+		*p = _p;
+		return (UINT64_MAX);
 	}
 
 	// char文字列 の BookPos 化
@@ -1262,24 +1342,25 @@ namespace Book
 		{
 			auto cur = trimlen_sfen(sfen, length);
 			sfenPos = string(sfen, cur);
-			ply = strtol(sfen + cur, NULL, 10);
+			const char * plycur = sfen + cur;
+			ply = _atos32(&plycur);
 		}
 	}
 
 	// ストリームからの BookEntry 読み込み
-	void BookEntry::set(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n)
+	void BookEntry::set(istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n)
 	{
-		std::string line;
+		string line;
 
 		do
 		{
 			int c;
 			// 行頭が's'になるまで読み飛ばす
 			while ((c = is.peek()) != 's')
-				if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
+				if (c == EOF || !is.ignore(numeric_limits<streamsize>::max(), '\n'))
 					return;
 			// 行読み込み
-			if (!std::getline(is, line))
+			if (!getline(is, line))
 				return;
 			// "sfen "で始まる行は局面のデータであり、sfen文字列が格納されている。
 			// 短すぎたり、sfenで始まらなかったりした行ならばスキップ
@@ -1302,14 +1383,14 @@ namespace Book
 	}
 
 	// ストリームから BookEntry への BookPos 順次読み込み
-	void BookEntry::incpos(std::istream& is, char* _buffer, const size_t _buffersize)
+	void BookEntry::incpos(istream& is, char* _buffer, const size_t _buffersize)
 	{
 		while (true)
 		{
 			int c;
 			// 行頭が数字か英文字以外なら行末文字まで読み飛ばす
 			while ((c = is.peek(), (c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z')))
-				if (c == EOF || !is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'))
+				if (c == EOF || !is.ignore(numeric_limits<streamsize>::max(), '\n'))
 					return;
 			// 次のsfen文字列に到達していそうなら離脱（指し手文字列で's'から始まるものは無い）
 			if (c == 's')
@@ -1319,8 +1400,8 @@ namespace Book
 			// バッファから溢れたら行末まで読み捨て
 			if (is.fail())
 			{
-				is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-				is.clear(is.rdstate() & ~std::ios_base::failbit);
+				is.ignore(numeric_limits<streamsize>::max(), '\n');
+				is.clear(is.rdstate() & ~ios_base::failbit);
 			}
 			// BookPos 読み込み
 			BookPos bp(_buffer);
@@ -1329,55 +1410,21 @@ namespace Book
 	}
 
 	// バイト文字列からの BookPos 読み込み
-	void BookPos::set(char* p)
+	void BookPos::set(const char * p)
 	{
-		// 指し手解析部
-		auto _mvparse = [](char* p) -> Move
-		{
-			char c0 = *p++;
-			if (c0 >= '1' && c0 <= '9')
-			{
-				char c1 = *p++; if (c1 < 'a' || c1 > 'i') return MOVE_NONE;
-				char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
-				char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
-				char c4 = *p++;
-				if (c4 == '+')
-					return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
-				else
-					return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
-			}
-			else if (c0 >= 'A' && c0 <= 'Z')
-			{
-				char c1 = *p++; if (c1 != '*') return MOVE_NONE;
-				char c2 = *p++; if (c2 < '1' || c2 > '9') return MOVE_NONE;
-				char c3 = *p++; if (c3 < 'a' || c3 > 'i') return MOVE_NONE;
-				for (int i = 1; i <= 7; ++i)
-					if (PieceToCharBW[i] == c0)
-						return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
-			}
-			else if (c0 == '0' || c0 >= 'a' && c0 <= 'z')
-			{
-				if (!memcmp(p, "win", 3)) return MOVE_WIN;
-				if (!memcmp(p, "null", 4)) return MOVE_NULL;
-				if (!memcmp(p, "pass", 4)) return MOVE_NULL;
-				if (!memcmp(p, "0000", 4)) return MOVE_NULL;
-			}
-			return MOVE_NONE;
-		};
-
 		// 解析実行
 		// 0x00 - 0x1f, 0x21 - 0x29, 0x80 - 0xff の文字が現れ次第中止
 		// 特に、NULL, CR, LF 文字に反応する事を企図。TAB 文字でも中止。SP 文字連続でも中止。
 		if (*p < '*') return;
-		bestMove = _mvparse(p);
-		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
-		nextMove = _mvparse(p);
-		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
-		value = strtol(p, NULL, 10);
-		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
-		depth = strtol(p, NULL, 10);
-		while (true) if (*++p < '*') { if (*p != ' ' || *++p < '*') return; break; }
-		num = strtoull(p, NULL, 10);
+		bestMove = _atomove(&p);
+		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
+		nextMove = _atomove(&p);
+		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
+		value = _atos32(&p);
+		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
+		depth = _atos32(&p);
+		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
+		num = _atou64(&p);
 	}
 
 	MemoryBook::BookType::iterator MemoryBook::find(const Position& pos)
@@ -1404,11 +1451,11 @@ namespace Book
 			// C++的には未定義動作だが、これのためにsys/stat.hをincludeしたくない。
 			// ここでfs.clear()を呼ばないとeof()のあと、tellg()が失敗する。
 			fs.clear();
-			fs.seekg(0, std::ios::end);
+			fs.seekg(0, ios::end);
 			auto file_end = fs.tellg();
 
 			fs.clear();
-			fs.seekg(0, std::ios::beg);
+			fs.seekg(0, ios::beg);
 			auto file_start = fs.tellg();
 
 			auto file_size = u64(file_end - file_start);
@@ -1490,7 +1537,6 @@ namespace Book
 			it = intl_find(pos);
 		}
 
-
 		if (it != book_body.end())
 		{
 			// 定跡のMoveは16bitであり、rootMovesは32bitのMoveであるからこのタイミングで補正する。
@@ -1516,7 +1562,7 @@ namespace Book
 	}
 
 	// sfen文字列のゴミを除いた長さ
-	const std::size_t trimlen_sfen(const char* sfen, const size_t length)
+	const size_t trimlen_sfen(const char* sfen, const size_t length)
 	{
 		auto cur = length;
 		while (cur > 0)
@@ -1530,28 +1576,28 @@ namespace Book
 		}
 		return cur;
 	}
-	const std::size_t trimlen_sfen(const std::string sfen)
+	const size_t trimlen_sfen(const string sfen)
 	{
 		return trimlen_sfen(sfen.c_str(), sfen.length());
 	}
 
 	// sfen文字列から末尾のゴミを取り除いて返す。
 	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
-	const std::string trim_sfen(const std::string sfen)
+	const string trim_sfen(const string sfen)
 	{
-		std::string s = sfen;
+		string s = sfen;
 		s.resize(trimlen_sfen(sfen));
 		return s;
 	}
 
 	// sfen文字列の手数分離
-	const std::pair<const std::string, const int> split_sfen(const std::string sfen)
+	const pair<const string, const int> split_sfen(const string sfen)
 	{
 		auto cur = trimlen_sfen(sfen);
-		std::string s = sfen;
+		string s = sfen;
 		s.resize(cur);
 		int ply = strtol(sfen.c_str() + cur, NULL, 10);
-		return std::make_pair(s, ply);
+		return make_pair(s, ply);
 	}
 
 }

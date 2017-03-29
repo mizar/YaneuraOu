@@ -37,8 +37,8 @@ namespace Book
 		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
 
 		// バイト文字列からの BookPos 読み込み
-		void set(char* p);
-		BookPos(char* p) { set(p); }
+		void set(const char* p);
+		BookPos(const char* p) { set(p); }
 
 		// 比較
 		bool operator == (const BookPos& rhs) const { return bestMove == rhs.bestMove; }
