@@ -36,7 +36,7 @@ namespace Book
 
 		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
 
-		// バイト文字列からの BookPos 読み込み
+		// char文字列からの BookPos 生成
 		void set(const char* p);
 		BookPos(const char* p) { set(p); }
 
@@ -53,31 +53,29 @@ namespace Book
 		int ply; // 手数
 		std::vector<BookPos> move_list; // 候補手リスト
 
-		BookEntry() : sfenPos(SHORTSFEN_HIRATE), ply(1), move_list({}) {}
-		BookEntry(const std::string sfen, const int p, std::vector<BookPos> mlist = {}) : sfenPos(sfen), ply(p), move_list(mlist) {}
-		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist = {}) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
-		BookEntry(const Position& pos, std::vector<BookPos> mlist = {}) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
+		BookEntry() : sfenPos(SHORTSFEN_HIRATE), ply(1), move_list() {}
+		BookEntry(const std::string sfen, const int p) : sfenPos(sfen), ply(p), move_list() {}
+		BookEntry(const std::string sfen, const int p, std::vector<BookPos> mlist) : sfenPos(sfen), ply(p), move_list(mlist) {}
+		BookEntry(const std::pair<const std::string, const int> sfen_pair) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list() {}
+		BookEntry(const std::pair<const std::string, const int> sfen_pair, std::vector<BookPos> mlist) : sfenPos(sfen_pair.first), ply(sfen_pair.second), move_list(mlist) {}
+		BookEntry(const Position& pos) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list() {}
+		BookEntry(const Position& pos, std::vector<BookPos> mlist) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()), move_list(mlist) {}
 
-		// char文字列 の BookPos 化
+		// char文字列からの BookEntry 生成
 		void set(const char* sfen, const size_t length, const bool sfen_n11n);
-		BookEntry(const char* sfen, const size_t length, const bool sfen_n11n = false)
-		{
-			set(sfen, length, sfen_n11n);
-		}
+		BookEntry(const char* sfen, const size_t length, const bool sfen_n11n = false) { set(sfen, length, sfen_n11n); }
 
 		// ストリームからの BookPos 順次読み込み
 		void incpos(std::istream& is, char* _buffer, const size_t _buffersize);
 
 		// ストリームからの BookEntry 読み込み
 		void set(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n);
-		BookEntry(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n = false)
-		{
-			set(is, _buffer, _buffersize, sfen_n11n);
-		}
+		BookEntry(std::istream& is, char* _buffer, const size_t _buffersize, const bool sfen_n11n = false) { set(is, _buffer, _buffersize, sfen_n11n); }
 
 		// 局面比較
 		bool operator < (const BookEntry& rhs) const { return sfenPos < rhs.sfenPos; }
 		bool operator == (const BookEntry& rhs) const { return sfenPos == rhs.sfenPos; }
+		int compare(const BookEntry& rhs) const { return sfenPos.compare(rhs.sfenPos); }
 
 		// 同一局面の合成
 		void update(const BookEntry& be)
@@ -280,19 +278,28 @@ namespace Book
 		void intl_uniq()
 		{
 			// 予め全体をソートしておく
-			if (!book_run.empty())
-				intl_merge();
+			intl_merge();
 
-			auto max = book_body.size();
+			if (book_body.empty()) return;
 			std::size_t i = 1;
-			while (i < max)
-				if (book_body[i - 1] == book_body[i])
+			iter_t it0 = book_body.begin(), it1 = it0 + 1, end = book_body.end();
+			while (it1 != end)
+				if (*it0 == *it1)
 				{
-					book_body[i - 1].update(book_body[i]);
-					book_body.erase(book_body.begin() + i);
-					max = book_body.size();
-				} else
+					do {
+						(*it0).update(std::move(*it1++));
+					} while (it1 != end && *it0 == *it1);
+					it0 = book_body.erase(++it0, it1);
+					end = book_body.end();
+					if (it0 == end) return;
+					it1 = it0 + 1;
+				}
+				else
+				{
+					++it0;
+					++it1;
 					++i;
+				}
 		}
 
 		// 局面の追加
@@ -300,14 +307,19 @@ namespace Book
 		void add(BookEntry& be, bool dofind = false)
 		{
 			iter_t it;
+			int cmp;
 			if (dofind && (it = intl_find(be)) != end())
 			{
 				// 重複していたら合成して再登録
 				(*it).update(be);
-			} else if (book_body.empty() || !(be < book_body.back()))
+			} else if (book_body.empty() || (cmp = be.compare(book_body.back())) > 0)
 			{
 				// 順序関係が保たれているなら単純に末尾に追加
 				book_body.push_back(be);
+			} else if (cmp == 0)
+			{
+				// 末尾と同一局面なら合成
+				book_body.back().update(be);
 			} else if (book_run.empty())
 			{
 				// 既に全体がソート済みの場合、全体の長さを見て
