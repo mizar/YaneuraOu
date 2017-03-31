@@ -155,7 +155,7 @@ namespace Book
 		bool on_the_fly = false;
 
 		// 上のon_the_fly == trueのときに、開いている定跡ファイルのファイルハンドル
-		std::fstream fs;
+		std::ifstream fs;
 
 		// 挿入ソートを行うしきい値
 		const std::size_t MINRUN = 32;

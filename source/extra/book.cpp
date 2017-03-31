@@ -827,7 +827,7 @@ namespace Book
 			if (book.fs.is_open())
 				book.fs.close();
 
-			book.fs.open(filename, ios::in);
+			book.fs.open(filename, ifstream::in);
 			if (book.fs.fail())
 			{
 				cout << "info string Error! : can't read " + filename << endl;
@@ -1242,6 +1242,10 @@ namespace Book
 		*p = _p;
 		return MOVE_NONE;
 	}
+	Move _atomove(const char *p)
+	{
+		return _atomove(&p);
+	}
 
 	// 文字列 → s32整数 (strtolの代替)
 	s32 _atos32(const char **p)
@@ -1280,37 +1284,41 @@ namespace Book
 		*p = _p;
 		return minus ? (INT32_MIN) : (INT32_MAX);
 	}
+	s32 _atos32(const char *p)
+	{
+		return _atos32(&p);
+	}
 
 	// 文字列 → u64整数 (strtoullの代替)
 	u64 _atou64(const char ** p)
 	{
 		const char * _p = *p;
-		u32 ru32 = 0;
+		u32 ru32 = 0u;
 		char c = *_p;
 		while (c == ' ') c = *++_p;
 		while (c == '0') c = *++_p;
 		if (c < '0' || c > '9') goto _atou64_ru32; else ru32 = (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10ul + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
 		u64 ru64 = (u64)ru32;
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
 		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64;
-		if (ru64 > (u64)1844674407370955161ull) goto _atou64_limit; else ru64 = ru64 * 10ull + (u64)(c - '0');
+		if (ru64 > (u64)1844674407370955161ull) goto _atou64_limit; else ru64 = ru64 * 10u + (u64)(c - '0');
 		if (ru64 < (u64)(UINT32_MAX)) goto _atou64_limit;
 		if ((c = *++_p) >= '0' && c <= '9') goto _atou64_limit;
 	_atou64_ru64:;
@@ -1323,6 +1331,10 @@ namespace Book
 		while ((c = *++_p) >= '0' && c <= '9');
 		*p = _p;
 		return (UINT64_MAX);
+	}
+	u64 _atou64(const char *p)
+	{
+		return _atou64(&p);
 	}
 
 	// char文字列 の BookPos 化
@@ -1342,8 +1354,7 @@ namespace Book
 		{
 			auto cur = trimlen_sfen(sfen, length);
 			sfenPos = string(sfen, cur);
-			const char * plycur = sfen + cur;
-			ply = _atos32(&plycur);
+			ply = _atos32(sfen + cur);
 		}
 	}
 
@@ -1596,7 +1607,7 @@ namespace Book
 		auto cur = trimlen_sfen(sfen);
 		string s = sfen;
 		s.resize(cur);
-		int ply = strtol(sfen.c_str() + cur, NULL, 10);
+		int ply = _atos32(sfen.c_str() + cur);
 		return make_pair(s, ply);
 	}
 
