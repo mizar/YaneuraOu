@@ -810,6 +810,147 @@ namespace Book
 	}
 #endif
 
+	// Move 書き出し
+	void movetoa(char ** s, const Move m)
+	{
+		char * _s = *s;
+		if (!is_ok(m))
+		{
+			// 頻度が低いのでstringで手抜き
+			string str;
+			switch (m)
+			{
+			case MOVE_RESIGN:
+				str = "resign";
+				break;
+			case MOVE_WIN:
+				str = "win";
+				break;
+			case MOVE_NULL:
+				str = "null";
+				break;
+			case MOVE_NONE:
+				str = "none";
+				break;
+			}
+			size_t movelen = str.size();
+			char_traits<char>::copy(_s, str.c_str(), movelen);
+			_s += movelen;
+		}
+		else if (is_drop(m))
+		{
+			Square sq_to = move_to(m);
+			*_s++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
+			*_s++ = '*';
+			*_s++ = (char)('1' + file_of(sq_to));
+			*_s++ = (char)('a' + rank_of(sq_to));
+		}
+		else
+		{
+			Square sq_from = move_from(m), sq_to = move_to(m);
+			*_s++ = (char)('1' + file_of(sq_from));
+			*_s++ = (char)('a' + rank_of(sq_from));
+			*_s++ = (char)('1' + file_of(sq_to));
+			*_s++ = (char)('a' + rank_of(sq_to));
+			if (is_promote(m))
+				*_s++ = '+';
+		}
+		*_s = NULL; // 念のためNULL文字出力
+		*s = _s;
+	}
+
+	// BookEntry 書き出し
+	void betoa(char ** s, const BookEntry& be)
+	{
+		char * _s = *s;
+
+		// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
+		// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
+		// 128bytes を超えたら明らかにおかしいので抑止。
+		*_s++ = 's';
+		*_s++ = 'f';
+		*_s++ = 'e';
+		*_s++ = 'n';
+		*_s++ = ' ';
+		size_t sfenlen = min(be.sfenPos.size(), (size_t)128);
+		char_traits<char>::copy(_s, be.sfenPos.c_str(), sfenlen);
+		_s += sfenlen;
+		*_s++ = ' ';
+		QConv::s32toa(&_s, be.ply);
+		*_s++ = '\n';
+		// BookPosは改行文字を含めても 62bytes を超えないので、
+		// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
+		// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
+		// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
+		// be.move_list.size() > 1000 なら安全のため出力しない
+		if (be.move_list.size() <= 1000)
+			for (auto& bp : be.move_list)
+			{
+				movetoa(&_s, bp.bestMove);
+				*_s++ = ' ';
+				movetoa(&_s, bp.nextMove);
+				*_s++ = ' ';
+				QConv::s32toa(&_s, bp.value);
+				*_s++ = ' ';
+				QConv::s32toa(&_s, bp.depth);
+				*_s++ = ' ';
+				QConv::u64toa(&_s, bp.num);
+				*_s++ = '\n';
+			}
+		*_s = NULL; // 念のためNULL文字出力
+		*s = _s;
+	}
+
+	// 文字列 → Move
+	Move atomove(const char **p)
+	{
+		const char * _p = *p;
+		char c0 = *_p;
+		if (c0 >= '1' && c0 <= '9')
+		{
+			char c1 = *++_p; if (c1 < 'a' || c1 > 'i') goto _atomove_none;
+			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
+			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
+			char c4 = *++_p;
+			if (c4 == '+')
+			{
+				*p = _p + 1;
+				return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+			}
+			else
+			{
+				*p = _p;
+				return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
+			}
+		}
+		else if (c0 >= 'A' && c0 <= 'Z')
+		{
+			char c1 = *++_p; if (c1 != '*') goto _atomove_none;
+			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
+			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
+			*p = _p + 1;
+			for (int i = 1; i <= 7; ++i)
+				if (PieceToCharBW[i] == c0)
+					return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
+		}
+		else if (c0 == '0' || c0 >= 'a' && c0 <= 'z')
+		{
+			if (!memcmp(_p, "win", 3)) { *p = _p + 3; return MOVE_WIN; }
+			if (!memcmp(_p, "null", 4)) { *p = _p + 4; return MOVE_NULL; }
+			if (!memcmp(_p, "pass", 4)) { *p = _p + 4; return MOVE_NULL; }
+			if (!memcmp(_p, "0000", 4)) { *p = _p + 4; return MOVE_NULL; }
+		}
+	_atomove_none:;
+		while (*_p >= '*') ++_p;
+		*p = _p;
+		return MOVE_NONE;
+	}
+
+	Move atomove(const char *p)
+	{
+		return atomove(&p);
+	}
+
 	// 定跡ファイルの読み込み(book.db)など。
 	int read_book(const string& filename, MemoryBook& book, bool on_the_fly, bool sfen_n11n)
 	{
@@ -952,97 +1093,6 @@ namespace Book
 		return 0;
 	}
 
-	// Move 書き出し
-	void movetoa(char ** s, const Move m)
-	{
-		char * _s = *s;
-		if (!is_ok(m))
-		{
-			// 頻度が低いのでstringで手抜き
-			string str;
-			switch (m)
-			{
-			case MOVE_RESIGN:
-				str = "resign";
-				break;
-			case MOVE_WIN:
-				str = "win";
-				break;
-			case MOVE_NULL:
-				str = "null";
-				break;
-			case MOVE_NONE:
-				str = "none";
-				break;
-			}
-			size_t movelen = str.size();
-			char_traits<char>::copy(_s, str.c_str(), movelen);
-			_s += movelen;
-		}
-		else if (is_drop(m))
-		{
-			Square sq_to = move_to(m);
-			*_s++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
-			*_s++ = '*';
-			*_s++ = (char)('1' + file_of(sq_to));
-			*_s++ = (char)('a' + rank_of(sq_to));
-		}
-		else
-		{
-			Square sq_from = move_from(m), sq_to = move_to(m);
-			*_s++ = (char)('1' + file_of(sq_from));
-			*_s++ = (char)('a' + rank_of(sq_from));
-			*_s++ = (char)('1' + file_of(sq_to));
-			*_s++ = (char)('a' + rank_of(sq_to));
-			if (is_promote(m))
-				*_s++ = '+';
-		}
-		*_s = NULL; // 念のためNULL文字出力
-		*s = _s;
-	}
-
-	// BookEntry 書き出し
-	void betoa(char ** s, const BookEntry& be)
-	{
-		char * _s = *s;
-
-		// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
-		// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
-		// 128bytes を超えたら明らかにおかしいので抑止。
-		*_s++ = 's';
-		*_s++ = 'f';
-		*_s++ = 'e';
-		*_s++ = 'n';
-		*_s++ = ' ';
-		size_t sfenlen = min(be.sfenPos.size(), (size_t)128);
-		char_traits<char>::copy(_s, be.sfenPos.c_str(), sfenlen);
-		_s += sfenlen;
-		*_s++ = ' ';
-		QConv::s32toa(&_s, be.ply);
-		*_s++ = '\n';
-		// BookPosは改行文字を含めても 62bytes を超えないので、
-		// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
-		// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
-		// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
-		// be.move_list.size() > 1000 なら安全のため出力しない
-		if (be.move_list.size() <= 1000)
-			for (auto& bp : be.move_list)
-			{
-				movetoa(&_s, bp.bestMove);
-				*_s++ = ' ';
-				movetoa(&_s, bp.nextMove);
-				*_s++ = ' ';
-				QConv::s32toa(&_s, bp.value);
-				*_s++ = ' ';
-				QConv::s32toa(&_s, bp.depth);
-				*_s++ = ' ';
-				QConv::u64toa(&_s, bp.num);
-				*_s++ = '\n';
-			}
-		*_s = NULL; // 念のためNULL文字出力
-		*s = _s;
-	}
-
 	// 定跡ファイルの書き出し
 	int write_book(const string& filename, MemoryBook& book)
 	{
@@ -1105,55 +1155,6 @@ namespace Book
 		delete[] renderbuf;
 
 		return 0;
-	}
-
-	// 文字列 → Move
-	Move _atomove(const char **p)
-	{
-		const char * _p = *p;
-		char c0 = *_p;
-		if (c0 >= '1' && c0 <= '9')
-		{
-			char c1 = *++_p; if (c1 < 'a' || c1 > 'i') goto _atomove_none;
-			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
-			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
-			char c4 = *++_p;
-			if (c4 == '+')
-			{
-				*p = _p + 1;
-				return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
-			}
-			else
-			{
-				*p = _p;
-				return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
-			}
-		}
-		else if (c0 >= 'A' && c0 <= 'Z')
-		{
-			char c1 = *++_p; if (c1 != '*') goto _atomove_none;
-			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
-			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
-			*p = _p;
-			for (int i = 1; i <= 7; ++i)
-				if (PieceToCharBW[i] == c0)
-					return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
-		}
-		else if (c0 == '0' || c0 >= 'a' && c0 <= 'z')
-		{
-			if (!memcmp(_p, "win", 3)) { *p = _p + 3; return MOVE_WIN; }
-			if (!memcmp(_p, "null", 4)) { *p = _p + 4; return MOVE_NULL; }
-			if (!memcmp(_p, "pass", 4)) { *p = _p + 4; return MOVE_NULL; }
-			if (!memcmp(_p, "0000", 4)) { *p = _p + 4; return MOVE_NULL; }
-		}
-	_atomove_none:;
-		while (*_p >= '*') ++_p;
-		*p = _p;
-		return MOVE_NONE;
-	}
-	Move _atomove(const char *p)
-	{
-		return _atomove(&p);
 	}
 
 	// char文字列 の BookPos 化
@@ -1246,9 +1247,9 @@ namespace Book
 		// 0x00 - 0x1f, 0x21 - 0x29, 0x80 - 0xff の文字が現れ次第中止
 		// 特に、NULL, CR, LF 文字に反応する事を企図。TAB 文字でも中止。SP 文字連続でも中止。
 		if (*p < '*') return;
-		bestMove = _atomove(&p);
+		bestMove = atomove(&p);
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		nextMove = _atomove(&p);
+		nextMove = atomove(&p);
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
 		value = QConv::atos32(&p);
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
