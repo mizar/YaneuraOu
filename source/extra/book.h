@@ -27,6 +27,7 @@ namespace Book
 	// 局面における指し手(定跡を格納するのに用いる)
 	struct BookPos
 	{
+
 		Move bestMove; // この局面での指し手
 		Move nextMove; // その指し手を指したときの予想される相手の指し手
 		int value;     // bestMoveを指したときの局面の評価値
@@ -49,6 +50,7 @@ namespace Book
 	// 局面ごとの項目
 	struct BookEntry
 	{
+
 		std::string sfenPos; // 末尾の手数を除くsfen局面文字列
 		int ply; // 手数
 		std::vector<BookPos> move_list; // 候補手リスト

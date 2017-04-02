@@ -952,6 +952,97 @@ namespace Book
 		return 0;
 	}
 
+	// Move 書き出し
+	void movetoa(char ** s, const Move m)
+	{
+		char * _s = *s;
+		if (!is_ok(m))
+		{
+			// 頻度が低いのでstringで手抜き
+			string str;
+			switch (m)
+			{
+			case MOVE_RESIGN:
+				str = "resign";
+				break;
+			case MOVE_WIN:
+				str = "win";
+				break;
+			case MOVE_NULL:
+				str = "null";
+				break;
+			case MOVE_NONE:
+				str = "none";
+				break;
+			}
+			size_t movelen = str.size();
+			char_traits<char>::copy(_s, str.c_str(), movelen);
+			_s += movelen;
+		}
+		else if (is_drop(m))
+		{
+			Square sq_to = move_to(m);
+			*_s++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
+			*_s++ = '*';
+			*_s++ = (char)('1' + file_of(sq_to));
+			*_s++ = (char)('a' + rank_of(sq_to));
+		}
+		else
+		{
+			Square sq_from = move_from(m), sq_to = move_to(m);
+			*_s++ = (char)('1' + file_of(sq_from));
+			*_s++ = (char)('a' + rank_of(sq_from));
+			*_s++ = (char)('1' + file_of(sq_to));
+			*_s++ = (char)('a' + rank_of(sq_to));
+			if (is_promote(m))
+				*_s++ = '+';
+		}
+		*_s = NULL; // 念のためNULL文字出力
+		*s = _s;
+	}
+
+	// BookEntry 書き出し
+	void betoa(char ** s, const BookEntry& be)
+	{
+		char * _s = *s;
+
+		// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
+		// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
+		// 128bytes を超えたら明らかにおかしいので抑止。
+		*_s++ = 's';
+		*_s++ = 'f';
+		*_s++ = 'e';
+		*_s++ = 'n';
+		*_s++ = ' ';
+		size_t sfenlen = min(be.sfenPos.size(), (size_t)128);
+		char_traits<char>::copy(_s, be.sfenPos.c_str(), sfenlen);
+		_s += sfenlen;
+		*_s++ = ' ';
+		QConv::s32toa(&_s, be.ply);
+		*_s++ = '\n';
+		// BookPosは改行文字を含めても 62bytes を超えないので、
+		// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
+		// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
+		// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
+		// be.move_list.size() > 1000 なら安全のため出力しない
+		if (be.move_list.size() <= 1000)
+			for (auto& bp : be.move_list)
+			{
+				movetoa(&_s, bp.bestMove);
+				*_s++ = ' ';
+				movetoa(&_s, bp.nextMove);
+				*_s++ = ' ';
+				QConv::s32toa(&_s, bp.value);
+				*_s++ = ' ';
+				QConv::s32toa(&_s, bp.depth);
+				*_s++ = ' ';
+				QConv::u64toa(&_s, bp.num);
+				*_s++ = '\n';
+			}
+		*_s = NULL; // 念のためNULL文字出力
+		*s = _s;
+	}
+
 	// 定跡ファイルの書き出し
 	int write_book(const string& filename, MemoryBook& book)
 	{
@@ -969,195 +1060,13 @@ namespace Book
 		// バッファ領域サイズ
 		size_t renderbufsize = entrymaxsize * min(renderbufmulti, book.book_body.size() + 1);
 		// バッファ払い出し閾値
-		size_t renderbufth = renderbufsize - entrymaxsize;
+		ptrdiff_t renderbufth = (ptrdiff_t)renderbufsize - (ptrdiff_t)entrymaxsize;
 		// バッファ確保
 		char * renderbuf = new char[renderbufsize];
 
 		// 文字列バッファ char[] に BookEntry を書き出し
 		// BookEntry 毎に書き出しを行う
-		size_t idx;
-		auto render_be = [&](const BookEntry& be)
-		{
-			// Move 書き出し
-			auto render_move = [&](const Move m)
-			{
-				size_t _idx = idx;
-				if (!is_ok(m))
-				{
-					// 頻度が低いのでstringで手抜き
-					string str;
-					switch (m)
-					{
-					case MOVE_RESIGN:
-						str = "resign";
-						break;
-					case MOVE_WIN:
-						str = "win";
-						break;
-					case MOVE_NULL:
-						str = "null";
-						break;
-					case MOVE_NONE:
-						str = "none";
-						break;
-					}
-					char_traits<char>::copy(renderbuf + _idx, str.c_str(), str.size());
-					_idx += str.size();
-				}
-				else if (is_drop(m))
-				{
-					Square sq_to = move_to(m);
-					renderbuf[_idx++] = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
-					renderbuf[_idx++] = '*';
-					renderbuf[_idx++] = (char)('1' + file_of(sq_to));
-					renderbuf[_idx++] = (char)('a' + rank_of(sq_to));
-				}
-				else
-				{
-					Square sq_from = move_from(m), sq_to = move_to(m);
-					renderbuf[_idx++] = (char)('1' + file_of(sq_from));
-					renderbuf[_idx++] = (char)('a' + rank_of(sq_from));
-					renderbuf[_idx++] = (char)('1' + file_of(sq_to));
-					renderbuf[_idx++] = (char)('a' + rank_of(sq_to));
-					if (is_promote(m))
-						renderbuf[_idx++] = '+';
-				}
-				idx = _idx;
-			};
-			// 整数値書き出し(sprintf_s を使うとこのコードより2倍～数倍？重い)
-			auto render_u16_1 = [&](u16 i)
-			{
-				if(i > (u16)9u)
-					i %= (u16)10u;
-				renderbuf[idx++] = '0' + (char)i;
-			};
-			auto render_u16_2l = [&](u16 i)
-			{
-				render_u16_1(i / (u16)10u);
-				render_u16_1(i);
-			};
-			auto render_u16_2u = [&](u16 i)
-			{
-				if(i > (u16)9u)
-					render_u16_1(i / (u16)10u);
-				render_u16_1(i);
-			};
-			auto render_u16_4l = [&](u16 i)
-			{
-				render_u16_2l(i / (u16)100u);
-				render_u16_2l(i);
-			};
-			auto render_u16_4u = [&](u16 i)
-			{
-				if(i > 99u)
-				{
-					render_u16_2u(i / (u16)100u);
-					render_u16_2l(i);
-				}
-				else
-					render_u16_2u(i);
-			};
-			auto render_u32_8l = [&](u32 i)
-			{
-				if (i > (u32)99999999ul)
-					i %= (u32)100000000ul;
-				render_u16_4l((u16)(i / (u16)10000u));
-				render_u16_4l((u16)(i % (u16)10000u));
-			};
-			auto render_u32_8u = [&](u32 i)
-			{
-				if(i > (u32)9999ul)
-				{
-					render_u16_4u((u16)(i / (u16)10000u));
-					render_u16_4l((u16)(i % (u16)10000u));
-				}
-				else
-					render_u16_4u((u16)i);
-			};
-			auto render_u64_16l = [&](u64 i)
-			{
-				if(i > (u64)9999999999999999ull)
-					i %= (u64)10000000000000000ull;
-				render_u32_8l((u32)(i / (u32)100000000ul));
-				render_u32_8l((u32)(i % (u32)100000000ul));
-			};
-			auto render_u64_16u = [&](u64 i)
-			{
-				if(i > (u64)99999999ull)
-				{
-					render_u32_8u((u32)(i / (u32)100000000ul));
-					render_u32_8l((u32)(i % (u32)100000000ul));
-				}
-				else
-					render_u32_8u((u32)i);
-			};
-			auto render_u32 = [&](u32 i)
-			{
-				if (i > (u32)99999999ul)
-				{
-					render_u32_8u(i / (u32)100000000ul);
-					render_u32_8l(i % (u32)100000000ul);
-				}
-				else
-					render_u32_8u(i);
-			};
-			auto render_s32 = [&](s32 i)
-			{
-				if (i < 0)
-					renderbuf[idx++] = '-';
-				render_u32((u32)(i < 0 ? -i : i));
-			};
-			auto render_u64 = [&](u64 i)
-			{
-				if(i > (u64)9999999999999999ull)
-				{
-					render_u64_16u(i / (u64)10000000000000000ull);
-					render_u64_16l(i % (u64)10000000000000000ull);
-				}
-				else
-					render_u64_16u(i);
-			};
-			auto render_s64 = [&](s64 i)
-			{
-				if (i < 0)
-					renderbuf[idx++] = '-';
-				render_u64((u64)(i < 0 ? -i : i));
-			};
-
-			// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
-			// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
-			// 128bytes を超えたら明らかにおかしいので抑止。
-			renderbuf[idx++] = 's';
-			renderbuf[idx++] = 'f';
-			renderbuf[idx++] = 'e';
-			renderbuf[idx++] = 'n';
-			renderbuf[idx++] = ' ';
-			char_traits<char>::copy(renderbuf + idx, be.sfenPos.c_str(), min(be.sfenPos.size(), (size_t)128));
-			idx += min(be.sfenPos.size(), (size_t)128);
-			renderbuf[idx++] = ' ';
-			render_s32(be.ply);
-			renderbuf[idx++] = '\n';
-			// BookPosは改行文字を含めても 62bytes を超えないので、
-			// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
-			// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
-			// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
-			// be.move_list.size() > 1000 なら安全のため出力しない
-			if (be.move_list.size() <= 1000)
-				for (auto& bp : be.move_list)
-				{
-					render_move(bp.bestMove);
-					renderbuf[idx++] = ' ';
-					render_move(bp.nextMove);
-					renderbuf[idx++] = ' ';
-					render_s32(bp.value);
-					renderbuf[idx++] = ' ';
-					render_s32(bp.depth);
-					renderbuf[idx++] = ' ';
-					render_u64(bp.num);
-					renderbuf[idx++] = '\n';
-				}
-			renderbuf[idx] = NULL; // 念のためNULL文字出力
-		};
+		char * p;
 
 		ofstream fs;
 		fs.open(filename, ofstream::out);
@@ -1170,7 +1079,7 @@ namespace Book
 		// バージョン識別用文字列
 		fs << "#YANEURAOU-DB2016 1.00" << endl;
 
-		renderbuf[idx = 0] = NULL;
+		*(p = renderbuf) = NULL;
 		for (BookEntry& be : book.book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
@@ -1178,17 +1087,17 @@ namespace Book
 			// 採択回数でソートしておく。
 			be.sort_pos();
 			// 出力
-			render_be(be);
+			betoa(&p, be);
 			// _bufth (16320kiB) を超えて出力が溜まったらファイルに書き出す
-			if (idx > renderbufth)
+			if (p - renderbuf > renderbufth)
 			{
-				fs.write(renderbuf, idx);
-				renderbuf[idx = 0] = NULL;
+				fs.write(renderbuf, p - renderbuf);
+				*(p = renderbuf) = NULL;
 			}
 		}
 		// 残りの出力をファイルに書き出し
-		if (idx > 0)
-			fs.write(renderbuf, idx);
+		if (p != renderbuf)
+			fs.write(renderbuf, p - renderbuf);
 
 		fs.close();
 
@@ -1232,10 +1141,10 @@ namespace Book
 		}
 		else if (c0 == '0' || c0 >= 'a' && c0 <= 'z')
 		{
-			if (!memcmp(_p, "win", 3)) { p += 3; return MOVE_WIN; }
-			if (!memcmp(_p, "null", 4)) { p += 4; return MOVE_NULL; }
-			if (!memcmp(_p, "pass", 4)) { p += 4; return MOVE_NULL; }
-			if (!memcmp(_p, "0000", 4)) { p += 4; return MOVE_NULL; }
+			if (!memcmp(_p, "win", 3)) { *p = _p + 3; return MOVE_WIN; }
+			if (!memcmp(_p, "null", 4)) { *p = _p + 4; return MOVE_NULL; }
+			if (!memcmp(_p, "pass", 4)) { *p = _p + 4; return MOVE_NULL; }
+			if (!memcmp(_p, "0000", 4)) { *p = _p + 4; return MOVE_NULL; }
 		}
 	_atomove_none:;
 		while (*_p >= '*') ++_p;
@@ -1245,96 +1154,6 @@ namespace Book
 	Move _atomove(const char *p)
 	{
 		return _atomove(&p);
-	}
-
-	// 文字列 → s32整数 (strtolの代替)
-	s32 _atos32(const char **p)
-	{
-		const char * _p = *p;
-		s32 rs32 = 0;
-		bool minus = false;
-		char c = *_p;
-		while (c == ' ') c = *++_p;
-		if (c == '-')
-		{
-			minus = true;
-			c = *++_p;
-		}
-		else if (c == '+')
-			c = *++_p;
-		while (c == '0') c = *++_p;
-		if (c < '0' || c > '9') goto _atos32_rs32; else rs32 = (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atos32_rs32;
-		if (rs32 > (s32)214748364l) goto _atos32_limit; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if (rs32 < (s32)0l) goto _atos32_limit;
-		if ((c = *++_p) >= '0' && c <= '9') goto _atos32_limit;
-	_atos32_rs32:;
-		*p = _p;
-		return minus ? -rs32 : rs32;
-	_atos32_limit:;
-		while ((c = *++_p) >= '0' && c <= '9');
-		*p = _p;
-		return minus ? (INT32_MIN) : (INT32_MAX);
-	}
-	s32 _atos32(const char *p)
-	{
-		return _atos32(&p);
-	}
-
-	// 文字列 → u64整数 (strtoullの代替)
-	u64 _atou64(const char ** p)
-	{
-		const char * _p = *p;
-		u32 ru32 = 0u;
-		char c = *_p;
-		while (c == ' ') c = *++_p;
-		while (c == '0') c = *++_p;
-		if (c < '0' || c > '9') goto _atou64_ru32; else ru32 = (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		u64 ru64 = (u64)ru32;
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_p) < '0' || c > '9') goto _atou64_ru64;
-		if (ru64 > (u64)1844674407370955161ull) goto _atou64_limit; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if (ru64 < (u64)(UINT32_MAX)) goto _atou64_limit;
-		if ((c = *++_p) >= '0' && c <= '9') goto _atou64_limit;
-	_atou64_ru64:;
-		*p = _p;
-		return ru64;
-	_atou64_ru32:;
-		*p = _p;
-		return (u64)ru32;
-	_atou64_limit:;
-		while ((c = *++_p) >= '0' && c <= '9');
-		*p = _p;
-		return (UINT64_MAX);
-	}
-	u64 _atou64(const char *p)
-	{
-		return _atou64(&p);
 	}
 
 	// char文字列 の BookPos 化
@@ -1354,7 +1173,7 @@ namespace Book
 		{
 			auto cur = trimlen_sfen(sfen, length);
 			sfenPos = string(sfen, cur);
-			ply = _atos32(sfen + cur);
+			ply = QConv::atos32(sfen + cur);
 		}
 	}
 
@@ -1431,11 +1250,11 @@ namespace Book
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
 		nextMove = _atomove(&p);
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		value = _atos32(&p);
+		value = QConv::atos32(&p);
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		depth = _atos32(&p);
+		depth = QConv::atos32(&p);
 		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		num = _atou64(&p);
+		num = QConv::atou64(&p);
 	}
 
 	MemoryBook::BookType::iterator MemoryBook::find(const Position& pos)
@@ -1607,7 +1426,7 @@ namespace Book
 		auto cur = trimlen_sfen(sfen);
 		string s = sfen;
 		s.resize(cur);
-		int ply = _atos32(sfen.c_str() + cur);
+		int ply = QConv::atos32(sfen.c_str() + cur);
 		return make_pair(s, ply);
 	}
 
