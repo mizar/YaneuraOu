@@ -98,7 +98,7 @@ inline File toFile(char c) { return (File)(c - '1'); }
 std::string pretty(File f);
 
 // Fileを棋譜形式で出力する
-std::string kif(File f, SquareFormat fmt = SqFmt_ASCII);
+char32_t kif_char32(File f, SquareFormat fmt = SqFmt_ASCII);
 
 // USI形式でFileを出力する
 inline std::ostream& operator<<(std::ostream& os, File f) { os << (char)('1' + f); return os; }
@@ -135,7 +135,7 @@ inline Rank toRank(char c) { return (Rank)(c - 'a'); }
 std::string pretty(Rank r);
 
 // Rankを棋譜形式で出力する
-std::string kif(Rank r, SquareFormat fmt = SqFmt_ASCII);
+char32_t kif_char32(Rank r, SquareFormat fmt = SqFmt_ASCII);
 
 // USI形式でRankを出力する
 inline std::ostream& operator<<(std::ostream& os, Rank r) { os << (char)('a' + r); return os; }
@@ -233,7 +233,14 @@ inline Square Mir(Square sq) { return File(8-file_of(sq)) | rank_of(sq); }
 inline std::string pretty(Square sq) { return pretty(file_of(sq)) + pretty(rank_of(sq)); }
 
 // Squareを棋譜形式で出力する
-inline std::string kif(Square sq, SquareFormat fmt = SqFmt_ASCII) { return kif(file_of(sq), fmt) + kif(rank_of(sq), fmt); }
+inline std::u32string kif_u32str(Square sq, SquareFormat fmt = SqFmt_ASCII)
+{
+	char32_t r[3];
+	r[0] = kif_char32(file_of(sq), fmt);
+	r[1] = kif_char32(rank_of(sq), fmt);
+	r[2] = (char32_t)NULL;
+	return std::u32string(r);
+}
 
 // USI形式でSquareを出力する
 inline std::ostream& operator<<(std::ostream& os, Square sq) { os << file_of(sq) << rank_of(sq); return os; }
@@ -505,7 +512,7 @@ std::string pretty_jpstr(Piece pc);
 // ↑のpretty()だと先手の駒を表示したときに先頭にスペースが入るので、それが嫌な場合はこちらを用いる。
 inline std::string pretty2(Piece pc) { ASSERT_LV1(color_of(pc) == BLACK); auto s = pretty(pc); return s.substr(1, s.length() - 1); }
 
-std::string kif(Piece pc);
+std::u32string kif_u32str(Piece pc);
 std::string csa(Piece pc);
 
 // USIで、盤上の駒を表現する文字列
@@ -595,12 +602,11 @@ std::string pretty(Move m);
 // 移動させた駒がわかっているときに指し手をわかりやすい表示形式で表示する。
 std::string pretty(Move m, Piece movedPieceType);
 
-// USI形式の文字列を出力する。
-void to_usi_ostream(Move m, std::ostream& os);
 // USI形式の文字列にする。
 std::string to_usi_string(Move m);
 // KIF形式の文字列にする。
 std::string to_kif1_string(Move m, Piece movedPieceType, Color c, Move prev_m = MOVE_NULL, SquareFormat fmt = SqFmt_ASCII);
+std::u32string to_kif1_u32string(Move m, Piece movedPieceType, Color c, Move prev_m = MOVE_NULL, SquareFormat fmt = SqFmt_ASCII);
 // 手番無しのCSA形式の文字列にする。
 std::string to_csa1_string(Move m, Piece movedPieceAfterType);
 // 手番有りのCSA形式の文字列にする。

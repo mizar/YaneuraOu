@@ -16,8 +16,8 @@ namespace Book
 	// 手数を除いた平手初期局面のsfen文字列
 	const std::string SHORTSFEN_HIRATE = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -";
 	// sfen文字列のゴミを除いた長さ
-	const std::size_t trimlen_sfen(const char* sfen, const size_t length);
-	const std::size_t trimlen_sfen(const std::string sfen);
+	std::size_t trimlen_sfen(const char* sfen, const size_t length);
+	std::size_t trimlen_sfen(const std::string sfen);
 	// sfen文字列から末尾のゴミを取り除いて返す。
 	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
 	const std::string trim_sfen(const std::string sfen);
@@ -165,15 +165,26 @@ namespace Book
 		// find()で見つからなかったときの値
 		const iter_t end() { return book_body.end(); }
 
+		// 比較関数
+		struct less_inner_bebe {
+			bool operator()(const BookEntry& lhs, const BookEntry& rhs) const { return bool(lhs.sfenPos < rhs.sfenPos); }
+		};
+		struct less_inner_strbe {
+			bool operator()(const std::string& lhs, const BookEntry& rhs) const { return bool(lhs < rhs.sfenPos); }
+		};
+		struct less_inner_bestr {
+			bool operator()(const BookEntry& lhs, const std::string& rhs) const { return bool(lhs.sfenPos < rhs); }
+		};
+
 		// book_body内の定跡を探索
-		iter_t intl_find(BookEntry& be)
+		iter_t intl_find(const BookEntry& be)
 		{
 			auto it0 = book_body.begin();
 			auto itr = book_run.begin();
 			while (true)
 			{
 				auto it1 = (itr != book_run.end()) ? book_body.begin() + *itr : book_body.end();
-				auto itf = std::lower_bound(it0, it1, be);
+				auto itf = std::lower_bound(it0, it1, be, less_inner_bebe());
 				if (itf != it1 && *itf == be)
 					return itf;
 				if (itr == book_run.end())
@@ -183,16 +194,26 @@ namespace Book
 			}
 		}
 
-		iter_t intl_find(Position pos)
+		iter_t intl_find(const std::string& sfenPos)
 		{
-			BookEntry be(pos);
-			return intl_find(be);
+			auto it0 = book_body.begin();
+			auto itr = book_run.begin();
+			while (true)
+			{
+				auto it1 = (itr != book_run.end()) ? book_body.begin() + *itr : book_body.end();
+				auto itf = std::lower_bound(it0, it1, sfenPos, less_inner_bestr());
+				if (itf != it1 && (*itf).sfenPos == sfenPos)
+					return itf;
+				if (itr == book_run.end())
+					return end();
+				itr++;
+				it0 = it1;
+			}
 		}
 
-		iter_t intl_find(std::string sfen)
+		iter_t intl_find(const Position& pos)
 		{
-			BookEntry be(split_sfen(sfen));
-			return intl_find(be);
+			return intl_find(pos.trimedsfen());
 		}
 
 		// 定跡として登録されているかを調べて返す。
@@ -354,14 +375,14 @@ namespace Book
 		}
 
 		// 局面・指し手の追加
-		void insert_book_pos(std::string sfen, BookPos& bp)
+		void insert_book_pos(std::pair<const std::string, const int>& sfen, BookPos& bp)
 		{
-			auto it = intl_find(sfen);
+			auto it = intl_find(sfen.first);
 			if (it == end())
 			{
 				// 存在しないので要素を作って追加。
 				std::vector<BookPos> move_list{ bp };
-				BookEntry be(split_sfen(sfen), move_list);
+				BookEntry be(sfen, move_list);
 				add(be);
 			} else
 			{

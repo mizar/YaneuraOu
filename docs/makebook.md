@@ -104,6 +104,8 @@ options:
     "#EMPTYLIST" : 候補手未登録
 
 makebook merge <import_book0_filename> <import_book1_filename> <export_book_filename>
+makebook softfilter <import_book_filename> <filter_book_filename> <export_book_filename>
+makebook hardfilter <import_book_filename> <filter_book_filename> <export_book_filename>
 
 makebook sort <import_book_filename> <export_book_filename>
 ```

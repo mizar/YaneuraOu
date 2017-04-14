@@ -104,7 +104,7 @@ namespace Book
 
 			// 1局面思考するごとに'.'をひとつ出力する。
 			if (progress_type == 0)
-				cout << "." << flush;
+				cout << ".";
 			else
 				cout << ("info string progress " + to_string(get_loop_count()) + " / " + to_string(get_loop_max()) + "\n") << flush;
 		}
@@ -153,6 +153,8 @@ namespace Book
 		bool from_thinking = token == "think";
 		// 定跡のマージ
 		bool book_merge = token == "merge";
+		bool book_hardfilter = token == "hardfilter";
+		bool book_softfilter = token == "softfilter";
 		// 定跡のsort
 		bool book_sort = token == "sort";
 		// 定跡からsfenを生成する
@@ -335,7 +337,8 @@ namespace Book
 					{
 						// この場合、m[i + 1]が必要になるので、m.size()-1までしかループできない。
 						BookPos bp(m[i], m[i + 1], VALUE_ZERO, 32, 1);
-						book.insert_book_pos(sf[i], bp);
+						auto ss = split_sfen(sf[i]);
+						book.insert_book_pos(ss, bp);
 					} else if (from_thinking)
 					{
 						// posの局面で思考させてみる。(あとでまとめて)
@@ -378,7 +381,7 @@ namespace Book
 				{
 
 					// この局面のいま格納されているデータを比較して、この局面を再考すべきか判断する。
-					auto it = book.intl_find(s);
+					auto it = book.intl_find(trim_sfen(s));
 
 					// MemoryBookにエントリーが存在しないなら無条件で、この局面について思考して良い。
 					if (it == book.end())
@@ -526,7 +529,7 @@ namespace Book
 			MemoryBook book;
 			if (read_book(book_name, book) != 0)
 				cout << "..but , create kifs." << endl;
-			cout << "..done" << endl;
+			cout << "..done. " << book.book_body.size() << " nodes loaded." << endl;
 
 			is_ready();
 
@@ -537,7 +540,7 @@ namespace Book
 			vector<Move> m;
 			vector<string> sf;	// sfen指し手文字列格納用
 
-			StateInfo si[258];
+			vector<StateInfo> si(max(moves + 2, 258));
 
 			fstream fs;
 			fs.open(sfen_name, ios::out);
@@ -607,7 +610,7 @@ namespace Book
 					case BOOKRES_MOVELIMIT:  os << "#MOVELIMIT"; break;
 					}
 				}
-				os << endl;
+				os << "\n";
 				// 出力行数のカウントアップ
 				++count_sfens;
 				if (++count_sfens_part >= count_sfens_threshold)
@@ -658,7 +661,7 @@ namespace Book
 					// 探索スタック積み
 					sf.push_back(to_movestr(pos, nowMove, m.empty() ? MOVE_NONE : m.back()));
 					m.push_back(nowMove);
-					pos.do_move(nowMove, si[ply]);
+					pos.do_move(nowMove, si.at(ply));
 					// 先の局面で駄目出しされたら、その局面までの手順を出力
 					auto res = (ply >= moves) ? BOOKRES_MOVELIMIT : to_sfen_func();
 					if (res != BOOKRES_SUCCESS)
@@ -689,7 +692,7 @@ namespace Book
 						break;
 					sf.push_back(to_movestr(pos, _mv, m.empty() ? MOVE_NONE : m.back()));
 					m.push_back(_mv);
-					pos.do_move(_mv, si[pos.game_ply()]);
+					pos.do_move(_mv, si.at(pos.game_ply()));
 				}
 				BookRes res = to_sfen_func();
 				if (res != BOOKRES_SUCCESS)
@@ -735,7 +738,8 @@ namespace Book
 			{
 				BookEntry& b0front = book[0].book_body.front();
 				BookEntry& b1front = book[1].book_body.front();
-				if (b0front == b1front)
+				int cmp = b0front.compare(b1front);
+				if (cmp == 0)
 				{
 					// 同じ局面があったので、良いほうをbook2に突っ込む。
 					same_nodes++;
@@ -744,17 +748,17 @@ namespace Book
 					book[2].add(be);
 					book[0].book_body.pop_front();
 					book[1].book_body.pop_front();
-				} else if (b0front < b1front)
+				} else if (cmp < 0)
 				{
 					// book0からbook2に突っ込む
 					diffrent_nodes0++;
-					book[2].add(move(b0front));
+					book[2].add(b0front);
 					book[0].book_body.pop_front();
 				} else
 				{
 					// book1からbook2に突っ込む
 					diffrent_nodes1++;
-					book[2].add(move(b1front));
+					book[2].add(b1front);
 					book[1].book_body.pop_front();
 				}
 			}
@@ -762,7 +766,7 @@ namespace Book
 			while (!book[0].book_body.empty())
 			{
 				diffrent_nodes0++;
-				book[2].add(move(book[0].book_body.front()));
+				book[2].add(book[0].book_body.front());
 				book[0].book_body.pop_front();
 			}
 			book[0].book_body.clear();
@@ -770,9 +774,97 @@ namespace Book
 			while (!book[1].book_body.empty())
 			{
 				diffrent_nodes1++;
-				book[2].add(move(book[1].book_body.front()));
+				book[2].add(book[1].book_body.front());
 				book[1].book_body.pop_front();
 			}
+			book[1].book_body.clear();
+			cout << "..done" << endl;
+
+			cout << "same nodes = " << same_nodes
+				<< " , different nodes =  " << diffrent_nodes0 << " + " << diffrent_nodes1 << endl;
+
+			cout << "write..";
+			write_book(book_name[2], book[2]);
+			cout << "..done!" << endl;
+
+		} else if (book_hardfilter || book_softfilter)
+		{
+			// 一致している定跡の抜き出し
+			MemoryBook book[3];
+			string book_name[3];
+			is >> book_name[0] >> book_name[1] >> book_name[2];
+			if (book_name[2] == "")
+			{
+				cout << "Error! book name is empty." << endl;
+				return;
+			}
+			cout << "book filter " << book_name[0] << " with " << book_name[1] << " to " << book_name[2] << endl;
+			for (int i = 0; i < 2; ++i)
+			{
+				cout << "reading book" << i << ".";
+				if (read_book(book_name[i], book[i]) != 0)
+					return;
+				cout << ".done." << endl;
+			}
+
+			// 読み込めたので抽出する。
+			cout << "filter..";
+
+			// 同一nodeと非同一nodeの統計用
+			// diffrent_nodes0 = book0側にのみあったnodeの数
+			// diffrent_nodes1 = book1側にのみあったnodeの数
+			u64 same_nodes = 0;
+			u64 diffrent_nodes0 = 0, diffrent_nodes1 = 0;
+
+			// フィルタ
+			while (!book[0].book_body.empty() && !book[1].book_body.empty())
+			{
+				BookEntry& b0front = book[0].book_body.front();
+				BookEntry& b1front = book[1].book_body.front();
+				int cmp = b0front.compare(b1front);
+				if (cmp == 0)
+				{
+					// 同じ局面があったので、book0からbook2に突っ込む。
+					same_nodes++;
+					BookEntry be0 = move(b0front);
+					BookEntry be1 = move(b1front);
+					book[0].book_body.pop_front();
+					book[1].book_body.pop_front();
+					if (book_hardfilter) {
+						BookEntry be(be0.sfenPos, (be1.ply > 0 && (be0.ply > be1.ply || be0.ply < 1)) ? be1.ply : be0.ply);
+						for (BookPos bp0 : be0.move_list)
+							for (BookPos bp1 : be1.move_list)
+								if (bp0.bestMove == bp1.bestMove)
+								{
+									be.move_list.push_back(bp0);
+									break;
+								}
+						if (!be.move_list.empty())
+							book[2].add(be);
+					}
+					else
+						book[2].add(be0);
+				}
+				else if (cmp < 0)
+				{
+					// book0から読み捨てる
+					diffrent_nodes0++;
+					BookEntry be = move(b0front);
+					book[0].book_body.pop_front();
+				}
+				else
+				{
+					// book1から読み捨てる
+					diffrent_nodes1++;
+					BookEntry be = move(b1front);
+					book[1].book_body.pop_front();
+				}
+			}
+			// book0側でまだ突っ込んでいないnodeを読み捨てる
+			diffrent_nodes0 += book[0].book_body.size();
+			book[0].book_body.clear();
+			// book1側でまだ突っ込んでいないnodeを読み捨てる
+			diffrent_nodes1 += book[1].book_body.size();
 			book[1].book_body.clear();
 			cout << "..done" << endl;
 
@@ -855,7 +947,7 @@ namespace Book
 			if (is_promote(m))
 				*_s++ = '+';
 		}
-		*_s = NULL; // 念のためNULL文字出力
+		*_s = '\0'; // 念のためNULL文字出力
 		*s = _s;
 	}
 
@@ -897,7 +989,7 @@ namespace Book
 				QConv::u64toa(&_s, bp.num);
 				*_s++ = '\n';
 			}
-		*_s = NULL; // 念のためNULL文字出力
+		*_s = '\0'; // 念のためNULL文字出力
 		*s = _s;
 	}
 
@@ -1004,7 +1096,7 @@ namespace Book
 			// 1文字分の余裕を残して読み込み、空いた1文字はNULで埋める
 			endidx = _idx + (_remain > 1 ? fs.read(buffer + _idx, _remain - 1).gcount() : 0);
 			char * _p = buffer + endidx;
-			*_p = NULL;
+			*_p = '\0';
 			// 最終行の行頭位置検出
 			size_t _lastheadidx = endidx;
 			for (; _lastheadidx > 0 && *--_p != '\n'; --_lastheadidx);
@@ -1065,10 +1157,8 @@ namespace Book
 				char c = buffer[idx0];
 				if ((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
 					continue;
-				// BookPos 構築
-				BookPos bp(buffer + idx0);
-				// BookEntry に追加
-				be.move_list.push_back(bp);
+				// BookEntry に BookPos 構築 & 追加
+				be.move_list.emplace_back(buffer + idx0);
 			}
 			// おかしければ登録せずに次へ
 			if (be.sfenPos.empty() || be.move_list.empty())
@@ -1129,7 +1219,7 @@ namespace Book
 		// バージョン識別用文字列
 		fs << "#YANEURAOU-DB2016 1.00" << endl;
 
-		*(p = renderbuf) = NULL;
+		*(p = renderbuf) = '\0';
 		for (BookEntry& be : book.book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
@@ -1142,7 +1232,7 @@ namespace Book
 			if (p - renderbuf > renderbufth)
 			{
 				fs.write(renderbuf, p - renderbuf);
-				*(p = renderbuf) = NULL;
+				*(p = renderbuf) = '\0';
 			}
 		}
 		// 残りの出力をファイルに書き出し
@@ -1393,7 +1483,7 @@ namespace Book
 	}
 
 	// sfen文字列のゴミを除いた長さ
-	const size_t trimlen_sfen(const char* sfen, const size_t length)
+	size_t trimlen_sfen(const char* sfen, const size_t length)
 	{
 		auto cur = length;
 		while (cur > 0)
@@ -1407,7 +1497,7 @@ namespace Book
 		}
 		return cur;
 	}
-	const size_t trimlen_sfen(const string sfen)
+	size_t trimlen_sfen(const string sfen)
 	{
 		return trimlen_sfen(sfen.c_str(), sfen.length());
 	}

@@ -138,14 +138,12 @@ std::string pretty(Piece pc) { return pretty_enstr(pc); }
 std::string pretty(Piece pc) { return pretty_jpstr(pc); }
 #endif
 
-std::string kif(Piece pc) {
-	const std::string kifb[] = { "",
-		"歩", "香", "桂", "銀", "角", "飛", "金", "玉",
-		"と", "成香", "成桂", "成銀", "馬", "龍", "成金", "王",
-		"歩", "香", "桂", "銀", "角", "飛", "金", "玉",
-		"と", "成香", "成桂","成銀", "馬", "龍", "成金", "王"
+std::u32string kif_u32str(Piece pc) {
+	const std::u32string kifb[] = { U"",
+		U"歩", U"香", U"桂", U"銀", U"角", U"飛", U"金", U"玉",
+		U"と", U"成香", U"成桂", U"成銀", U"馬", U"龍", U"成金", U"王"
 	};
-	return kifb[pc];
+	return kifb[pc & 15];
 }
 std::string csa(Piece pc) { return std::string("**FUKYKEGIKAHIKIOUTONYNKNGUMRYKIOUFUKYKEGIKAHIKIOUTONYNKNGUMRYKIOU").substr(pc * 2, 2); }
 

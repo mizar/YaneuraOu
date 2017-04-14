@@ -270,6 +270,7 @@ namespace QConv {
 			render_u16_4l(s, (u16)i10);
 			render_u16_4l(s, (u16)i11);
 		}
+		**s = '\0';
 	}
 
 	void s32toa(char ** s, s32 i)
@@ -325,6 +326,7 @@ namespace QConv {
 			render_u16_4l(s, i10);
 			render_u16_4l(s, i11);
 		}
+		**s = '\0';
 	}
 
 	void s64toa(char ** s, s64 i)
@@ -348,7 +350,7 @@ namespace QConv {
 	u32 atou32(const char ** s)
 	{
 		const char * _s = *s;
-		s32 ru32 = 0u;
+		u32 ru32 = 0u;
 		char c = *_s;
 		while (c == ' ') c = *++_s;
 		while (c == '0') c = *++_s;
@@ -415,6 +417,7 @@ namespace QConv {
 	{
 		const char * _s = *s;
 		u32 ru32 = 0u;
+		u64 ru64 = 0u;
 		char c = *_s;
 		while (c == ' ') c = *++_s;
 		while (c == '0') c = *++_s;
@@ -427,7 +430,7 @@ namespace QConv {
 		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		u64 ru64 = (u64)ru32;
+		ru64 = (u64)ru32;
 		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
@@ -458,6 +461,7 @@ namespace QConv {
 	{
 		const char * _s = *s;
 		s32 rs32 = 0;
+		s64 rs64 = 0;
 		bool minus = false;
 		char c = *_s;
 		while (c == ' ') c = *++_s;
@@ -478,7 +482,7 @@ namespace QConv {
 		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		s64 rs64 = (s64)rs32;
+		rs64 = (s64)rs32;
 		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
 		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
