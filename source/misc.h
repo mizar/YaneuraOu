@@ -225,6 +225,18 @@ inline std::string path_combine(const std::string& folder, const std::string& fi
 
 extern void prefetch(void* addr);
 
+// --------------------------------
+//   char32_t -> utf-8 string 変換
+// --------------------------------
+
+namespace UniConv {
+
+	// std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> だとLNK2001をVS2015,VS2017が吐く不具合の回避。
+	// 参照: http://qiita.com/benikabocha/items/1fc76b8cea404e9591cf
+
+	std::string char32_to_utf8string(const char32_t * r);
+
+}
 
 // --------------------
 //   数値・文字列変換

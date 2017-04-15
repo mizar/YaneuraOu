@@ -23,9 +23,11 @@ extern "C" {
 
 #endif
 
+#include <codecvt>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <locale>
 #include <sstream>
 
 #include "misc.h"
@@ -201,6 +203,32 @@ void prefetch(void* addr) {
 }
 
 #endif
+
+// --------------------------------
+//   char32_t -> utf-8 string 変換
+// --------------------------------
+
+namespace UniConv {
+
+	// std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> だとLNK2001をVS2015,VS2017が吐く不具合の回避。
+	// 参照: http://qiita.com/benikabocha/items/1fc76b8cea404e9591cf
+
+#ifdef _MSC_VER // MSVCの場合
+	std::wstring_convert<std::codecvt_utf8<uint32_t>, uint32_t> char32_utf8_converter;
+#else // MSVC以外の場合
+	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> char32_utf8_converter;
+#endif
+
+	std::string char32_to_utf8string(const char32_t * r)
+	{
+#ifdef _MSC_VER // MSVCの場合
+		return char32_utf8_converter.to_bytes((const uint32_t *)r);
+#else // MSVC以外の場合
+		return char32_utf8_converter.to_bytes(r);
+#endif
+	}
+
+}
 
 // --------------------
 //   数値・文字列変換

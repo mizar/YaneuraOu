@@ -1,6 +1,4 @@
-﻿#include <codecvt>
-#include <iostream>
-#include <locale>
+﻿#include <iostream>
 #include <sstream>
 
 #include "shogi.h"
@@ -129,18 +127,6 @@ std::ostream& operator<<(std::ostream& os, HandKind hk)
   return os;
 }
 
-std::string char32_to_string(char32_t * r)
-{
-#ifdef _MSC_VER // MSVCの場合
-	// std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> だとLNK2001をVS2015,VS2017が吐く不具合の回避。
-	// 参照: http://qiita.com/benikabocha/items/1fc76b8cea404e9591cf
-	std::wstring_convert<std::codecvt_utf8<uint32_t>, uint32_t> converter;
-	return converter.to_bytes((uint32_t *)r);
-#else // MSVC以外の場合
-	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-	return converter.to_bytes(r);
-#endif
-}
 std::string to_usi_string(Move m)
 {
   std::ostringstream ss;
@@ -275,14 +261,14 @@ std::string to_kif1_string(Move m, Piece movedPieceType, Color c, Move prev_m, S
 	char32_t r[32];
 	char32_t * p = r;
 	to_kif1_c32(&p, m, movedPieceType, c, prev_m, fmt);
-	return char32_to_string(r);
+	return UniConv::char32_to_utf8string(r);
 }
 std::string to_kif1_string(Move m, Position& pos, Move prev_m, SquareFormat fmt)
 {
 	char32_t r[32];
 	char32_t * p = r;
 	to_kif1_c32(&p, m, pos, prev_m, fmt);
-	return char32_to_string(r);
+	return UniConv::char32_to_utf8string(r);
 }
 void to_kif2_c32(char32_t ** r, Move m, Position& pos, Move prev_m, SquareFormat fmt)
 {
@@ -439,7 +425,7 @@ std::string to_kif2_string(Move m, Position& pos, Move prev_m, SquareFormat fmt)
 	char32_t r[10];
 	char32_t * p = r;
 	to_kif2_c32(&p, m, pos, prev_m, fmt);
-	return char32_to_string(r);
+	return UniConv::char32_to_utf8string(r);
 }
 std::u32string to_kif2_u32string(Move m, Position& pos, Move prev_m, SquareFormat fmt)
 {
