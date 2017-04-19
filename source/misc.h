@@ -232,7 +232,8 @@ extern void prefetch(void* addr);
 namespace UniConv {
 
 	// std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> だとLNK2001をVS2015,VS2017が吐く不具合の回避。
-	// 参照: http://qiita.com/benikabocha/items/1fc76b8cea404e9591cf
+	// http://qiita.com/benikabocha/items/1fc76b8cea404e9591cf
+	// https://social.msdn.microsoft.com/Forums/en-US/8f40dcd8-c67f-4eba-9134-a19b9178e481/vs-2015-rc-linker-stdcodecvt-error
 
 	std::string char32_to_utf8string(const char32_t * r);
 

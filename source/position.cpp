@@ -145,7 +145,15 @@ std::u32string kif_u32str(Piece pc) {
 	};
 	return kifb[pc & 15];
 }
-std::string csa(Piece pc) { return std::string("**FUKYKEGIKAHIKIOUTONYNKNGUMRYKIOUFUKYKEGIKAHIKIOUTONYNKNGUMRYKIOU").substr(pc * 2, 2); }
+std::string csa(Piece pc) {
+	const std::string csab[] = { "**",
+		"FU", "KY", "KE", "GI", "KA", "HI", "KI", "OU",
+		"TO", "NY", "NK", "NG", "UM", "RY", "KI", "OU",
+		"FU", "KY", "KE", "GI", "KA", "HI", "KI", "OU",
+		"TO", "NY", "NK", "NG", "UM", "RY", "KI", "OU"
+	};
+	return csab[pc];
+}
 
 // sfen文字列で盤面を設定する
 void Position::set(std::string sfen)
