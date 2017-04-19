@@ -1560,10 +1560,6 @@ void learn(Position& pos, istringstream& is)
 
 #ifdef _OPENMP
 	omp_set_num_threads((int)Options["Threads"]);
-/* // ここでpragma使って何を…? build出来ないのでコメントアウト。
-	#pragma omp parallel for schedule static
-*/
-
 #endif
 
 	cout << "\ninit done." << endl;
