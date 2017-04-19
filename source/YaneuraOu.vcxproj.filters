@@ -175,6 +175,9 @@
     <ClInclude Include="engine\must-capture-shogi-engine\must-capture-shogi-param.h">
       <Filter>リソース ファイル\engine\must-capture-shogi-engine</Filter>
     </ClInclude>
+    <ClInclude Include="extra\move_picker_2017Q2.h">
+      <Filter>リソース ファイル\extra</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="movegen.cpp">
@@ -309,6 +312,9 @@
     <ClCompile Include="engine\must-capture-shogi-engine\must-capture-shogi.cpp">
       <Filter>リソース ファイル\engine\must-capture-shogi-engine</Filter>
     </ClCompile>
+    <ClCompile Include="extra\move_picker_2017Q2.cpp">
+      <Filter>リソース ファイル\extra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\docs\USI拡張コマンド.txt">
@@ -328,6 +334,9 @@
     </Text>
     <Text Include="..\script\readme.txt">
       <Filter>script</Filter>
+    </Text>
+    <Text Include="開発メモ2017.txt">
+      <Filter>doc</Filter>
     </Text>
   </ItemGroup>
   <ItemGroup>

@@ -2,6 +2,102 @@
 やねうら王 更新履歴
 
 
+■　2017/04/19 V4.31
+
+・search()にStep 1.からStep 20.のコメントをつける。Step 19.はStockfishのソースには抜けている。
+・reduction_tableの名前をReductionsにリネーム。
+・Stockfishの最新版にキャッチアップ
+	- Singular extension and check extension tweak
+	- Skip quiet moves based on moveCount pruning threshold and history stats
+	- Penalty for a quiet ttMove that fails low
+	- Simplify skipping of plies with helper threads
+	- Further simplify skipping of plies with threads
+	- Prefer std::find over a hand-coded loop
+	- Move-Count Formula Tweak
+	// 以上で、最新のStockfish(2017/4/18)に追いついた。
+
+
+■　2017/04/18 V4.30
+
+・Stockfishの最新版にキャッチアップ
+	- Penalty for a quiet ttMove that fails low
+	- Standardize stat penalty
+	- update_cm_stats() 書き換え
+	- Always have counterMoves associated
+	- Remove HistoryStats
+	- Rename FromTo -> History
+	- Simplify TT penalty stat
+
+
+■　2017/04/18 V4.29
+
+・Stockfishの最新版にキャッチアップ
+	- Removing CM parameter from the Stats struct. 
+	- A small tweak in doEasyMove()
+	- Drop Stats c'tors
+		- これに伴い、thread.cppでスレッドメモリの確保のときにゼロクリアを強制するように変更。
+	- Razor Simplification
+	- Introduce assert for stats update
+		- これに伴い、HistoryStats、Statsのupdateでvの値が大きいときにreturnする処理を削除。
+	- Don't update TT at excluded move ply
+
+
+■　2017/04/18 V4.28
+
+・MovePicker新しく用意した。
+	- move_picker_2017Q2.h / cpp
+	- これに伴いmakefile修正。
+・Stockfishの最新版にキャッチアップ
+	- Simplify threshold handling for probcut.
+	- Don't clear EasyMove in search()
+	- Use consistent variable names for counterMoveStats 
+	- Correct zero-init of Thread data members
+	- Zero init fromToStats in constructor. 
+	- Tweak best thread selection logic
+	- Simplified select best thread 
+		- ベストスレッドの指し手を返すときにresignの指し手だとhangすることに対する修正。
+		- ベストスレッドの指し手を返すときにeasyMovePlayedのフラグを見るように修正。
+
+
+■　2017/04/17 V4.27
+
+・開発メモ2017.txt追加。(そのうち消すかも)
+・Stockfishの最新版にキャッチアップ
+	- Help GCC to optimize msb() to single instruction
+	- Use DEPTH_ZERO initializer for depth in qsearch
+	- Remove piece condition in decrease lmr reduction check
+	- Explicitly use alpha+1 for beta in NonPV search
+	- Clean-up skipEarlyPruning 
+
+
+■　2017/04/17 V4.26
+
+・Ryzenに向けた最適化、調査。
+・attackers_to()のColorを取らないバージョン、バグってた。see_ge()実装以降バグっていたのか。修正。[1秒で+R25]
+・attackers_to()のColorを取らないバージョン、香の利きに関して高速化した。全体で1%ぐらい速くなったかも。
+
+
+■　2017/04/16 V4.25
+
+・プロジェクトファイルをVisual Studio 2015→2017に変更。
+・推奨コンパイル環境をVisual Studio 2017に変更。
+・解説.txtのVisual Studio 2015用の説明を削除。
+・デバッグのターゲットフォルダ、..\\YaneuraOu2016Engineに設定。
+・[pullreq] リファクタリング: コマンドラインオプションのパースにargparseを使用するようにした(nodchipさん)
+・[pullreq] リファクタリング: パスの結合をos.path.join()で行うようにした(nodchipさん)
+・[pullreq] Intel Xeon Phi Processor 7250においてCPUを100%使い切れるようにした(nodchipさん) →　Stockfish公式にpull reqすべき？
+・[pullreq] 駒得評価関数での思考エンジンのコンパイルエラーを回避(YuriCatさん)
+・[pullreq] 自己対戦フレームワークの先手・後手の表示の誤りを修正した (nodchipさん)
+・V4.24を間違って削除してしまったので復旧。→	config.h
+・Windows SDKのターゲットバージョンを10.0.14393.0から10.0.15063.0に変更。
+	→時期尚早だった。Windows 10 Creators Updateが来てからにする。
+
+
+■　2016/12/04 V4.24
+
+・評価関数を増やすためにeval関連の整理。
+
+
 ■　2016/12/04 V4.23
 
 ・shogi.h、4タブ化。

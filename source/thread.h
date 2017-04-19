@@ -99,12 +99,12 @@ struct Thread
 	std::atomic_bool resetCalls;
 	int callsCnt;
 
-#if defined( USE_MOVE_PICKER_2015 ) || defined( USE_MOVE_PICKER_2016Q2 ) || defined( USE_MOVE_PICKER_2016Q3 )
+#if defined( USE_MOVE_PICKER_2015 ) || defined( USE_MOVE_PICKER_2016Q2 ) || defined( USE_MOVE_PICKER_2016Q3 ) || defined ( USE_MOVE_PICKER_2017Q2 )
 	// ある種のMovePickerではオーダリングのために、
 	// スレッドごとにhistoryとcounter movesのtableを持たないといけない。
 
-	HistoryStats history;
 	MoveStats counterMoves;
+	HistoryStats history;
 #endif
 
 #if defined( USE_MOVE_PICKER_2016Q2 ) || defined( USE_MOVE_PICKER_2016Q3 )
