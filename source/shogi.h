@@ -8,7 +8,7 @@
 
 // 思考エンジンのバージョンとしてUSIプロトコルの"usi"コマンドに応答するときの文字列。
 // ただし、この値を数値として使用することがあるので数値化できる文字列にしておく必要がある。
-#define ENGINE_VERSION "4.35"
+#define ENGINE_VERSION "4.39"
 
 // --------------------
 // コンパイル時の設定
@@ -33,7 +33,7 @@
 //#define YANEURAOU_CLASSIC_TCE_ENGINE     // やねうら王classic tce  (完成2016/04/15)
 //#define YANEURAOU_2016_MID_ENGINE        // やねうら王2016(MID)    (完成2016/08/18)
 //#define YANEURAOU_2016_LATE_ENGINE       // やねうら王2016(LATE)   (完成2016/10/07)
-#define YANEURAOU_2017_EARLY_ENGINE      // やねうら王2017(EARLY)  (開発中)
+#define YANEURAOU_2017_EARLY_ENGINE      // やねうら王2017(EARLY)  (完成2017/05/03)
 //#define CHECK_SHOGI_ENGINE	           // やねうら王 王手将棋    (完成2016/11/30)
 //#define MUST_CAPTURE_SHOGI_ENGINE        // やねうら王 取る一手将棋(完成2016/12/04)
 //#define RANDOM_PLAYER_ENGINE             // ランダムプレイヤー
@@ -624,7 +624,11 @@ inline std::ostream& operator<<(std::ostream& os, Move m) { os << to_usi_string(
 struct ExtMove {
 
 	Move move;   // 指し手(32bit)
-	Value value; // これはMovePickerが指し手オーダリングのために並び替えるときに用いる値(≠評価値)。
+#if defined(USE_MOVE_PICKER_2017Q2)
+	int value;
+#else
+	Value value;   // これはMovePickerが指し手オーダリングのために並び替えるときに用いる値(≠評価値)。
+#endif
 
 	// Move型とは暗黙で変換できていい。
 
