@@ -102,7 +102,7 @@
 // #define EVAL_PPAT      // 3駒 + Piece-Piece-and Pawn型
 
 // KPPT評価関数の学習に使うときのモード
-// #define EVAL_LEARN
+#define EVAL_LEARN
 
 // 長い利き(遠方駒の利き)のライブラリを用いるか。
 // 超高速1手詰め判定などではこのライブラリが必要。
