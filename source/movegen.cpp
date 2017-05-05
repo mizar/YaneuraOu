@@ -51,13 +51,13 @@ using namespace std;
 // 上位16bitに格納する駒を生成する。
 
 // そのままの駒
-#define OurPt(Us,Pt)     Move(((Us ? PIECE_WHITE:0)+Pt) << 16)
+#define OurPt(Us,Pt)     Move(((Us ? u32(PIECE_WHITE):0)+(Pt)) << 16)
 
 // 成るときの駒(+8)
-#define OurProPt(Us,Pt)  Move(((Us ? PIECE_WHITE:0)+Pt+PIECE_PROMOTE) << 16)
+#define OurProPt(Us,Pt)  Move(((Us ? u32(PIECE_WHITE):0)+(Pt)+u32(PIECE_PROMOTE)) << 16)
 
 // 駒打ちするときの駒(+32)
-#define OurDropPt(Us,Pt) Move(((Us ? PIECE_WHITE:0)+Pt+PIECE_DROP) << 16)
+#define OurDropPt(Us,Pt) Move(((Us ? u32(PIECE_WHITE):0)+(Pt)+u32(PIECE_DROP)) << 16)
 
 // 成らない指し手生成を生成する
 #define MAKE_MOVE_TARGET(target_) { FOREACH_BB(target_,to,{                                      \

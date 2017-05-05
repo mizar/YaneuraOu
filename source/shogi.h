@@ -8,7 +8,7 @@
 
 // 思考エンジンのバージョンとしてUSIプロトコルの"usi"コマンドに応答するときの文字列。
 // ただし、この値を数値として使用することがあるので数値化できる文字列にしておく必要がある。
-#define ENGINE_VERSION "4.42"
+#define ENGINE_VERSION "4.45"
 
 // --------------------
 // コンパイル時の設定
@@ -33,7 +33,8 @@
 //#define YANEURAOU_CLASSIC_TCE_ENGINE     // やねうら王classic tce  (完成2016/04/15)
 //#define YANEURAOU_2016_MID_ENGINE        // やねうら王2016(MID)    (完成2016/08/18)
 //#define YANEURAOU_2016_LATE_ENGINE       // やねうら王2016(LATE)   (完成2016/10/07)
-#define YANEURAOU_2017_EARLY_ENGINE      // やねうら王2017(EARLY)  (完成2017/05/03)
+#define YANEURAOU_2017_EARLY_ENGINE      // やねうら王2017(EARLY)  (完成2017/05/05)
+//#define YANEURAOU_2017_LATE_ENGINE      // やねうら王2017(LATE)  (開発中2017/05/05～)
 //#define CHECK_SHOGI_ENGINE	           // やねうら王 王手将棋    (完成2016/11/30)
 //#define MUST_CAPTURE_SHOGI_ENGINE        // やねうら王 取る一手将棋(完成2016/12/04)
 //#define RANDOM_PLAYER_ENGINE             // ランダムプレイヤー
@@ -447,7 +448,7 @@ inline Value mated_in(int ply) {  return (Value)(-VALUE_MATE + ply);}
 // USIプロトコルでやりとりするときの駒の表現
 extern const char* USI_PIECE;
 
-enum Piece: int32_t
+enum Piece: uint32_t
 {
 	// 金の順番を飛の後ろにしておく。KINGを8にしておく。
 	// こうすることで、成りを求めるときに pc |= 8;で求まり、かつ、先手の全種類の駒を列挙するときに空きが発生しない。(DRAGONが終端になる)
@@ -471,11 +472,11 @@ enum Piece: int32_t
 	HDK = KING,        // Position::pieces()で使うときの定数。H=Horse,D=Dragon,K=Kingの合体したBitboardが返る。
 
 	// 指し手生成(GeneratePieceMove = GPM)でtemplateの引数として使うマーカー的な値。変更する可能性があるのでユーザーは使わないでください。
-	// 値はマイナスにしておくことで、連続的な値になり、テーブルジャンプしやすくする。
-	GPM_BR   = -1,     // Bishop Rook
-	GPM_GBR  = -2,     // Gold Bishop Rook
-	GPM_GHD  = -3,     // Gold Horse Dragon
-	GPM_GHDK = -4,     // Gold Horse Dragon King
+	// 連続的な値にしておくことで、テーブルジャンプしやすくする。
+	GPM_BR   = 16,     // Bishop Rook
+	GPM_GBR  = 17,     // Gold Bishop Rook
+	GPM_GHD  = 18,     // Gold Horse Dragon
+	GPM_GHDK = 19,     // Gold Horse Dragon King
 };
 
 // USIプロトコルで駒を表す文字列を返す。
