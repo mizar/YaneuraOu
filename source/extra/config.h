@@ -24,8 +24,8 @@
 // ターゲットCPUのところだけdefineしてください。(残りは自動的にdefineされます。)
 
 //#define USE_AVX512
-#define USE_AVX2
-//#define USE_SSE42
+//#define USE_AVX2
+#define USE_SSE42
 //#define USE_SSE41
 //#define USE_SSE2
 //#define NO_SSE

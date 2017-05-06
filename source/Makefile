@@ -17,21 +17,28 @@ YANEURAOU_EDITION = YANEURAOU_2017_EARLY_ENGINE
 COMPILER = g++
 #COMPILER = mpicxx
 
-CFLAGS   = -std=c++14 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fopenmp -fpermissive -D_WIN64 -DUNICODE
+CFLAGS   = -std=c++1z -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fopenmp -fpermissive -DUNICODE
 
-# ltoƒIƒvƒVƒ‡ƒ“‚ğw’è‚·‚é‚ÆÀs’¼Œã‚ÉSegmentation Fault‚Å—‚¿‚é‚Æ‚«‚ª‚ ‚é‚Ì‚ÅA‚»‚Ì‚Æ‚«‚ÍAƒRƒƒ“ƒgƒAƒEƒg‚µ‚Ä‚­‚¾‚³‚¢B
+# ltoã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’æŒ‡å®šã™ã‚‹ã¨å®Ÿè¡ŒåŒæ™‚ã«Segmentation Faultã§è½ã¡ã‚‹ã¨ããŒã‚ã‚‹ã®ã§ã€ãã®ã¨ãã¯ã€ã‚³ãƒ¡ãƒ³ãƒˆã‚¢ã‚¦ãƒˆã—ã¦ãã ã•ã„ã€‚
 # CFLAGS   += -flto
 CFLAGS   += -march=native
 LDFLAGS  = -lpthread #-lboost_mpi -lboost_serialization
 LIBS     =
 INCLUDE  = #-I../include
 
+UNAME = ${shell uname}
+ifeq ($(UNAME),Linux)
+# Bash on Windowsç’°å¢ƒã§ã¯Linuxã¨èªè­˜ã™ã‚‹ã‚ˆã†ã«
+  CFLAGS += -D_LINUX
+  TARGET = YaneuraOu-by-gcc
+else
 ifeq ($(OS),Windows_NT)
-  LDFLAGS += -static
+  LDFLAGS += -static -D_WIN64
   TARGET = YaneuraOu-by-gcc.exe
 else
   CFLAGS += -D_LINUX
   TARGET = YaneuraOu-by-gcc
+endif
 endif
 OBJDIR   = ../obj
 ifeq "$(strip $(OBJDIR))" ""
@@ -113,7 +120,7 @@ sse2:
 nosse:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION)' LDFLAGS='$(LDFLAGS) -flto' $(TARGET)
 
-#@‚Æ‚è‚ ‚¦‚¸PGO‚Íavx2ê—p
+#ã€€ã¨ã‚Šã‚ãˆãšPGOã¯avx2å°‚ç”¨
 prof:
 	$(MAKE) CFLAGS='$(CFLAGS) -pg' avx2
 
