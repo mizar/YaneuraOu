@@ -470,11 +470,6 @@ struct Position
 	// ※利きのない1手詰め判定のときに必要。
 	Bitboard pinned_pieces(Color c, Square from, Square to) const;
 
-	// 駒を配置して、内部的に保持しているBitboardなどを更新する。
-	void put_piece(Square sq, Piece pc, PieceNo piece_no);
-
-	// 駒を盤面から取り除き、内部的に保持しているBitboardも更新する。
-	void remove_piece(Square sq);
 
 	// 指し手mで王手になるかを判定する。
 	// 指し手mはpseudo-legal(擬似合法)の指し手であるものとする。
@@ -640,10 +635,23 @@ private:
 	// stが初期状態で指している、空のStateInfo
 	StateInfo startState;
 
+	// put_piece()やremove_piece()、xor_piece()を用いたときは、最後にupdate_bitboards()を呼び出して
+	// bitboardの整合性を保つこと。
+
+	// 駒を配置して、内部的に保持しているBitboardなどを更新する。
+	void put_piece(Square sq, Piece pc, PieceNo piece_no);
+
+	// 駒を盤面から取り除き、内部的に保持しているBitboardも更新する。
+	void remove_piece(Square sq);
+
 	// sqの地点にpcを置く/取り除く、したとして内部で保持しているBitboardを更新する。
+	// 最後にupdate_bitboards()を呼び出すこと。
 	void xor_piece(Piece pc, Square sq);
 
-#ifndef EVAL_NO_USE
+	// put_piece()やremove_piece()、xor_piece()を用いたときに、最後に呼び出して整合性を取るためのもの。
+	void update_bitboards();
+
+#if !defined(EVAL_NO_USE)
 	// --- 盤面を更新するときにEvalListの更新のために必要なヘルパー関数
 
 	// c側の手駒ptの最後の1枚のBonaPiece番号を返す
@@ -702,58 +710,57 @@ private:
 
 // PieceからPieceTypeBitboardへの変換テーブル
 const PieceTypeBitboard piece2ptb[PIECE_WHITE] = {
-  PIECE_TYPE_BITBOARD_NB /*NO_PIECE*/,PIECE_TYPE_BITBOARD_PAWN /*歩*/,PIECE_TYPE_BITBOARD_LANCE /*香*/,PIECE_TYPE_BITBOARD_KNIGHT /*桂*/,
-  PIECE_TYPE_BITBOARD_SILVER /*銀*/,PIECE_TYPE_BITBOARD_BISHOP /*角*/,PIECE_TYPE_BITBOARD_ROOK /*飛*/,PIECE_TYPE_BITBOARD_GOLD /*金*/,
-  PIECE_TYPE_BITBOARD_HDK /*玉*/, PIECE_TYPE_BITBOARD_GOLD /*歩成*/ , PIECE_TYPE_BITBOARD_GOLD /*香成*/,PIECE_TYPE_BITBOARD_GOLD/*桂成*/,
-  PIECE_TYPE_BITBOARD_GOLD /*銀成*/,PIECE_TYPE_BITBOARD_BISHOP/*馬*/,PIECE_TYPE_BITBOARD_ROOK/*龍*/ ,PIECE_TYPE_BITBOARD_NB/*金成*/ };
+	PIECE_TYPE_BITBOARD_NB /*NO_PIECE*/,PIECE_TYPE_BITBOARD_PAWN /*歩*/,PIECE_TYPE_BITBOARD_LANCE /*香*/,PIECE_TYPE_BITBOARD_KNIGHT /*桂*/,
+	PIECE_TYPE_BITBOARD_SILVER /*銀*/,PIECE_TYPE_BITBOARD_BISHOP /*角*/,PIECE_TYPE_BITBOARD_ROOK /*飛*/,PIECE_TYPE_BITBOARD_GOLD /*金*/,
+	PIECE_TYPE_BITBOARD_HDK /*玉*/, PIECE_TYPE_BITBOARD_GOLD /*歩成*/ , PIECE_TYPE_BITBOARD_GOLD /*香成*/,PIECE_TYPE_BITBOARD_GOLD/*桂成*/,
+	PIECE_TYPE_BITBOARD_GOLD /*銀成*/,PIECE_TYPE_BITBOARD_BISHOP/*馬*/,PIECE_TYPE_BITBOARD_ROOK/*龍*/ ,PIECE_TYPE_BITBOARD_NB/*金成*/
+};
 
 inline void Position::xor_piece(Piece pc, Square sq)
 {
-  Color c = color_of(pc);
-  const Bitboard q = Bitboard(sq);
-  // 先手・後手の駒のある場所を示すoccupied bitboardの更新
-  occupied[c] ^= q;
-  // 先手 or 後手の駒のある場所を示すoccupied bitboardの更新
-  occupied[COLOR_ALL] ^= q;
+	Color c = color_of(pc);
+	const Bitboard q = Bitboard(sq);
+	// 先手・後手の駒のある場所を示すoccupied bitboardの更新
+	occupied[c] ^= q;
 
-  // 駒別のBitboardの更新
-  Piece pt = type_of(pc);
-  piece_bb[piece2ptb[pt]] ^= q;
+	// 駒別のBitboardの更新
+	Piece pt = type_of(pc);
+	piece_bb[piece2ptb[pt]] ^= q;
 
-  // 馬、龍は、piece_bbのPIECE_TYPE_BITBOARD_BISHOP(ROOK)とPIECE_TYPE_BITBOARD_HDKの両方のbitboardにまたがって存在するので
-  // PIECE_TYPE_BITBOARD_HDKのほうも更新する必要がある。
-  if (pt >= HORSE)
-    piece_bb[PIECE_TYPE_BITBOARD_HDK] ^= q;
+	// 馬、龍は、piece_bbのPIECE_TYPE_BITBOARD_BISHOP(ROOK)とPIECE_TYPE_BITBOARD_HDKの両方のbitboardにまたがって存在するので
+	// PIECE_TYPE_BITBOARD_HDKのほうも更新する必要がある。
+	if (pt >= HORSE)
+		piece_bb[PIECE_TYPE_BITBOARD_HDK] ^= q;
 }
 
 // 駒を配置して、内部的に保持しているBitboardも更新する。
 inline void Position::put_piece(Square sq, Piece pc,PieceNo piece_no)
 {
-  ASSERT_LV2(board[sq] == NO_PIECE);
-  board[sq] = pc;
-  xor_piece(pc, sq);
+	ASSERT_LV2(board[sq] == NO_PIECE);
+	board[sq] = pc;
+	xor_piece(pc, sq);
 
-  // 駒番号をセットしておく必要がある。
-  ASSERT_LV3(is_ok(piece_no));
-  
+	// 駒番号をセットしておく必要がある。
+	ASSERT_LV3(is_ok(piece_no));
+
 #ifndef EVAL_NO_USE
-  // evalListのほうを更新しないといけない
-  evalList.put_piece(piece_no,sq,pc); // sqの升にpcの駒を配置する
+	// evalListのほうを更新しないといけない
+	evalList.put_piece(piece_no, sq, pc); // sqの升にpcの駒を配置する
 #endif
 
-  // 王なら、その升を記憶しておく。
-  // (王の升はBitboardなどをみればわかるが、頻繁にアクセスするのでcacheしている。)
-  if (type_of(pc) == KING)
-    kingSquare[color_of(pc)] = sq;
+										  // 王なら、その升を記憶しておく。
+										  // (王の升はBitboardなどをみればわかるが、頻繁にアクセスするのでcacheしている。)
+	if (type_of(pc) == KING)
+		kingSquare[color_of(pc)] = sq;
 }
 
 // 駒を盤面から取り除き、内部的に保持しているBitboardも更新する。
 inline void Position::remove_piece(Square sq)
 {
-  Piece pc = board[sq];
-  ASSERT_LV3(pc != NO_PIECE);
-  board[sq] = NO_PIECE;
-  xor_piece(pc, sq);
+	Piece pc = board[sq];
+	ASSERT_LV3(pc != NO_PIECE);
+	board[sq] = NO_PIECE;
+	xor_piece(pc, sq);
 }
 
 inline bool is_ok(Position& pos) { return pos.pos_is_ok(); }
