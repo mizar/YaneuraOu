@@ -172,6 +172,9 @@
     <ClInclude Include="extra\book\apery_book.h">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClInclude>
+    <ClInclude Include="extra\book\book_util.h">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClInclude>
     <ClInclude Include="extra\book\book.h">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClInclude>
@@ -195,6 +198,9 @@
     </ClInclude>
     <ClInclude Include="extra\mate\mate1ply.h">
       <Filter>リソース ファイル\extra\mate</Filter>
+    </ClInclude>
+    <ClInclude Include="extra\book\optional.h">
+      <Filter>リソース ファイル\extra\book</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -313,6 +319,9 @@
       <Filter>リソース ファイル\engine\must-capture-shogi-engine</Filter>
     </ClCompile>
     <ClCompile Include="extra\book\apery_book.cpp">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClCompile>
+    <ClCompile Include="extra\book\book_util.cpp">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClCompile>
     <ClCompile Include="extra\book\book.cpp">
