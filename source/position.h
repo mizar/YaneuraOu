@@ -194,7 +194,9 @@ struct Position
 	// 局面のsfen文字列を取得する
 	// ※ USIプロトコルにおいては不要な機能ではあるが、デバッグのために局面を標準出力に出力して
 	// 　その局面から開始させたりしたいときに、sfenで現在の局面を出力出来ないと困るので用意してある。
-	const std::string sfen() const;
+	const std::string sfen(bool trimply = false) const;
+	// 末尾の手数を省略したsfen文字列
+	const std::string trimedsfen() const { return sfen(true); }
 
 	// 平手の初期盤面を設定する。
 	void set_hirate() { set(SFEN_HIRATE); }
@@ -207,6 +209,9 @@ struct Position
 	// (将棋の)開始局面からの手数を返す。
 	// 平手の開始局面なら1が返る。(0ではない)
 	int game_ply() const { return gamePly; }
+
+	// 開始局面からの手数を設定する。
+	void set_game_ply(int ply) { gamePly = ply; }
 
 	// この局面クラスを用いて探索しているスレッドを返す。 
 	Thread* this_thread() const { return thisThread; }
@@ -767,5 +772,20 @@ std::ostream& operator<<(std::ostream& os, const Position& pos);
 
 // depthに応じたZobrist Hashを得る。depthを含めてhash keyを求めたいときに用いる。
 HASH_KEY DepthHash(int depth);
+
+// --------------------
+//       指し手出力
+// --------------------
+
+// KIF形式の文字列にする。
+std::string to_kif1_string(Move m, Position& pos, Move prev_m = MOVE_NULL, SquareFormat fmt = SqFmt_ASCII);
+std::u32string to_kif1_u32string(Move m, Position& pos, Move prev_m = MOVE_NULL, SquareFormat fmt = SqFmt_ASCII);
+// 伝統形式の文字列にする。
+std::string to_kif2_string(Move m, Position& pos, Move prev_m = MOVE_NULL, SquareFormat fmt = SqFmt_ASCII);
+std::u32string to_kif2_u32string(Move m, Position& pos, Move prev_m = MOVE_NULL, SquareFormat fmt = SqFmt_ASCII);
+// 手番無しのCSA形式の文字列にする。
+std::string to_csa1_string(Move m, Position& pos);
+// 手番有りのCSA形式の文字列にする。
+std::string to_csa_string(Move m, Position& pos);
 
 #endif // of #ifndef _SHOGI_H_
