@@ -35,7 +35,11 @@ extern void bench_cmd(Position& pos, istringstream& is);
 
 // 定跡を作るコマンド
 #ifdef ENABLE_MAKEBOOK_CMD
-namespace Book { extern void makebook_cmd(Position& pos, istringstream& is); }
+namespace Book
+{
+	extern void makebook_cmd(Position& pos, istringstream& is);
+	extern void bookutil_cmd(Position& pos, istringstream& is);
+}
 #endif
 
 // 協力詰めsolverモード
@@ -450,7 +454,10 @@ void position_cmd(Position& pos, istringstream& is)
 		// 1手進めるごとにStateInfoが積まれていく。これは千日手の検出のために必要。
 		// ToDoあとで考える。
 		SetupStates->push(StateInfo());
-		pos.do_move(m, SetupStates->top());
+		if (m == MOVE_NULL) // do_move に MOVE_NULL を与えると死ぬので
+			pos.do_null_move(SetupStates->top());
+		else
+			pos.do_move(m, SetupStates->top());
 	}
 }
 
@@ -638,6 +645,14 @@ void USI::loop(int argc, char* argv[])
 
 		istringstream is(cmd);
 
+		// 行頭の非ASCII文字列スキップ(UTF-8 BOM等)
+		while (unsigned char c = is.get())
+			if (c < 0x80)
+			{
+				is.unget();
+				break;
+			}
+
 		token = "";
 		is >> skipws >> token;
 
@@ -741,6 +756,8 @@ void USI::loop(int argc, char* argv[])
 #ifdef ENABLE_MAKEBOOK_CMD
 		// 定跡を作るコマンド
 		else if (token == "makebook") Book::makebook_cmd(pos, is);
+		// 定跡操作コマンドAlternate、試験実装用
+		else if (token == "bookutil") Book::bookutil_cmd(pos, is);
 #endif
 
 #ifdef EVAL_LEARN
@@ -854,6 +871,10 @@ Move move_from_usi(const Position& pos, const std::string& str)
 
 	if (str == "win")
 		return MOVE_WIN;
+
+	// パス(null move)入力への対応 {UCI: "0000", GPSfish: "pass"}
+	if (str == "0000" || str == "null" || str == "pass")
+		return MOVE_NULL;
 
 	// usi文字列をmoveに変換するやつがいるがな..
 	Move move = move_from_usi(str);
