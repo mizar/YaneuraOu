@@ -202,6 +202,8 @@ namespace Book
 		bool to_kif1 = token == "to_kif1";
 		bool to_kif2 = token == "to_kif2";
 		bool to_csa1 = token == "to_csa1";
+		// apery形式bookからの変換
+		bool from_apery = token == "from_apery";
 
 #if !defined(EVAL_LEARN) || !(defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE) || defined(YANEURAOU_2017_EARLY_ENGINE) || defined(YANEURAOU_2017_GOKU_ENGINE))
 		if (from_thinking)
@@ -508,7 +510,7 @@ namespace Book
 			// sfenファイル名
 			string sfen_name;
 			is >> sfen_name;
-			
+
 			// 探索・出力オプション
 			int moves = 256;
 			int evalblackdiff = Options["BookEvalDiff"];
@@ -741,6 +743,121 @@ namespace Book
 			fs.close();
 			cout << ".finished!" << endl;
 			cout << count_sfens << " lines exported." << endl;
+
+		} else if (from_apery)
+		{
+			string book_name[2];
+			is >> book_name[0] >> book_name[1];
+			if (book_name[1] == "")
+			{
+				cout << "Error! book name is empty." << endl;
+				return;
+			}
+			string opening = "";
+			int unregDepth_default = 1;
+			while (true)
+			{
+				token = "";
+				is >> token;
+				if (token == "")
+					break;
+				if (token == "opening")
+					is >> quoted(opening);
+				if (token == "unregdepth")
+					is >> unregDepth_default;
+				else
+				{
+					cout << "Error! : Illigal token = " << token << endl;
+					return;
+				}
+			}
+
+			is_ready();
+
+			AdpAperyBook apery_book(book_name[0]);
+			cout << apery_book.apery_book.size() << " nodes loaded." << endl;
+			deqBook work_book;
+			u64 count_pos = 0;
+			// 探索結果種別
+			enum BookRes
+			{
+				BOOKRES_UNFILLED,
+				BOOKRES_SUCCESS,
+				BOOKRES_DUPEPOS
+			};
+			// 局面コピー
+			function<BookRes(const Position &)> regPos = [&](const Position &)
+			{
+				auto mlist = apery_book.get_entries(pos);
+				if (mlist.empty()) { return BOOKRES_UNFILLED; }
+				dBookEntry be(pos, mlist);
+				if (work_book.add(be, true) == 1)
+					return BOOKRES_DUPEPOS;
+				++count_pos;
+				if (count_pos % 10000 == 0)
+					cout << ".";
+				return BOOKRES_SUCCESS;
+			};
+
+			// 再帰探索
+			function<BookRes(int)> recSearch = [&](int unregDepth)
+			{
+				BookRes res = regPos(pos);
+				int nextUnreg = 0;
+				switch (res)
+				{
+				case BOOKRES_UNFILLED:
+					if(unregDepth < 1)
+						return res;
+					nextUnreg = unregDepth - 1;
+					break;
+				case BOOKRES_SUCCESS:
+					nextUnreg = unregDepth_default;
+					break;
+				case BOOKRES_DUPEPOS:
+					return res;
+				}
+				bool f = false;
+				for (ExtMove em : MoveList<LEGAL_ALL>(pos))
+				{
+					StateInfo si;
+					Move m = em.move;
+					pos.do_move(m, si);
+					if (recSearch(nextUnreg) == BOOKRES_SUCCESS)
+						f = true;
+					pos.undo_move(m);
+				}
+				return f ? BOOKRES_SUCCESS : BOOKRES_UNFILLED;
+			};
+
+			// 探索開始
+			istringstream ssop(opening);
+			string opsfen;
+			getline(ssop, opsfen, ',');
+			do
+			{
+				istringstream ssopsfen(opsfen);
+				string inisfen = fetch_initialpos(pos, ssopsfen);
+
+				string movetoken;
+				while (ssopsfen >> movetoken)
+				{
+					regPos(pos);
+					Move _mv = pos.move16_to_move(move_from_usi(movetoken));
+					if (!(is_ok(_mv) && pos.pseudo_legal(_mv) && pos.legal(_mv)))
+						break;
+					pos.do_move(_mv, StateInfo());
+				}
+				recSearch(unregDepth_default);
+			} while (getline(ssop, opsfen, ','));
+
+			// 探索終了
+			apery_book.close_book();
+			work_book.write_book(book_name[1]);
+			auto count_nodes = work_book.book_body.size();
+			work_book.close_book();
+			cout << ".finished!" << endl;
+			cout << count_nodes << " nodes exported." << endl;
 
 		} else if (book_merge)
 		{
@@ -1494,19 +1611,26 @@ namespace Book
 
 	// 局面の追加
 	// 大量の局面を追加する場合、重複チェックを逐一は行わず(dofind_false)に、後で intl_uniq() を行うことを推奨
-	void deqBook::add(dBookEntry & be, bool dofind)
+	// 返り値 0:新規局面追加 1:登録済み局面有り
+	int deqBook::add(dBookEntry & be, bool dofind)
 	{
 		dBookType::iterator it;
 		int cmp;
 		if (dofind && (it = find(be)) != end())
+		{
 			// 重複していたら整理して再登録
 			(*it).select(be);
+			return 1;
+		}
 		else if (book_body.empty() || (cmp = be.compare(book_body.back())) > 0)
 			// 順序関係が保たれているなら単純に末尾に追加
 			book_body.push_back(be);
 		else if (cmp == 0)
+		{
 			// 末尾と同一局面なら整理
 			book_body.back().select(be);
+			return 1;
+		}
 		else if (book_run.empty())
 			if (book_body.size() < MINRUN)
 				// 短ければ、挿入ソート
@@ -1531,6 +1655,7 @@ namespace Book
 				book_body.push_back(be);
 			}
 		}
+		return 0;
 	}
 
 	// char文字列 の dBookPos 化

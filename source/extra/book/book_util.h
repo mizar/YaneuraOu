@@ -90,8 +90,9 @@ namespace Book {
 		dBookEntry() : dSfenPos(), move_list() {}
 		dBookEntry(const std::string sfen, const int p) : dSfenPos(sfen, p), move_list() {}
 		dBookEntry(const sfen_pair_t & sfen_pair) : dSfenPos(sfen_pair), move_list() {}
-		dBookEntry(const sfen_pair_t & sfen_pair, dMoveListType mlist) : dSfenPos(sfen_pair), move_list(mlist) {}
+		dBookEntry(const sfen_pair_t & sfen_pair, const dMoveListType & mlist) : dSfenPos(sfen_pair), move_list(mlist) {}
 		dBookEntry(const Position & pos) : dSfenPos(pos), move_list() {}
+		dBookEntry(const Position & pos, const dMoveListType & mlist) : dSfenPos(pos), move_list(mlist) {}
 
 		// char文字列からの dBookEntry 生成
 		void init(const char * sfen, const size_t length, const bool sfen_n11n);
@@ -332,7 +333,7 @@ namespace Book {
 
 		// 局面の追加
 		// 大量の局面を追加する場合、重複チェックを逐一は行わず(dofind_false)に、後で intl_uniq() を行うことを推奨
-		void add(dBookEntry & be, bool dofind = false);
+		int add(dBookEntry & be, bool dofind = false);
 
 		// 局面・指し手の追加
 		void insert_book_pos(const sfen_pair_t & sfen, dBookPos & bp)
@@ -389,6 +390,7 @@ namespace Book {
 		int read_book(const std::string & filename)
 		{
 			apery_book = AperyBook(filename.c_str());
+			return 0;
 		}
 		static Move convert_move_from_apery(uint16_t apery_move) {
 			const uint16_t to = apery_move & 0x7f;
