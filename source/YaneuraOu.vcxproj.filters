@@ -199,6 +199,9 @@
     <ClInclude Include="extra\mate\mate1ply.h">
       <Filter>リソース ファイル\extra\mate</Filter>
     </ClInclude>
+    <ClInclude Include="extra\book\optional.h">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="movegen.cpp">

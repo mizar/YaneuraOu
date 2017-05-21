@@ -3,11 +3,11 @@
 
 #include "book.h"
 #include "apery_book.h"
+#include "optional.h"
 #include <algorithm>
 #include <deque>
 #include <iterator>
 #include <utility>
-#include <optional>
 
 namespace Book {
 
@@ -55,6 +55,7 @@ namespace Book {
 	typedef typename std::allocator<dbp_t> alloc_dbp_t;
 	typedef typename std::vector<dBookPos, alloc_dbp_t> dMoveListType;
 	typedef typename dMoveListType::iterator dBookPosIter;
+	typedef typename std::experimental::optional<dMoveListType> dMoveListTypeOpt;
 
 	// 内部実装用局面
 	struct dSfenPos
@@ -203,7 +204,7 @@ namespace Book {
 		virtual int read_book(const std::string & filename) { return 1; }
 		virtual int write_book(const std::string & filename) { return 1; }
 		virtual int close_book() { return 1; }
-		virtual std::optional<dMoveListType> get_entries(const Position & pos) { return {}; }
+		virtual dMoveListTypeOpt get_entries(const Position & pos) { return {}; }
 	};
 
 	// 単に全合法手を返すだけのサンプル実装
@@ -211,7 +212,7 @@ namespace Book {
 	{
 		int read_book(const std::string & filename) { return 0; }
 		int close_book() { return 0; }
-		std::optional<dMoveListType> get_entries(const Position & pos)
+		dMoveListTypeOpt get_entries(const Position & pos)
 		{
 			dMoveListType mlist;
 			for (ExtMove m : MoveList<LEGAL_ALL>(pos))
@@ -229,7 +230,7 @@ namespace Book {
 		std::ifstream fs;
 		int read_book(const std::string & filename);
 		int close_book();
-		std::optional<dMoveListType> get_entries(const Position & pos);
+		dMoveListTypeOpt get_entries(const Position & pos);
 		OnTheFlyBook(const std::string & filename)
 		{
 			read_book(filename);
@@ -362,7 +363,7 @@ namespace Book {
 		int read_book(const std::string & filename, bool sfen_n11n);
 		int write_book(const std::string & filename);
 		int close_book();
-		std::optional<dMoveListType> get_entries(const Position & pos)
+		dMoveListTypeOpt get_entries(const Position & pos)
 		{
 			auto it = find(pos);
 			if (it == end())
@@ -407,7 +408,7 @@ namespace Book {
 			}
 			return make_move(static_cast<Square>(from), static_cast<Square>(to));
 		}
-		std::optional<dMoveListType> get_entries(const Position & pos)
+		dMoveListTypeOpt get_entries(const Position & pos)
 		{
 			auto apmlist = apery_book.get_entries_opt(pos);
 			if (!apmlist)
