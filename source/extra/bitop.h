@@ -278,6 +278,7 @@ extern ymm ymm_one;   // all packed bytes are 1.
 // C++11では、std::stack<StateInfo>がalignasを無視するために、代わりにstack相当のものを自作。
 template <typename T> struct aligned_stack {
 	void push(const T& t) { auto ptr = (T*)_mm_malloc(sizeof(T), alignof(T)); *ptr = t; container.push_back(ptr); }
+	void pop() { if (container.empty()) return; _mm_free(container.back()); container.pop_back(); }
 	T& top() const { return *container.back(); }
 	void clear() { for (auto ptr : container) _mm_free(ptr); container.clear(); }
 	size_t size() const { return container.size(); }
