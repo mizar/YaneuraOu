@@ -1224,7 +1224,7 @@ namespace Book
 		return 0;
 	}
 
-	std::optional<dMoveListType> OnTheFlyBook::get_entries(const Position & pos)
+	dMoveListTypeOpt OnTheFlyBook::get_entries(const Position & pos)
 	{
 		if (!on_the_fly)
 			return {};

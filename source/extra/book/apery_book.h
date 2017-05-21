@@ -23,7 +23,7 @@
 #define APERY_BOOK_HPP
 
 #include <unordered_map>
-#include <optional>
+#include "optional.h"
 #include "mt64bit.h"
 #include "../../shogi.h"
 #include "../../position.h"
@@ -44,7 +44,7 @@ class AperyBook {
 public:
 	explicit AperyBook(const char* fName);
 	const std::vector<AperyBookEntry>& get_entries(const Position& pos) const;
-	const std::optional<std::vector<AperyBookEntry>> get_entries_opt(const Position& pos) const;
+	const std::experimental::optional<std::vector<AperyBookEntry>> get_entries_opt(const Position& pos) const;
 	static Key bookKey(const Position& pos);
 	size_t size() const { return book_.size(); }
 
