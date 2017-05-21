@@ -81,5 +81,10 @@ const std::vector<AperyBookEntry>& AperyBook::get_entries(const Position& pos) c
     if (it == book_.end()) return empty_entries_;
     return it->second;
 }
+const std::optional<std::vector<AperyBookEntry>> AperyBook::get_entries_opt(const Position& pos) const {
+	const auto it = book_.find(bookKey(pos));
+	if (it == book_.end()) return {};
+	return it->second;
+}
 
 }
