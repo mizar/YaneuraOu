@@ -7,6 +7,7 @@
 #include <deque>
 #include <iterator>
 #include <utility>
+#include <optional>
 
 namespace Book {
 
@@ -202,7 +203,7 @@ namespace Book {
 		virtual int read_book(const std::string & filename) { return 1; }
 		virtual int write_book(const std::string & filename) { return 1; }
 		virtual int close_book() { return 1; }
-		virtual dMoveListType get_entries(const Position & pos) { return dMoveListType(); }
+		virtual std::optional<dMoveListType> get_entries(const Position & pos) { return {}; }
 	};
 
 	// 単に全合法手を返すだけのサンプル実装
@@ -210,7 +211,7 @@ namespace Book {
 	{
 		int read_book(const std::string & filename) { return 0; }
 		int close_book() { return 0; }
-		dMoveListType get_entries(const Position & pos)
+		std::optional<dMoveListType> get_entries(const Position & pos)
 		{
 			dMoveListType mlist;
 			for (ExtMove m : MoveList<LEGAL_ALL>(pos))
@@ -228,7 +229,7 @@ namespace Book {
 		std::ifstream fs;
 		int read_book(const std::string & filename);
 		int close_book();
-		dMoveListType get_entries(const Position & pos);
+		std::optional<dMoveListType> get_entries(const Position & pos);
 		OnTheFlyBook(const std::string & filename)
 		{
 			read_book(filename);
@@ -361,11 +362,11 @@ namespace Book {
 		int read_book(const std::string & filename, bool sfen_n11n);
 		int write_book(const std::string & filename);
 		int close_book();
-		dMoveListType get_entries(const Position & pos)
+		std::optional<dMoveListType> get_entries(const Position & pos)
 		{
 			auto it = find(pos);
 			if (it == end())
-				return dMoveListType();
+				return {};
 			else
 			{
 				move_update(pos, it->move_list);
@@ -406,11 +407,20 @@ namespace Book {
 			}
 			return make_move(static_cast<Square>(from), static_cast<Square>(to));
 		}
-		dMoveListType get_entries(const Position & pos)
+		std::optional<dMoveListType> get_entries(const Position & pos)
 		{
+			auto apmlist = apery_book.get_entries_opt(pos);
+			if (!apmlist)
+				return {};
 			dMoveListType mlist;
-			for (const auto& entry : apery_book.get_entries(pos))
-				mlist.emplace_back(pos.move16_to_move(convert_move_from_apery(entry.fromToPro)), MOVE_NONE, entry.score, 256, entry.count);
+			for (const auto& entry : *apmlist)
+			{
+				Move mv = convert_move_from_apery(entry.fromToPro);
+				// collision check
+				if (!pos.legal(mv))
+					return {};
+				mlist.emplace_back(pos.move16_to_move(mv), MOVE_NONE, entry.score, 256, entry.count);
+			}
 			return mlist;
 		}
 		AdpAperyBook(const std::string & filename) : apery_book(filename.c_str()) {}

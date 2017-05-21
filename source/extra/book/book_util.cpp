@@ -789,8 +789,8 @@ namespace Book
 			function<BookRes(const Position &)> regPos = [&](const Position &)
 			{
 				auto mlist = apery_book.get_entries(pos);
-				if (mlist.empty()) { return BOOKRES_UNFILLED; }
-				dBookEntry be(pos, mlist);
+				if (!mlist) { return BOOKRES_UNFILLED; }
+				dBookEntry be(pos, *mlist);
 				if (work_book.add(be, true) == 1)
 					return BOOKRES_DUPEPOS;
 				++count_pos;
@@ -1224,10 +1224,10 @@ namespace Book
 		return 0;
 	}
 
-	dMoveListType OnTheFlyBook::get_entries(const Position & pos)
+	std::optional<dMoveListType> OnTheFlyBook::get_entries(const Position & pos)
 	{
 		if (!on_the_fly)
-			return dMoveListType();
+			return {};
 
 		// 末尾の手数は取り除いておく。
 		// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
@@ -1293,7 +1293,7 @@ namespace Book
 			{
 				if (s != 0 || e != 0)
 					// 見つからなかった
-					return dMoveListType();
+					return {};
 
 				// もしかしたら先頭付近にあるかも知れん..
 				e = 0; // この条件で再度サーチ
