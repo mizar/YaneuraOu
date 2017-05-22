@@ -3,27 +3,41 @@
 
 #include "book.h"
 #include "apery_book.h"
+#if __cplusplus < 201703
 #include "optional.h"
+#else
+#include <optional>
+#endif
 #include <algorithm>
 #include <deque>
 #include <iterator>
 #include <utility>
 
-namespace Book {
+namespace BookUtil
+{
 
-	typedef typename std::pair<std::string, int> sfen_pair_t;
-	typedef typename std::allocator<char> alloc_char_t;
-	typedef typename std::basic_string<char, std::char_traits<char>, alloc_char_t> dsfen_t;
+	typedef std::pair<std::string, int> sfen_pair_t;
+	typedef std::allocator<char> alloc_char_t;
+	typedef std::basic_string<char, std::char_traits<char>, alloc_char_t> dsfen_t;
 
 	// 手数を除いた平手初期局面のsfen文字列
 	const std::string SHORTSFEN_HIRATE = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b -";
-	std::size_t trimlen_sfen(const char * sfen, const size_t length);
+
+	// sfen文字列から末尾のゴミを取り除いて返す。
+	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
+	const std::string trim_sfen(const std::string sfen);
+	// sfen文字列の手数分離
+	const sfen_pair_t split_sfen(const std::string sfen);
+	// sfen文字列の手数分離位置
+	std::size_t trimlen_sfen(const char * sfen, const std::size_t length);
 	std::size_t trimlen_sfen(const std::string sfen);
 	// sfen文字列の手数分離
 	const sfen_pair_t split_sfen(const std::string sfen);
+	// 棋譜文字列ストリームから初期局面を抽出して設定
+	std::string fetch_initialpos(Position & pos, std::istream & is);
 
 	// 局面における指し手(定跡を格納するのに用いる)
-	struct dBookPos
+	struct BookPos
 	{
 
 		Move bestMove;
@@ -32,18 +46,18 @@ namespace Book {
 		int depth;
 		u64 num;
 
-		dBookPos(const dBookPos & bp) : bestMove(bp.bestMove), nextMove(bp.nextMove), value(bp.value), depth(bp.depth), num(bp.num) {}
-		dBookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
+		BookPos(const BookPos & bp) : bestMove(bp.bestMove), nextMove(bp.nextMove), value(bp.value), depth(bp.depth), num(bp.num) {}
+		BookPos(Move best, Move next, int v, int d, u64 n) : bestMove(best), nextMove(next), value(v), depth(d), num(n) {}
 
-		// char文字列からの dBookPos生成
+		// char文字列からのBookPos生成
 		void init(const char * p);
-		dBookPos(const char * p) { init(p); }
+		BookPos(const char * p) { init(p); }
 
-		bool operator == (const dBookPos & rhs) const
+		bool operator == (const BookPos & rhs) const
 		{
 			return bestMove == rhs.bestMove;
 		}
-		bool operator < (const dBookPos & rhs) const
+		bool operator < (const BookPos & rhs) const
 		{
 			// std::sortで降順ソートされて欲しいのでこう定義する。
 			return value > rhs.value || value == rhs.value && num > rhs.num;
@@ -51,81 +65,85 @@ namespace Book {
 
 	};
 
-	typedef typename dBookPos dbp_t;
-	typedef typename std::allocator<dbp_t> alloc_dbp_t;
-	typedef typename std::vector<dBookPos, alloc_dbp_t> dMoveListType;
-	typedef typename dMoveListType::iterator dBookPosIter;
-	typedef typename std::experimental::optional<dMoveListType> dMoveListTypeOpt;
+	typedef BookPos dbp_t;
+	typedef std::allocator<dbp_t> alloc_dbp_t;
+	typedef std::vector<BookPos, alloc_dbp_t> MoveListType;
+	typedef MoveListType::iterator BookPosIter;
+#if __cplusplus < 201703
+	typedef std::experimental::optional<MoveListType> MoveListTypeOpt;
+#else
+	typedef std::optional<MoveListType> MoveListTypeOpt;
+#endif
 
 	// 内部実装用局面
-	struct dSfenPos
+	struct SfenPos
 	{
 		dsfen_t sfenPos;
 		int ply;
 
-		dSfenPos() : sfenPos(SHORTSFEN_HIRATE), ply(1) {}
-		dSfenPos(const std::string sfen, const int p) : sfenPos(sfen), ply(p) {}
-		dSfenPos(const sfen_pair_t & sfen_pair) : sfenPos(sfen_pair.first), ply(sfen_pair.second) {}
-		dSfenPos(const Position & pos) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()) {}
-		dSfenPos(const dSfenPos & pos) : sfenPos(pos.sfenPos), ply(pos.ply) {}
+		SfenPos() : sfenPos(SHORTSFEN_HIRATE), ply(1) {}
+		SfenPos(const std::string sfen, const int p) : sfenPos(sfen), ply(p) {}
+		SfenPos(const sfen_pair_t & sfen_pair) : sfenPos(sfen_pair.first), ply(sfen_pair.second) {}
+		SfenPos(const Position & pos) : sfenPos(pos.trimedsfen()), ply(pos.game_ply()) {}
+		SfenPos(const SfenPos & pos) : sfenPos(pos.sfenPos), ply(pos.ply) {}
 
 		// 局面比較
-		bool operator < (const dSfenPos & rhs) const
+		bool operator < (const SfenPos & rhs) const
 		{
 			return sfenPos < rhs.sfenPos;
 		}
-		bool operator == (const dSfenPos & rhs) const
+		bool operator == (const SfenPos & rhs) const
 		{
 			return sfenPos == rhs.sfenPos;
 		}
-		int compare(const dSfenPos & rhs) const
+		int compare(const SfenPos & rhs) const
 		{
 			return sfenPos.compare(rhs.sfenPos);
 		}
 	};
 
 	// 内部実装用局面項目
-	struct dBookEntry : dSfenPos
+	struct BookEntry : SfenPos
 	{
-		dMoveListType move_list;
+		MoveListType move_list;
 
-		dBookEntry() : dSfenPos(), move_list() {}
-		dBookEntry(const std::string sfen, const int p) : dSfenPos(sfen, p), move_list() {}
-		dBookEntry(const sfen_pair_t & sfen_pair) : dSfenPos(sfen_pair), move_list() {}
-		dBookEntry(const sfen_pair_t & sfen_pair, const dMoveListType & mlist) : dSfenPos(sfen_pair), move_list(mlist) {}
-		dBookEntry(const Position & pos) : dSfenPos(pos), move_list() {}
-		dBookEntry(const Position & pos, const dMoveListType & mlist) : dSfenPos(pos), move_list(mlist) {}
+		BookEntry() : SfenPos(), move_list() {}
+		BookEntry(const std::string sfen, const int p) : SfenPos(sfen, p), move_list() {}
+		BookEntry(const sfen_pair_t & sfen_pair) : SfenPos(sfen_pair), move_list() {}
+		BookEntry(const sfen_pair_t & sfen_pair, const MoveListType & mlist) : SfenPos(sfen_pair), move_list(mlist) {}
+		BookEntry(const Position & pos) : SfenPos(pos), move_list() {}
+		BookEntry(const Position & pos, const MoveListType & mlist) : SfenPos(pos), move_list(mlist) {}
 
-		// char文字列からの dBookEntry 生成
+		// char文字列からの BookEntry 生成
 		void init(const char * sfen, const size_t length, const bool sfen_n11n);
-		dBookEntry(const char * sfen, const size_t length, const bool sfen_n11n = false) { init(sfen, length, sfen_n11n); }
+		BookEntry(const char * sfen, const size_t length, const bool sfen_n11n = false) { init(sfen, length, sfen_n11n); }
 
-		// ストリームからの dBookPos 順次読み込み
+		// ストリームからの BookPos 順次読み込み
 		void incpos(std::istream & is, char * _buffer, const size_t _buffersize);
 
-		// ストリームからの dBookEntry 読み込み
+		// ストリームからの BookEntry 読み込み
 		void init(std::istream & is, char * _buffer, const size_t _buffersize, const bool sfen_n11n);
-		dBookEntry(std::istream & is, char * _buffer, const size_t _buffersize, const bool sfen_n11n = false)
+		BookEntry(std::istream & is, char * _buffer, const size_t _buffersize, const bool sfen_n11n = false)
 		{
 			init(is, _buffer, _buffersize, sfen_n11n);
 		}
 
 		// 局面比較
-		bool operator < (const dBookEntry & rhs) const
+		bool operator < (const BookEntry & rhs) const
 		{
 			return sfenPos < rhs.sfenPos;
 		}
-		bool operator == (const dBookEntry & rhs) const
+		bool operator == (const BookEntry & rhs) const
 		{
 			return sfenPos == rhs.sfenPos;
 		}
-		int compare(const dBookEntry & rhs) const
+		int compare(const BookEntry & rhs) const
 		{
 			return sfenPos.compare(rhs.sfenPos);
 		}
 
 		// 優位な局面情報の選択
-		void select(const dBookEntry & be)
+		void select(const BookEntry & be)
 		{
 			// 異なる局面は処理しない
 			if (sfenPos != be.sfenPos)
@@ -154,7 +172,7 @@ namespace Book {
 			std::stable_sort(move_list.begin(), move_list.end());
 		}
 
-		void insert_book_pos(const dBookPos & bp)
+		void insert_book_pos(const BookPos & bp)
 		{
 			for (auto & b : move_list)
 			{
@@ -169,14 +187,14 @@ namespace Book {
 			move_list.push_back(bp);
 		}
 
-		std::vector<BookPos> export_move_list(const Position & pos)
+		std::vector<Book::BookPos> export_move_list(const Position & pos)
 		{
-			std::vector<BookPos> mlist;
+			std::vector<Book::BookPos> mlist;
 			mlist.reserve(move_list.size());
 			u64 num_sum = 0;
 			for (auto & bp : move_list)
 			{
-				// vector<dBookPos> から vector<BookPos> へのコピー
+				// vector<BookUtil::BookPos> から vector<Book::BookPos> へのコピー
 				// 定跡のMoveは16bitであり、rootMovesは32bitのMoveであるからこのタイミングで補正する。
 				mlist.emplace_back(pos.move16_to_move(bp.bestMove), bp.nextMove, bp.value, bp.depth, bp.num);
 				num_sum += bp.num;
@@ -192,7 +210,7 @@ namespace Book {
 	};
 
 	// 定跡のbestMove(16bit)を32bitに補正
-	void move_update(const Position & pos, dMoveListType & mlist) {
+	void move_update(const Position & pos, MoveListType & mlist) {
 		for (auto & bp : mlist)
 			bp.bestMove = pos.move16_to_move(bp.bestMove);
 	}
@@ -204,7 +222,7 @@ namespace Book {
 		virtual int read_book(const std::string & filename) { return 1; }
 		virtual int write_book(const std::string & filename) { return 1; }
 		virtual int close_book() { return 1; }
-		virtual dMoveListTypeOpt get_entries(const Position & pos) { return {}; }
+		virtual MoveListTypeOpt get_entries(const Position & pos) { return {}; }
 	};
 
 	// 単に全合法手を返すだけのサンプル実装
@@ -212,9 +230,9 @@ namespace Book {
 	{
 		int read_book(const std::string & filename) { return 0; }
 		int close_book() { return 0; }
-		dMoveListTypeOpt get_entries(const Position & pos)
+		MoveListTypeOpt get_entries(const Position & pos)
 		{
-			dMoveListType mlist;
+			MoveListType mlist;
 			for (ExtMove m : MoveList<LEGAL_ALL>(pos))
 				mlist.emplace_back(m.move, MOVE_NONE, 0, 0, 1);
 			return mlist;
@@ -230,15 +248,17 @@ namespace Book {
 		std::ifstream fs;
 		int read_book(const std::string & filename);
 		int close_book();
-		dMoveListTypeOpt get_entries(const Position & pos);
+		MoveListTypeOpt get_entries(const Position & pos);
 		OnTheFlyBook(const std::string & filename)
 		{
 			read_book(filename);
 		}
 	};
 
-	typedef std::deque<dBookEntry> dBookType;
-	typedef typename std::iterator_traits<dBookType::iterator>::difference_type dBookIterDiff;
+	typedef std::deque<BookEntry> BookType;
+	typedef BookType::iterator BookIter;
+	typedef std::iterator_traits<BookIter>::difference_type BookIterDiff;
+	typedef std::vector<BookIterDiff> BookRun;
 
 	// std::dequeを使った実装
 	// std::unordered_map では順序関係が破壊されるが、 std::map は敢えて使わなかった的な。
@@ -249,22 +269,21 @@ namespace Book {
 	// メモリ消費のオーバーヘッドはstd::mapより少なくする、などを目指す。
 	struct deqBook : AbstractBook
 	{
-		typedef std::vector<dBookIterDiff> dBookRun;
 
 		// 定跡本体
 		// dMemoryBook 同士のマージを行いやすくするため、
-		dBookType book_body;
+		BookType book_body;
 
 		// ソート済み区間の保持
 		// book_body をマージソートの中間状態とみなし、ソート済み区間の区切り位置を保持する
 		// これが空の場合、 book_body は全てソート済みであるとみなす
-		dBookRun book_run;
+		BookRun book_run;
 
 		// 挿入ソートを行うしきい値
 		const std::size_t MINRUN = 32;
 
 		// find() で見つからなかった時の値
-		const dBookType::iterator end()
+		const BookIter end()
 		{
 			return book_body.end();
 		}
@@ -272,20 +291,20 @@ namespace Book {
 		// 比較関数
 		struct d_less_bebe
 		{
-			bool operator()(const dBookEntry & lhs, const dBookEntry & rhs) const
+			bool operator()(const BookEntry & lhs, const BookEntry & rhs) const
 			{
 				return bool(lhs.sfenPos < rhs.sfenPos);
 			}
 		};
 		struct d_less_bestr
 		{
-			bool operator()(const dBookEntry & lhs, const std::string & rhs) const
+			bool operator()(const BookEntry & lhs, const std::string & rhs) const
 			{
 				return bool(lhs.sfenPos < rhs);
 			}
 		};
 
-		dBookType::iterator find(const dBookEntry & be)
+		BookIter find(const BookEntry & be)
 		{
 			auto it0 = book_body.begin();
 			auto itr = book_run.begin();
@@ -301,7 +320,7 @@ namespace Book {
 				it0 = it1;
 			}
 		}
-		dBookType::iterator find(const std::string & sfenPos)
+		BookIter find(const std::string & sfenPos)
 		{
 			auto it0 = book_body.begin();
 			auto itr = book_run.begin();
@@ -317,7 +336,7 @@ namespace Book {
 				it0 = it1;
 			}
 		}
-		dBookType::iterator find(const Position & pos)
+		BookIter find(const Position & pos)
 		{
 			return find(pos.trimedsfen());
 		}
@@ -335,16 +354,16 @@ namespace Book {
 
 		// 局面の追加
 		// 大量の局面を追加する場合、重複チェックを逐一は行わず(dofind_false)に、後で intl_uniq() を行うことを推奨
-		int add(dBookEntry & be, bool dofind = false);
+		int add(BookEntry & be, bool dofind = false);
 
 		// 局面・指し手の追加
-		void insert_book_pos(const sfen_pair_t & sfen, dBookPos & bp)
+		void insert_book_pos(const sfen_pair_t & sfen, BookPos & bp)
 		{
 			auto it = find(sfen.first);
 			if (it == end())
 			{
 				// 存在しないので要素を作って追加。
-				dBookEntry be(sfen);
+				BookEntry be(sfen);
 				be.move_list.push_back(bp);
 				add(be);
 			}
@@ -363,7 +382,7 @@ namespace Book {
 		int read_book(const std::string & filename, bool sfen_n11n);
 		int write_book(const std::string & filename);
 		int close_book();
-		dMoveListTypeOpt get_entries(const Position & pos)
+		MoveListTypeOpt get_entries(const Position & pos)
 		{
 			auto it = find(pos);
 			if (it == end())
@@ -386,12 +405,12 @@ namespace Book {
 	};
 
 	// AperyBook向けのインタフェース共通化用Adapter
-	struct AdpAperyBook : AbstractBook
+	struct AperyBook : AbstractBook
 	{
-		AperyBook apery_book;
+		Book::AperyBook apery_book;
 		int read_book(const std::string & filename)
 		{
-			apery_book = AperyBook(filename.c_str());
+			apery_book = Book::AperyBook(filename.c_str());
 			return 0;
 		}
 		static Move convert_move_from_apery(uint16_t apery_move) {
@@ -408,12 +427,12 @@ namespace Book {
 			}
 			return make_move(static_cast<Square>(from), static_cast<Square>(to));
 		}
-		dMoveListTypeOpt get_entries(const Position & pos)
+		MoveListTypeOpt get_entries(const Position & pos)
 		{
 			auto apmlist = apery_book.get_entries_opt(pos);
 			if (!apmlist)
 				return {};
-			dMoveListType mlist;
+			MoveListType mlist;
 			for (const auto& entry : *apmlist)
 			{
 				Move mv = convert_move_from_apery(entry.fromToPro);
@@ -424,12 +443,12 @@ namespace Book {
 			}
 			return mlist;
 		}
-		AdpAperyBook(const std::string & filename) : apery_book(filename.c_str()) {}
+		AperyBook(const std::string & filename) : apery_book(filename.c_str()) {}
 	};
 
 	// 出力ストリーム
-	std::ostream & operator << (std::ostream & os, const dBookPos & bp);
-	std::ostream & operator << (std::ostream & os, const dBookEntry & be);
+	std::ostream & operator << (std::ostream & os, const BookPos & bp);
+	std::ostream & operator << (std::ostream & os, const BookEntry & be);
 
 #ifdef ENABLE_MAKEBOOK_CMD
 	extern void bookutil_cmd(Position & pos, std::istringstream & is);

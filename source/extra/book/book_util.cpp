@@ -19,7 +19,7 @@ using std::cout;
 
 void is_ready();
 
-namespace Book
+namespace BookUtil
 {
 
 #ifdef ENABLE_MAKEBOOK_CMD
@@ -28,9 +28,9 @@ namespace Book
 	// ----------------------------------
 	// 局面を与えて、その局面で思考させるために、やねうら王2016Mid以降が必要。
 #if defined(EVAL_LEARN) && (defined(YANEURAOU_2016_MID_ENGINE) || defined(YANEURAOU_2016_LATE_ENGINE) || defined(YANEURAOU_2017_EARLY_ENGINE) || defined(YANEURAOU_2017_GOKU_ENGINE))
-	struct dMultiThinkBook: public MultiThink
+	struct MultiThinkBook: public MultiThink
 	{
-		dMultiThinkBook(int search_depth_, deqBook & book_)
+		MultiThinkBook(int search_depth_, deqBook & book_)
 			: search_depth(search_depth_), book(book_), appended(false) {}
 
 		virtual void thread_worker(size_t thread_id);
@@ -54,7 +54,7 @@ namespace Book
 
 	//  thread_id    = 0..Threads.size()-1
 	//  search_depth = 通常探索の探索深さ
-	void dMultiThinkBook::thread_worker(size_t thread_id)
+	void MultiThinkBook::thread_worker(size_t thread_id)
 	{
 		// g_loop_maxになるまで繰り返し
 		u64 id;
@@ -77,14 +77,14 @@ namespace Book
 
 			// MultiPVで局面を足す、的な
 
-			dMoveListType move_list;
+			MoveListType move_list;
 
 			int multi_pv = min((int)Options["MultiPV"], (int)th->rootMoves.size());
 			for (int i = 0; i < multi_pv; ++i)
 			{
 				// 出現頻度は、バージョンナンバーを100倍したものにしておく)
 				Move nextMove = (th->rootMoves[i].pv.size() >= 1) ? th->rootMoves[i].pv[1] : MOVE_NONE;
-				dBookPos bp(th->rootMoves[i].pv[0], nextMove, th->rootMoves[i].score
+				BookPos bp(th->rootMoves[i].pv[0], nextMove, th->rootMoves[i].score
 					, search_depth, int(atof(ENGINE_VERSION) * 100));
 
 				// MultiPVで思考しているので、手番側から見て評価値の良い順に並んでいることは保証される。
@@ -95,7 +95,7 @@ namespace Book
 			{
 				unique_lock<Mutex> lk(io_mutex);
 				// 前のエントリーは上書きされる。
-				dBookEntry be(split_sfen(sfen), move_list);
+				BookEntry be(split_sfen(sfen), move_list);
 				book.add(be, true);
 
 				// 新たなエントリーを追加したのでフラグを立てておく。
@@ -111,74 +111,6 @@ namespace Book
 	}
 
 #endif
-
-	// sfen文字列のゴミを除いた長さ
-	size_t trimlen_sfen(const char * sfen, const size_t length)
-	{
-		auto cur = length;
-		while (cur > 0)
-		{
-			char c = sfen[cur - 1];
-			// 改行文字、スペース、数字(これはgame ply)ではないならループを抜ける。
-			// これらの文字が出現しなくなるまで末尾を切り詰める。
-			if (c != '\r' && c != '\n' && c != ' ' && !('0' <= c && c <= '9'))
-				break;
-			cur--;
-		}
-		return cur;
-	}
-	size_t trimlen_sfen(const string sfen)
-	{
-		return trimlen_sfen(sfen.c_str(), sfen.length());
-	}
-
-	// sfen文字列から末尾のゴミを取り除いて返す。
-	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
-	const string trim_sfen(const string sfen)
-	{
-		string s = sfen;
-		s.resize(trimlen_sfen(sfen));
-		return s;
-	}
-
-	// sfen文字列の手数分離
-	const sfen_pair_t split_sfen(const string sfen)
-	{
-		auto cur = trimlen_sfen(sfen);
-		string s = sfen;
-		s.resize(cur);
-		int ply = QConv::atos32(sfen.c_str() + cur);
-		return make_pair(s, ply);
-	}
-
-	// 棋譜文字列ストリームから初期局面を抽出して設定
-	string fetch_initialpos(Position & pos, istream & is)
-	{
-		string sfenpos, token;
-		auto ispos = is.tellg();
-		if (!(is >> token) || token == "moves")
-			sfenpos = SFEN_HIRATE;
-		else if (token != "position" && token != "sfen" && token != "startpos")
-		{
-			// 先頭句が予約語でないなら、いきなり平手からの指し手文字列が始まったと見なす
-			sfenpos = SFEN_HIRATE;
-			// シーク位置を戻す
-			is.seekg(ispos);
-		} else do
-		{
-			if (token == "moves")
-				break;
-			else if (token == "startpos")
-				sfenpos = SFEN_HIRATE;
-			else if (token == "sfen")
-				sfenpos = "";
-			else if (token != "position")
-				sfenpos += token + " ";
-		} while (is >> token);
-		// 初期局面を設定
-		pos.set(sfenpos);
-		return sfenpos;
-	}
 
 	// フォーマット等についてはdoc/解説.txt を見ること。
 	void bookutil_cmd(Position & pos, istringstream & is)
@@ -376,7 +308,7 @@ namespace Book
 					if (from_sfen)
 					{
 						// この場合、m[i + 1]が必要になるので、m.size()-1までしかループできない。
-						dBookPos bp(m[i], m[i + 1], VALUE_ZERO, 32, 1);
+						BookPos bp(m[i], m[i + 1], VALUE_ZERO, 32, 1);
 						auto ss = split_sfen(sf[i]);
 						book.insert_book_pos(ss, bp);
 					} else if (from_thinking)
@@ -411,7 +343,7 @@ namespace Book
 				Position pos_;
 
 				// 思考する局面をsfensに突っ込んで、この局面数をg_loop_maxに代入しておき、この回数だけ思考する。
-				dMultiThinkBook multi_think(depth, book);
+				MultiThinkBook multi_think(depth, book);
 
 				// 進捗表示形式
 				multi_think.progress_type = progress_type;
@@ -670,7 +602,7 @@ namespace Book
 				if (it == book.end())
 					return BOOKRES_UNFILLED;
 				auto & be = *it;
-				// 探索済み局面(dBookEntryのplyをフラグ代わり)なら戻る
+				// 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
 				if (be.ply == 0)
 					return BOOKRES_DUPEPOS;
 				// move_listが空なら戻る
@@ -774,9 +706,11 @@ namespace Book
 
 			is_ready();
 
-			AdpAperyBook apery_book(book_name[0]);
+			AperyBook apery_book(book_name[0]);
 			cout << apery_book.apery_book.size() << " nodes loaded." << endl;
 			deqBook work_book;
+			vector<unordered_set<Key>> cacheKey(max(unregDepth_default + 1, 1));
+			vector<int> cacheCount(max(unregDepth_default + 1, 1));
 			u64 count_pos = 0;
 			// 探索結果種別
 			enum BookRes
@@ -790,11 +724,11 @@ namespace Book
 			{
 				auto mlist = apery_book.get_entries(pos);
 				if (!mlist) { return BOOKRES_UNFILLED; }
-				dBookEntry be(pos, *mlist);
+				BookEntry be(pos, *mlist);
 				if (work_book.add(be, true) == 1)
 					return BOOKRES_DUPEPOS;
 				++count_pos;
-				if (count_pos % 10000 == 0)
+				if (count_pos % 1000 == 0)
 					cout << ".";
 				return BOOKRES_SUCCESS;
 			};
@@ -804,20 +738,33 @@ namespace Book
 			{
 				BookRes res = regPos(pos);
 				int nextUnreg = 0;
+				bool f = false;
+				Key bookKey;
 				switch (res)
 				{
 				case BOOKRES_UNFILLED:
 					if(unregDepth < 1)
 						return res;
 					nextUnreg = unregDepth - 1;
+					bookKey = Book::AperyBook::bookKey(pos);
+					for (int i = nextUnreg; i >= 0; --i)
+					{
+						if (!cacheKey[i].insert(bookKey).second)
+							return res;
+						if (++cacheCount[i] > 16777215)
+						{
+							cacheKey[i].clear();
+							cacheCount[i] = 0;
+						}
+					}
 					break;
 				case BOOKRES_SUCCESS:
 					nextUnreg = unregDepth_default;
+					f = true;
 					break;
 				case BOOKRES_DUPEPOS:
 					return res;
 				}
-				bool f = false;
 				for (ExtMove em : MoveList<LEGAL_ALL>(pos))
 				{
 					StateInfo si;
@@ -846,7 +793,8 @@ namespace Book
 					Move _mv = pos.move16_to_move(move_from_usi(movetoken));
 					if (!(is_ok(_mv) && pos.pseudo_legal(_mv) && pos.legal(_mv)))
 						break;
-					pos.do_move(_mv, StateInfo());
+					StateInfo si;
+					pos.do_move(_mv, si);
 				}
 				recSearch(unregDepth_default);
 			} while (getline(ssop, opsfen, ','));
@@ -891,14 +839,14 @@ namespace Book
 			// マージ
 			while (!book[0].book_body.empty() && !book[1].book_body.empty())
 			{
-				dBookEntry & b0front = book[0].book_body.front();
-				dBookEntry & b1front = book[1].book_body.front();
+				BookEntry & b0front = book[0].book_body.front();
+				BookEntry & b1front = book[1].book_body.front();
 				int cmp = b0front.compare(b1front);
 				if (cmp == 0)
 				{
 					// 同じ局面があったので、良いほうをbook2に突っ込む。
 					same_nodes++;
-					dBookEntry be = move(b0front);
+					BookEntry be = move(b0front);
 					be.select(move(b1front));
 					book[2].add(be);
 					book[0].book_body.pop_front();
@@ -974,21 +922,21 @@ namespace Book
 			// フィルタ
 			while (!book[0].book_body.empty() && !book[1].book_body.empty())
 			{
-				dBookEntry & b0front = book[0].book_body.front();
-				dBookEntry & b1front = book[1].book_body.front();
+				BookEntry & b0front = book[0].book_body.front();
+				BookEntry & b1front = book[1].book_body.front();
 				int cmp = b0front.compare(b1front);
 				if (cmp == 0)
 				{
 					// 同じ局面があったので、book0からbook2に突っ込む。
 					same_nodes++;
-					dBookEntry be0 = move(b0front);
-					dBookEntry be1 = move(b1front);
+					BookEntry be0 = move(b0front);
+					BookEntry be1 = move(b1front);
 					book[0].book_body.pop_front();
 					book[1].book_body.pop_front();
 					if (book_hardfilter) {
-						dBookEntry be(be0.sfenPos, (be1.ply > 0 && (be0.ply > be1.ply || be0.ply < 1)) ? be1.ply : be0.ply);
-						for (dBookPos bp0 : be0.move_list)
-							for (dBookPos bp1 : be1.move_list)
+						BookEntry be(be0.sfenPos, (be1.ply > 0 && (be0.ply > be1.ply || be0.ply < 1)) ? be1.ply : be0.ply);
+						for (BookPos bp0 : be0.move_list)
+							for (BookPos bp1 : be1.move_list)
 								if (bp0.bestMove == bp1.bestMove)
 								{
 									be.move_list.push_back(bp0);
@@ -1004,14 +952,14 @@ namespace Book
 				{
 					// book0から読み捨てる
 					diffrent_nodes0++;
-					dBookEntry be = move(b0front);
+					BookEntry be = move(b0front);
 					book[0].book_body.pop_front();
 				}
 				else
 				{
 					// book1から読み捨てる
 					diffrent_nodes1++;
-					dBookEntry be = move(b1front);
+					BookEntry be = move(b1front);
 					book[1].book_body.pop_front();
 				}
 			}
@@ -1056,6 +1004,75 @@ namespace Book
 		}
 	}
 #endif
+
+	// sfen文字列のゴミを除いた長さ
+	size_t trimlen_sfen(const char * sfen, const size_t length)
+	{
+		auto cur = length;
+		while (cur > 0)
+		{
+			char c = sfen[cur - 1];
+			// 改行文字、スペース、数字(これはgame ply)ではないならループを抜ける。
+			// これらの文字が出現しなくなるまで末尾を切り詰める。
+			if (c != '\r' && c != '\n' && c != ' ' && !('0' <= c && c <= '9'))
+				break;
+			cur--;
+		}
+		return cur;
+	}
+	size_t trimlen_sfen(const string sfen)
+	{
+		return trimlen_sfen(sfen.c_str(), sfen.length());
+	}
+
+	// sfen文字列から末尾のゴミを取り除いて返す。
+	// ios::binaryでopenした場合などには'\r'なども入っていると思われる。
+	const string trim_sfen(const string sfen)
+	{
+		string s = sfen;
+		s.resize(trimlen_sfen(sfen));
+		return s;
+	}
+
+	// sfen文字列の手数分離
+	const sfen_pair_t split_sfen(const string sfen)
+	{
+		auto cur = trimlen_sfen(sfen);
+		string s = sfen;
+		s.resize(cur);
+		int ply = QConv::atos32(sfen.c_str() + cur);
+		return make_pair(s, ply);
+	}
+
+	// 棋譜文字列ストリームから初期局面を抽出して設定
+	string fetch_initialpos(Position & pos, istream & is)
+	{
+		string sfenpos, token;
+		auto ispos = is.tellg();
+		if (!(is >> token) || token == "moves")
+			sfenpos = SFEN_HIRATE;
+		else if (token != "position" && token != "sfen" && token != "startpos")
+		{
+			// 先頭句が予約語でないなら、いきなり平手からの指し手文字列が始まったと見なす
+			sfenpos = SFEN_HIRATE;
+			// シーク位置を戻す
+			is.seekg(ispos);
+		}
+		else do
+		{
+			if (token == "moves")
+				break;
+			else if (token == "startpos")
+				sfenpos = SFEN_HIRATE;
+			else if (token == "sfen")
+				sfenpos = "";
+			else if (token != "position")
+				sfenpos += token + " ";
+		} while (is >> token);
+		// 初期局面を設定
+		pos.set(sfenpos);
+		return sfenpos;
+	}
 
 	// Move 書き出し
 	void movetoa(char ** s, const Move m)
@@ -1106,8 +1123,8 @@ namespace Book
 		*s = _s;
 	}
 
-	// dBookEntry 書き出し
-	void betoa(char ** s, const dBookEntry & be)
+	// BookEntry 書き出し
+	void betoa(char ** s, const BookEntry & be)
 	{
 		char * _s = *s;
 
@@ -1125,7 +1142,7 @@ namespace Book
 		*_s++ = ' ';
 		QConv::s32toa(&_s, be.ply);
 		*_s++ = '\n';
-		// dBookPosは改行文字を含めても 62bytes を超えないので、
+		// BookPosは改行文字を含めても 62bytes を超えないので、
 		// be.move_list.size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
 		// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
 		// sfen 8R/kSS1S1K2/4B4/9/9/9/9/9/3L1L1L1 b RB4GS4NL18P 1
@@ -1224,7 +1241,7 @@ namespace Book
 		return 0;
 	}
 
-	dMoveListTypeOpt OnTheFlyBook::get_entries(const Position & pos)
+	MoveListTypeOpt OnTheFlyBook::get_entries(const Position & pos)
 	{
 		if (!on_the_fly)
 			return {};
@@ -1306,7 +1323,7 @@ namespace Book
 		const size_t _buffersize = 256;
 		char _buffer[_buffersize];
 
-		dBookEntry be(sfen, pos.game_ply());
+		BookEntry be(sfen, pos.game_ply());
 		be.incpos(fs, _buffer, _buffersize);
 		be.sort_pos();
 		move_update(pos, be.move_list);
@@ -1397,9 +1414,9 @@ namespace Book
 				nextrange();
 				continue;
 			}
-			// dBookEntry 構築
-			dBookEntry be(buffer + idx0 + 5, idx1 - idx0 - 5, sfen_n11n);
-			// dBookEntry への dBookPos要素充填
+			// BookEntry 構築
+			BookEntry be(buffer + idx0 + 5, idx1 - idx0 - 5, sfen_n11n);
+			// BookEntry への BookPos要素充填
 			while (true)
 			{
 				nextrange();
@@ -1413,7 +1430,7 @@ namespace Book
 				char c = buffer[idx0];
 				if ((c < '0' || c > '9') && (c < 'A' || c > 'Z') && (c < 'a' || c > 'z'))
 					continue;
-				// dBookEntry に dBookPos 構築 & 追加
+				// BookEntry に BookPos 構築 & 追加
 				be.move_list.emplace_back(buffer + idx0);
 			}
 			// おかしければ登録せずに次へ
@@ -1476,7 +1493,7 @@ namespace Book
 		fs << "#YANEURAOU-DB2016 1.00" << endl;
 
 		*(p = renderbuf) = '\0';
-		for (dBookEntry & be : book_body)
+		for (BookEntry & be : book_body)
 		{
 			// 指し手のない空っぽのentryは書き出さないように。
 			if (be.move_list.empty()) continue;
@@ -1520,8 +1537,8 @@ namespace Book
 		{
 			f = false;
 			auto run_size = book_run.size();
-			dBookIterDiff run_back2, run_back;
-			dBookType::iterator body_begin;
+			BookIterDiff run_back2, run_back;
+			BookType::iterator body_begin;
 			switch (run_size)
 			{
 			case 1:
@@ -1575,9 +1592,9 @@ namespace Book
 	{
 		while (!book_run.empty())
 		{
-			dBookIterDiff d1 = book_run.back();
+			BookIterDiff d1 = book_run.back();
 			book_run.pop_back();
-			dBookIterDiff d0 = book_run.empty() ? (dBookIterDiff)0 : book_run.back();
+			BookIterDiff d0 = book_run.empty() ? (BookIterDiff)0 : book_run.back();
 			auto body_begin = book_body.begin();
 			inplace_merge(next(body_begin, d0), next(body_begin, d1), book_body.end());
 		}
@@ -1591,7 +1608,7 @@ namespace Book
 		intl_merge();
 
 		if (book_body.empty()) return;
-		dBookType::iterator it0 = book_body.begin(), it1 = next(it0), end = book_body.end();
+		BookType::iterator it0 = book_body.begin(), it1 = next(it0), end = book_body.end();
 		while (it1 != end)
 			if (*it0 == *it1)
 			{
@@ -1612,9 +1629,9 @@ namespace Book
 	// 局面の追加
 	// 大量の局面を追加する場合、重複チェックを逐一は行わず(dofind_false)に、後で intl_uniq() を行うことを推奨
 	// 返り値 0:新規局面追加 1:登録済み局面有り
-	int deqBook::add(dBookEntry & be, bool dofind)
+	int deqBook::add(BookEntry & be, bool dofind)
 	{
-		dBookType::iterator it;
+		BookType::iterator it;
 		int cmp;
 		if (dofind && (it = find(be)) != end())
 		{
@@ -1643,7 +1660,7 @@ namespace Book
 			}
 		else
 		{
-			if (distance(next(book_body.begin(), book_run.back()), book_body.end()) < (dBookIterDiff)MINRUN)
+			if (distance(next(book_body.begin(), book_run.back()), book_body.end()) < (BookIterDiff)MINRUN)
 				// 短ければ、挿入ソート
 				book_body.insert(upper_bound(next(book_body.begin(), book_run.back()), book_body.end(), be), be);
 			else
@@ -1658,8 +1675,8 @@ namespace Book
 		return 0;
 	}
 
-	// char文字列 の dBookPos 化
-	void dBookEntry::init(const char * sfen, const size_t length, const bool sfen_n11n)
+	// char文字列 の BookPos 化
+	void BookEntry::init(const char * sfen, const size_t length, const bool sfen_n11n)
 	{
 		if(sfen_n11n)
 		{
@@ -1678,8 +1695,8 @@ namespace Book
 		}
 	}
 
-	// ストリームからの dBookEntry 読み込み
-	void dBookEntry::init(istream & is, char * _buffer, const size_t _buffersize, const bool sfen_n11n)
+	// ストリームからの BookEntry 読み込み
+	void BookEntry::init(istream & is, char * _buffer, const size_t _buffersize, const bool sfen_n11n)
 	{
 		string line;
 
@@ -1713,8 +1730,8 @@ namespace Book
 		}
 	}
 
-	// ストリームから dBookEntry への dBookPos 順次読み込み
-	void dBookEntry::incpos(istream & is, char * _buffer, const size_t _buffersize)
+	// ストリームから BookEntry への BookPos 順次読み込み
+	void BookEntry::incpos(istream & is, char * _buffer, const size_t _buffersize)
 	{
 		while (true)
 		{
@@ -1739,8 +1756,8 @@ namespace Book
 		}
 	}
 
-	// バイト文字列からの dBookPos 読み込み
-	void dBookPos::init(const char * p)
+	// バイト文字列からの BookPos 読み込み
+	void BookPos::init(const char * p)
 	{
 		// 解析実行
 		// 0x00 - 0x1f, 0x21 - 0x29, 0x80 - 0xff の文字が現れ次第中止
@@ -1759,12 +1776,12 @@ namespace Book
 
 	// 出力ストリーム
 	// write_book では最適化のため現在使われていない
-	ostream & operator << (ostream & os, const dBookPos & bp)
+	ostream & operator << (ostream & os, const BookPos & bp)
 	{
 		os << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << ' ' << bp.depth << ' ' << bp.num << "\n";
 		return os;
 	}
-	ostream & operator << (ostream & os, const dBookEntry & be)
+	ostream & operator << (ostream & os, const BookEntry & be)
 	{
 		os << "sfen " << be.sfenPos << " " << be.ply << "\n";
 		for (auto & bp : be.move_list)
