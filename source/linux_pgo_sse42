@@ -1,0 +1,9 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+mkdir -p ../build/linux/2017Early
+
+make clean
+make -j8 pgo-sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse42-pgo
+
+make clean

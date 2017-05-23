@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+# -*- coding: utf-8 -*-
+mkdir -p ../build/msys2/2017Early
+
+mingw32-make clean
+mingw32-make -j8 pgo-sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-sse42-pgo.exe
+
+mingw32-make clean
