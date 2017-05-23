@@ -126,8 +126,14 @@ all: clean $(TARGET)
 evallearn:
 	$(MAKE) CFLAGS='$(CFLAGS) -fopenmp -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi2 -mavx2 -march=corei7-avx' LDFLAGS='$(LDFLAGS) -flto' $(TARGET)
 
+evallearn-sse42:
+	$(MAKE) CFLAGS='$(CFLAGS) -fopenmp -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_SSE42 -msse4.2 -march=corei7' LDFLAGS='$(LDFLAGS) -flto' $(TARGET)
+
 tournament:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi2 -mavx2 -DFOR_TOURNAMENT -march=corei7-avx' LDFLAGS='$(LDFLAGS) -flto' $(TARGET)
+
+tournament-sse42:
+	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_SSE42 -msse4.2 -DFOR_TOURNAMENT -march=corei7' LDFLAGS='$(LDFLAGS) -flto' $(TARGET)
 
 avx2:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi2 -mavx2 -march=corei7-avx' LDFLAGS='$(LDFLAGS) -flto' $(TARGET)
@@ -162,9 +168,24 @@ profuse:
 
 pgo:
 	$(MAKE) profgen
-	@./$(TARGET) bench , quit
+	@./$(TARGET) EvalDir ../build/eval , bench , quit
 	@touch $(SOURCES)
 	$(MAKE) profuse
+
+prof-sse42:
+	$(MAKE) CFLAGS='$(CFLAGS) -pg' sse42
+
+profgen-sse42:
+	$(MAKE) CFLAGS='$(CFLAGS) -fprofile-generate -lgcov' LDFLAGS='$(LDFLAGS) -fprofile-generate -lgcov' sse42
+
+profuse-sse42:
+	$(MAKE) CFLAGS='$(CFLAGS) -fprofile-use -lgcov' LDFLAGS='$(LDFLAGS) -fprofile-use -lgcov -flto' sse42
+
+pgo-sse42:
+	$(MAKE) profgen-sse42
+	@./$(TARGET) EvalDir ../build/eval , bench , quit
+	@touch $(SOURCES)
+	$(MAKE) profuse-sse42
 
 clean:
 	rm -f $(OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda}
