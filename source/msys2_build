@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+# 各CPU用の実行ファイルの一括生成用バッチファイル
+mkdir -p ../build/msys2/2017Early
+
+mingw32-make clean
+mingw32-make -j8 sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-sse42.exe
+
+mingw32-make clean
+mingw32-make -j8 tournament YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-tournament.exe
+
+mingw32-make clean
+mingw32-make -j8 avx2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early.exe
+
+mingw32-make clean
+mingw32-make -j8 sse41 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-sse41.exe
+
+mingw32-make clean
+mingw32-make -j8 sse2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-sse2.exe
+
+mingw32-make clean
+mingw32-make -j8 evallearn YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-evallearn.exe
+
+# export Path=C:/msys64/mingw32/bin;$PATH
+# mingw32-make clean
+# mingw32-make -j8 nosse YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+# cp YaneuraOu-by-gcc.exe ../build/msys2/2017Early/YaneuraOu-2017-early-nosse.exe
+
+mingw32-make clean
