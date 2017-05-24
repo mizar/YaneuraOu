@@ -709,8 +709,14 @@ namespace BookUtil
 			AperyBook apery_book(book_name[0]);
 			cout << apery_book.apery_book.size() << " nodes loaded." << endl;
 			deqBook work_book;
-			vector<unordered_set<Key>> cacheKey(max(unregDepth_default + 1, 1));
-			vector<int> cacheCount(max(unregDepth_default + 1, 1));
+			const int cache_bitlen = 24;
+			const int cache_idxmask = (1 << cache_bitlen) - 1;
+			vector<vector<Book::Key>> cacheKey;
+			for (int i = 0; i < unregDepth_default; ++i)
+			{
+				cacheKey.emplace_back(1 << cache_bitlen, static_cast<Book::Key>(0));
+				cacheKey.back()[0] = static_cast<Book::Key>(-1LL);
+			}
 			u64 count_pos = 0;
 			// 探索結果種別
 			enum BookRes
@@ -740,6 +746,7 @@ namespace BookUtil
 				int nextUnreg = 0;
 				bool f = false;
 				Key bookKey;
+				int cacheIdx;
 				switch (res)
 				{
 				case BOOKRES_UNFILLED:
@@ -747,16 +754,11 @@ namespace BookUtil
 						return res;
 					nextUnreg = unregDepth - 1;
 					bookKey = Book::AperyBook::bookKey(pos);
+					cacheIdx = (static_cast<int>(bookKey) & cache_idxmask);
 					for (int i = nextUnreg; i >= 0; --i)
-					{
-						if (!cacheKey[i].insert(bookKey).second)
+						if (cacheKey[i][cacheIdx] == bookKey)
 							return res;
-						if (++cacheCount[i] > 16777215)
-						{
-							cacheKey[i].clear();
-							cacheCount[i] = 0;
-						}
-					}
+					cacheKey[nextUnreg][cacheIdx] = bookKey;
 					break;
 				case BOOKRES_SUCCESS:
 					nextUnreg = unregDepth_default;
