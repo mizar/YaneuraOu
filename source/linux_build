@@ -1,0 +1,34 @@
+#!/bin/bash
+# 各CPU用の実行ファイルの一括生成用バッチファイル
+mkdir -p ../build/linux/2017Early
+
+make clean
+make -j8 sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse42
+
+make clean
+make -j8 tournament YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-tournament
+
+make clean
+make -j8 avx2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early
+
+make clean
+make -j8 sse41 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse41
+
+make clean
+make -j8 sse2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse2
+
+make clean
+make -j8 evallearn YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-evallearn
+
+# export Path=C:/msys64/mingw32/bin;$PATH
+# make clean
+# make -j8 nosse YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+# cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-nosse
+
+make clean
