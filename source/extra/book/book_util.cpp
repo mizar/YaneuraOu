@@ -735,7 +735,7 @@ namespace BookUtil
 					return BOOKRES_DUPEPOS;
 				++count_pos;
 				if (count_pos % 1000 == 0)
-					cout << ".";
+					cout << "." << flush;
 				return BOOKRES_SUCCESS;
 			};
 
@@ -745,7 +745,7 @@ namespace BookUtil
 				BookRes res = regPos(pos);
 				int nextUnreg = 0;
 				bool f = false;
-				Key bookKey;
+				Book::Key bookKey;
 				int cacheIdx;
 				switch (res)
 				{
