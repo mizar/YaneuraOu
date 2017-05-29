@@ -1,0 +1,42 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+mkdir -p ../build/linux-clang/2017Early
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-sse42
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 tournament-sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-tournament-sse42
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 evallearn-sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-evallearn-sse42
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 tournament YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-tournament-avx2
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 avx2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-avx2
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 sse41 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-sse41
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 sse2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-sse2
+
+make -f Makefile.clang clean
+make -f Makefile.clang -j8 evallearn YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-evallearn-avx2
+
+# export Path=C:/msys64/mingw32/bin;$PATH
+# make -f Makefile.clang clean
+# make -f Makefile.clang -j8 nosse YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
+# cp YaneuraOu-by-gcc ../build/linux-clang/2017Early/YaneuraOu-2017-early-nosse
+
+make -f Makefile.clang clean
