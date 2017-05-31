@@ -36,6 +36,7 @@ extern void bench_cmd(Position& pos, istringstream& is);
 // 定跡を作るコマンド
 #ifdef ENABLE_MAKEBOOK_CMD
 namespace Book { extern void makebook_cmd(Position& pos, istringstream& is); }
+namespace BookUtil { extern void bookutil_cmd(Position& pos, istringstream& is); }
 #endif
 
 // 協力詰めsolverモード
@@ -773,6 +774,8 @@ void USI::loop(int argc, char* argv[])
 #ifdef ENABLE_MAKEBOOK_CMD
 		// 定跡を作るコマンド
 		else if (token == "makebook") Book::makebook_cmd(pos, is);
+		// 定跡操作コマンドAlternate、試験実装用
+		else if (token == "bookutil") BookUtil::bookutil_cmd(pos, is);
 #endif
 
 #ifdef EVAL_LEARN
