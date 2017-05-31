@@ -1,42 +1,49 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
-mkdir -p ../build/linux/2017Early
+MAKE=make
+MAKEFILE=Makefile
+COMPILER=gcc
+BUILDDIR=../build/linux/2017Early
+EDITION=YANEURAOU_2017_EARLY_ENGINE
+TARGET=YaneuraOu-2017-early
 
-make clean
-make -j8 sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse42
+mkdir -p ${BUILDDIR}
 
-make clean
-make -j8 tournament-sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-tournament-sse42
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 sse42 YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-sse42.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-sse42
 
-make clean
-make -j8 evallearn-sse42 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-evallearn-sse42
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 tournament-sse42 YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-tournament-sse42.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-tournament-sse42
 
-make clean
-make -j8 tournament YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-tournament-avx2
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 evallearn-sse42 YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-evallearn-sse42.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-evallearn-sse42
 
-make clean
-make -j8 avx2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-avx2
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 tournament YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-tournament-avx2.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-tournament-avx2
 
-make clean
-make -j8 sse41 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse41
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 avx2 YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-avx2.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-avx2
 
-make clean
-make -j8 sse2 YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-sse2
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 sse41 YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-sse41.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-sse41
 
-make clean
-make -j8 evallearn YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-evallearn-avx2
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 sse2 YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-sse2.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-sse2
+
+${MAKE} -f ${MAKEFILE} clean
+${MAKE} -f ${MAKEFILE} -j8 evallearn YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-evallearn-avx2.log
+cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-evallearn-avx2
 
 # export Path=C:/msys64/mingw32/bin;$PATH
-# make clean
-# make -j8 nosse YANEURAOU_EDITION=YANEURAOU_2017_EARLY_ENGINE
-# cp YaneuraOu-by-gcc ../build/linux/2017Early/YaneuraOu-2017-early-nosse
+# ${MAKE} -f ${MAKEFILE} clean
+# ${MAKE} -f ${MAKEFILE} -j8 nosse YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TARGET}-nosse.log
+# cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}-nosse
 
-make clean
+${MAKE} -f ${MAKEFILE} clean
