@@ -787,6 +787,14 @@ void USI::loop(int argc, char* argv[])
 
 		istringstream is(cmd);
 
+		// 行頭の非ASCII文字列スキップ(UTF-8 BOM等)
+		while (int c = is.get())
+			if (c < 0x80)
+			{
+				is.unget();
+				break;
+			}
+
 		token = "";
 		is >> skipws >> token;
 
