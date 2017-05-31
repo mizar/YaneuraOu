@@ -309,6 +309,8 @@ namespace Eval
 			{ 0x3aa68b055a020a8 , "Yomita(WCSC27)" } ,
 			{ 0x702fb2ee5672156 , "Qhapaq(WCSC27)" } ,
 			{ 0x6c54a1bcb654e37 , "tanuki(WCSC27)" } ,
+			{ 0x64dccf2f61f17f8 , "EloQhappa(20170511v1.0)" } ,
+			{ 0x64a4b49026085c0 , "EloQhappa(20170521v1.1)" } ,
 		};
 		if (list.count(check_sum))
 			softname = list[check_sum];
