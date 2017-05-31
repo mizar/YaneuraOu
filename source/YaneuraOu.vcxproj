@@ -657,7 +657,9 @@
     <ClInclude Include="extra\bitop.h" />
     <ClInclude Include="extra\book\apery_book.h" />
     <ClInclude Include="extra\book\book.h" />
+    <ClInclude Include="extra\book\book_util.h" />
     <ClInclude Include="extra\book\mt64bit.h" />
+    <ClInclude Include="extra\book\optional.h" />
     <ClInclude Include="extra\config.h" />
     <ClInclude Include="extra\key128.h" />
     <ClInclude Include="extra\long_effect.h" />
@@ -707,6 +709,7 @@
     <ClCompile Include="extra\bitop.cpp" />
     <ClCompile Include="extra\book\apery_book.cpp" />
     <ClCompile Include="extra\book\book.cpp" />
+    <ClCompile Include="extra\book\book_util.cpp" />
     <ClCompile Include="extra\entering_king_win.cpp" />
     <ClCompile Include="extra\long_effect.cpp" />
     <ClCompile Include="extra\mate\mate1ply_without_effect.cpp" />
