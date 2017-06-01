@@ -1,0 +1,21 @@
+#!/bin/bash
+# -*- coding: utf-8 -*-
+MAKE=make
+MAKEFILE=Makefile
+# Bash on Windows (Ubuntu 16.04 Xenial) 環境の場合は http://apt.llvm.org/ を参考に clang++-4.0 を導入する。
+COMPILER=clang++-4.0
+BUILDDIR=../build/linux/2017Early
+EDITION=YANEURAOU_2017_EARLY_ENGINE
+TARGET=YaneuraOu-2017-early-clang
+declare -A TGTAIL=([sse42]=-sse42)
+
+mkdir -p ${BUILDDIR}
+
+for key in ${!TGTAIL[*]}
+do
+	${MAKE} -f ${MAKEFILE} clean
+	${MAKE} -f ${MAKEFILE} -j8 ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	cp YaneuraOu-by-gcc ${BUILDDIR}/${TARGET}${TGTAIL[$key]}
+done
+
+${MAKE} -f ${MAKEFILE} clean
