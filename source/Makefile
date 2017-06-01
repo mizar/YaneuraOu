@@ -21,6 +21,9 @@ COMPILER = clang++
 # 標準的なコンパイルオプション
 CFLAGS   = -std=c++14 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fpermissive
 WCFLAGS  =
+LCFLAGS  =
+WLFLAGS  =
+LLFLAGS  =
 LDFLAGS  =
 LIBS     =
 INCLUDE  = # -I../include
@@ -29,7 +32,12 @@ INCLUDE  = # -I../include
 # あとでclang用のMakefileは分離する。
 ifeq ($(findstring clang++,$(COMPILER)),clang++)
   # stdlib
-  CFLAGS += -stdlib=libstdc++
+  WCFLAGS += -stdlib=libstdc++
+  LCFLAGS += -stdlib=libstdc++
+
+  # linuxでlibc++を使う場合の設定候補
+  #LCFLAGS += -stdlib=libc++
+  #LLFLAGS += -lc++ -lc++abi
 
   # 関数の引数が関数本体で使われていないときに警告出るのうざすぎるので抑制。
   CFLAGS += -Wno-unused-parameter
@@ -48,10 +56,11 @@ endif
 
 ifeq ($(OS),Windows_NT)
   CFLAGS += $(WCFLAGS)
-  LDFLAGS += -static -Wl,--stack,100000000
+  LDFLAGS += -static -Wl,--stack,100000000 $(WLFLAGS)
   TARGET = YaneuraOu-by-gcc.exe
 else
-  CFLAGS += -D_LINUX
+  CFLAGS += -D_LINUX $(LCFLAGS)
+  LDFLAGS += $(LLFLAGS)
   TARGET = YaneuraOu-by-gcc
 endif
 
