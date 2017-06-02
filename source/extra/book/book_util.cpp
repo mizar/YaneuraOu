@@ -531,6 +531,7 @@ namespace BookUtil
 			std::vector<Move> m;
 			std::vector<std::string> sf;	// sfen指し手文字列格納用
 
+			auto SetupStates = Search::StateStackPtr(new aligned_stack<StateInfo>);
 			std::vector<StateInfo> si(std::max(moves + 2, 258));
 
 			std::fstream fs;
@@ -627,6 +628,8 @@ namespace BookUtil
 				// move_listが空なら戻る
 				if (be.move_list.empty())
 					return BOOKRES_EMPTYLIST;
+				// Move正規化
+				move_update(pos, be.move_list);
 				// 到達済み局面のフラグ立て
 				be.ply = 0;
 				// 最善手が駄目なら戻る
@@ -652,13 +655,15 @@ namespace BookUtil
 					// 探索スタック積み
 					sf.push_back(to_movestr(pos, nowMove, m.empty() ? MOVE_NONE : m.back()));
 					m.push_back(nowMove);
-					pos.do_move(nowMove, si.at(ply));
+					SetupStates->push(StateInfo());
+					pos.do_move(nowMove, SetupStates->top());
 					// 先の局面で駄目出しされたら、その局面までの手順を出力
 					auto res = (ply >= moves) ? BOOKRES_MOVELIMIT : to_sfen_func();
 					if (res != BOOKRES_SUCCESS)
 						printstack(fs, res);
 					// 探索スタック崩し
 					pos.undo_move(nowMove);
+					SetupStates->pop();
 					m.pop_back();
 					sf.pop_back();
 				}
@@ -683,7 +688,8 @@ namespace BookUtil
 						break;
 					sf.push_back(to_movestr(pos, _mv, m.empty() ? MOVE_NONE : m.back()));
 					m.push_back(_mv);
-					pos.do_move(_mv, si.at(pos.game_ply()));
+					SetupStates->push(StateInfo());
+					pos.do_move(_mv, SetupStates->top());
 				}
 				BookRes res = to_sfen_func();
 				if (res != BOOKRES_SUCCESS)

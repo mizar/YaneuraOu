@@ -208,7 +208,7 @@ namespace BookUtil
 	};
 
 	// 定跡のbestMove(16bit)を32bitに補正
-	void move_update(const Position & pos, MoveListType & mlist) {
+	static void move_update(const Position & pos, MoveListType & mlist) {
 		for (auto & bp : mlist)
 			bp.bestMove = pos.move16_to_move(bp.bestMove);
 	}
@@ -287,20 +287,14 @@ namespace BookUtil
 		}
 
 		// 比較関数
-		struct d_less_bebe
+		static bool d_less_bebe(const BookEntry & lhs, const BookEntry & rhs)
 		{
-			bool operator()(const BookEntry & lhs, const BookEntry & rhs) const
-			{
-				return bool(lhs.sfenPos < rhs.sfenPos);
-			}
-		};
-		struct d_less_bestr
+			return bool(lhs.sfenPos < rhs.sfenPos);
+		}
+		static bool d_less_bestr(const BookEntry & lhs, const std::string & rhs)
 		{
-			bool operator()(const BookEntry & lhs, const std::string & rhs) const
-			{
-				return bool(lhs.sfenPos < rhs);
-			}
-		};
+			return bool(lhs.sfenPos < rhs);
+		}
 
 		BookIter find(const BookEntry & be)
 		{
@@ -309,7 +303,7 @@ namespace BookUtil
 			while (true)
 			{
 				auto it1 = (itr != book_run.end()) ? std::next(book_body.begin(), *itr) : book_body.end();
-				auto itf = std::lower_bound(it0, it1, be, d_less_bebe());
+				auto itf = std::lower_bound(it0, it1, be, d_less_bebe);
 				if (itf != it1 && *itf == be)
 					return itf;
 				if (itr == book_run.end())
@@ -325,7 +319,7 @@ namespace BookUtil
 			while (true)
 			{
 				auto it1 = (itr != book_run.end()) ? std::next(book_body.begin(), *itr) : book_body.end();
-				auto itf = std::lower_bound(it0, it1, sfenPos, d_less_bestr());
+				auto itf = std::lower_bound(it0, it1, sfenPos, d_less_bestr);
 				if (itf != it1 && (*itf).sfenPos == sfenPos)
 					return itf;
 				if (itr == book_run.end())
