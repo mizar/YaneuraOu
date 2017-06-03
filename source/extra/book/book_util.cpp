@@ -1,7 +1,7 @@
 ﻿#include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <unordered_set>
-#include <iomanip>
 #include <inttypes.h>
 
 #include "../../shogi.h"
@@ -17,12 +17,6 @@
 void is_ready();
 
 #if defined(EVAL_LEARN) && (defined(YANEURAOU_2017_EARLY_ENGINE) || defined(YANEURAOU_2017_GOKU_ENGINE))
-namespace Learner
-{
-	// いまのところ、やねうら王2017Early/王手将棋しか、このスタブを持っていない。
-	extern std::pair<Value, std::vector<Move>> qsearch(Position& pos);
-	extern std::pair<Value, std::vector<Move>>  search(Position& pos, int depth);
-}
 
 namespace BookUtil
 {
@@ -48,18 +42,6 @@ namespace BookUtil
 
 		// 進捗表示の出力形式。
 		int progress_type;
-
-		// [ASYNC] 通常探索をして、その結果を返す。
-		std::pair<Value, std::vector<Move>>  search(Position& pos, int depth)
-		{
-			return Learner::search(pos, depth);
-		}
-
-		// [ASYNC] 静止探索をして、その結果を返す。
-		std::pair<Value, std::vector<Move>> qsearch(Position& pos)
-		{
-			return Learner::qsearch(pos);
-		}
 
 	};
 
@@ -167,7 +149,22 @@ namespace BookUtil
 		{
 			// sfenファイル名
 			is >> token;
-			std::string sfen_name = token;
+
+			// 読み込むべきファイル名
+			std::string sfen_file_name[COLOR_NB];
+
+			// ここに "bw"(black and whiteの意味)と指定がある場合、
+			// 先手局面用と後手局面用とのsfenファイルが異なるという意味。
+			// つまり、このあとsfenファイル名の指定が2つ来ることを想定している。
+			if (token == "bw")
+			{
+				is >> sfen_file_name[BLACK];
+				is >> sfen_file_name[WHITE];
+			}
+			else {
+				/*BLACKとWHITEと共通*/
+				sfen_file_name[0] = token;
+			}
 
 			// 定跡ファイル名
 			std::string book_name;
@@ -189,8 +186,8 @@ namespace BookUtil
 			int cluster_num = 1;
 
 			// 手番拘束
-			bool disableblack = false;
-			bool disablewhite = false;
+			bool blackonly = false;
+			bool whiteonly = false;
 
 			// 進捗表示形式 0:通常 1:冗長
 			int progress_type = 0;
@@ -210,9 +207,9 @@ namespace BookUtil
 				else if (from_thinking && token == "cluster")
 					is >> cluster_id >> cluster_num;
 				else if (from_thinking && token == "blackonly")
-					disablewhite = true;
+					blackonly = true;
 				else if (from_thinking && token == "whiteonly")
-					disableblack = true;
+					whiteonly = true;
 				else if (from_thinking && token == "progresstype")
 					is >> progress_type;
 				else
@@ -247,8 +244,10 @@ namespace BookUtil
 			// この時点で評価関数を読み込まないとKPPTはPositionのset()が出来ないので…。
 			is_ready();
 
-			std::vector<std::string> sfens;
-			read_all_lines(sfen_name, sfens);
+			std::vector<std::string> sfens[COLOR_NB];
+			for (auto c : COLOR)
+				if (!sfen_file_name[c].empty())
+					read_all_lines(sfen_file_name[c], sfens[c]);
 
 			std::cout << "parse.." << std::flush;
 
@@ -259,87 +258,91 @@ namespace BookUtil
 			Search::StateStackPtr ssp;
 
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
-			for (size_t k = 0; k < sfens.size(); ++k)
+			for (auto c : COLOR)
 			{
-				auto sfen = std::move(sfens[k]);
-
-				// "#"以降読み捨て
-				size_t compos;
-				if ((compos = sfen.find("#")) < sfen.length())
-					sfen.resize(compos);
-
-				if (sfen.length() == 0)
-					continue;
-
-				std::istringstream iss(sfen);
-				fetch_initialpos(pos, iss);
-
-				std::vector<Move> m;    // 初手から(moves+1)手までの指し手格納用
-				std::vector<std::string> sf; // 初手から(moves+0)手までのsfen文字列格納用
-
-				int plyinit = pos.game_ply();
-				ssp = Search::StateStackPtr(new aligned_stack<StateInfo>);
-
-				// sfenから直接生成するときはponderのためにmoves + 1の局面まで調べる必要がある。
-				for (int i = plyinit; i <= moves + (from_sfen ? 1 : 0); ++i)
+				bool enable_black = (!whiteonly && c == BLACK);
+				bool enable_white = (!blackonly && (c == WHITE || sfen_file_name[1].empty()));
+				for (size_t k = 0; k < sfens[c].size(); ++k)
 				{
-					token = "";
-					iss >> token;
-					if (token == "")
-					{
-						// この局面、未知の局面なのでpushしないといけないのでは..
-						if (!from_sfen)
-							sf.push_back(pos.sfen());
-						break;
-					}
+					auto sfen = std::move(sfens[c][k]);
 
-					Move move = move_from_usi(pos, token);
-					// illigal moveであるとMOVE_NONEが返る。
-					if (move == MOVE_NONE)
-					{
-						std::cout << "illegal move : line = " << (k + 1) << " , " << sfen << " , move = " << token << std::endl;
-						break;
-					}
+					// "#"以降読み捨て
+					size_t compos;
+					if ((compos = sfen.find("#")) < sfen.length())
+						sfen.resize(compos);
 
-					// MOVE_WIN,MOVE_RESIGNでは局面を進められないのでここで終了。
-					if (!is_ok(move))
-						break;
-					
-					if (~pos.side_to_move() ? disableblack : disablewhite)
-						sf.push_back("");
-					else
-						sf.push_back(pos.sfen());
-					m.push_back(move);
-
-					ssp->push(StateInfo());
-					if(move == MOVE_NULL)
-						pos.do_null_move(ssp->top());
-					else
-						pos.do_move(move, ssp->top());
-				}
-
-				for (int i = 0; i < (int)sf.size() - (from_sfen ? 1 : 0); ++i)
-				{
-					if (i + plyinit < start_moves || sf[i] == "")
+					if (sfen.length() == 0)
 						continue;
 
-					if (from_sfen)
-					{
-						// この場合、m[i + 1]が必要になるので、m.size()-1までしかループできない。
-						BookPos bp(m[i], m[i + 1], VALUE_ZERO, 32, 1);
-						auto ss = split_sfen(sf[i]);
-						book.insert_book_pos(ss, bp);
-					} else if (from_thinking)
-					{
-						// posの局面で思考させてみる。(あとでまとめて)
-						if (thinking_sfens.count(sf[i]) == 0)
-							thinking_sfens.insert(sf[i]);
-					}
-				}
+					std::istringstream iss(sfen);
+					fetch_initialpos(pos, iss);
 
-				// sfenから生成するモードの場合、1000棋譜処理するごとにドットを出力。
-				if ((k % 1000) == 0)
-					std::cout << '.' << std::flush;
+					std::vector<Move> m;    // 初手から(moves+1)手までの指し手格納用
+					std::vector<std::string> sf; // 初手から(moves+0)手までのsfen文字列格納用
+
+					int plyinit = pos.game_ply();
+					ssp = Search::StateStackPtr(new aligned_stack<StateInfo>);
+
+					// sfenから直接生成するときはponderのためにmoves + 1の局面まで調べる必要がある。
+					for (int i = plyinit; i <= moves + (from_sfen ? 1 : 0); ++i)
+					{
+						token = "";
+						iss >> token;
+						if (token == "")
+						{
+							// この局面、未知の局面なのでpushしないといけないのでは..
+							if (!from_sfen)
+								sf.push_back(pos.sfen());
+							break;
+						}
+
+						Move move = move_from_usi(pos, token);
+						// illigal moveであるとMOVE_NONEが返る。
+						if (move == MOVE_NONE)
+						{
+							std::cout << "illegal move : line = " << (k + 1) << " , " << sfen << " , move = " << token << std::endl;
+							break;
+						}
+
+						// MOVE_WIN,MOVE_RESIGNでは局面を進められないのでここで終了。
+						if (!is_ok(move))
+							break;
+						
+						sf.push_back(
+							(~pos.side_to_move() ? enable_black : enable_white) ?
+							pos.sfen() : "");
+						m.push_back(move);
+
+						ssp->push(StateInfo());
+						if (move == MOVE_NULL)
+							pos.do_null_move(ssp->top());
+						else
+							pos.do_move(move, ssp->top());
+					}
+
+					for (int i = 0; i < (int)sf.size() - (from_sfen ? 1 : 0); ++i)
+					{
+						if (i + plyinit < start_moves || sf[i] == "")
+							continue;
+
+						if (from_sfen)
+						{
+							// この場合、m[i + 1]が必要になるので、m.size()-1までしかループできない。
+							BookPos bp(m[i], m[i + 1], VALUE_ZERO, 32, 1);
+							auto ss = split_sfen(sf[i]);
+							book.insert_book_pos(ss, bp);
+						} else if (from_thinking)
+						{
+							// posの局面で思考させてみる。(あとでまとめて)
+							if (thinking_sfens.count(sf[i]) == 0)
+								thinking_sfens.insert(sf[i]);
+						}
+					}
+
+					// sfenから生成するモードの場合、1000棋譜処理するごとにドットを出力。
+					if ((k % 1000) == 0)
+						std::cout << '.' << std::flush;
+				}
 			}
 			// 入力が空でも初期局面は含めるように
 			if (from_thinking && start_moves == 1 && thinking_sfens.empty())
