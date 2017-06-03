@@ -259,7 +259,6 @@ extern void prefetch2(void* addr);
 //   char32_t -> utf-8 string 変換
 // --------------------------------
 
-#ifdef DO_IT_LATER
 namespace UniConv
 {
 
@@ -270,7 +269,6 @@ namespace UniConv
 	std::string char32_to_utf8string(const char32_t * r);
 
 }
-#endif
 
 // --------------------
 //   数値・文字列変換
