@@ -273,6 +273,35 @@ namespace UniConv
 #endif
 
 // --------------------
+//   数値・文字列変換
+// --------------------
+
+namespace QConv
+{
+
+	void u32toa(char ** s, u32 i);
+	void s32toa(char ** s, s32 i);
+	void u64toa(char ** s, u64 i);
+	void s64toa(char ** s, s64 i);
+
+	void u32toa(char * s, u32 i);
+	void s32toa(char * s, s32 i);
+	void u64toa(char * s, u64 i);
+	void s64toa(char * s, s64 i);
+
+	u32 atou32(const char ** s);
+	s32 atos32(const char ** s);
+	u64 atou64(const char ** s);
+	s64 atos64(const char ** s);
+
+	u32 atou32(const char * s);
+	s32 atos32(const char * s);
+	u64 atou64(const char * s);
+	s64 atos64(const char * s);
+
+}
+
+// --------------------
 //  全プロセッサを使う
 // --------------------
 

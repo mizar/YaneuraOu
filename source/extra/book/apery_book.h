@@ -23,6 +23,11 @@
 #define APERY_BOOK_HPP
 
 #include <unordered_map>
+#if (__cplusplus > 201412L || _LIBCPP_STD_VER > 14)
+#include <optional>
+#else
+#include "optional.h"
+#endif
 #include "mt64bit.h"
 #include "../../shogi.h"
 #include "../../position.h"
@@ -39,10 +44,18 @@ struct AperyBookEntry {
     Score score;
 };
 
+#if (__cplusplus > 201412L || _LIBCPP_STD_VER > 14)
+    typedef std::optional<std::vector<AperyBookEntry>> AperyBookResOpt;
+#else
+    typedef std::experimental::optional<std::vector<AperyBookEntry>> AperyBookResOpt;
+#endif
+
 class AperyBook {
 public:
     explicit AperyBook(const char* fName);
     const std::vector<AperyBookEntry>& get_entries(const Position& pos) const;
+    const AperyBookResOpt get_entries_opt(const Position& pos) const;
+    const AperyBookResOpt get_entries_opt(const Key book_key) const;
     static Key bookKey(const Position& pos);
     size_t size() const { return book_.size(); }
 
