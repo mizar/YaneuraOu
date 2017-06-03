@@ -26,8 +26,15 @@
 ## bookutil コマンドリファレンス
 
 ```
-bookutil from_sfen <sfen_filename> <book_filename> [moves <value>]
+bookutil from_sfen <sfen_filename> <book_filename> [(options)...]
+bookutil from_sfen bw <black_sfen_filename> <white_sfen_filename> <book_filename> [(options)...]
+options:
+  [moves <value>] : 最大手数(default: 16)
+  [blackonly] : black手番の局面のみ登録
+  [whiteonly] : white手番の局面のみ登録
+
 bookutil think <sfen_filename> <book_filename> [(options)...]
+bookutil think bw <black_sfen_filename> <white_sfen_filename> <book_filename> [(options)...]
 options:
   [moves <value>] : 最大手数(default: 16)
   [depth <value>] : 探索深さ(default: 24)
@@ -35,8 +42,8 @@ options:
   [cluster <id> <num>] : クラスタ用間引き指定(default: 1 1)
   [progresstype <value>] : 思考中経過表示のタイプ(default: 0)
     0:標準 1:冗長
-  [blackonly] : white手番の局面を思考対象から省く
-  [whiteonly] : black手番の局面を思考対象から省く
+  [blackonly] : black手番の局面のみ思考して登録
+  [whiteonly] : white手番の局面のみ思考して登録
 
 bookutil {to_sfen | to_kif1 | to_kif2 | to_csa1} <book_filename> <sfen_filename> [(options)...]
 options:
