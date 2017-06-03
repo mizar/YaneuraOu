@@ -277,6 +277,318 @@ void prefetch2(void* addr)
 }
 
 // --------------------
+//   数値・文字列変換
+// --------------------
+
+namespace QConv {
+
+	// 内部実装
+
+	void render_u16_4l(char ** s, u16 i)
+	{
+		char * p = *s;
+		u8 i0 = (u8)(i / (u16)100), i1 = (u8)(i % (u16)100);
+		*p++ = '0' + (char)(i0 / (u8)10);
+		*p++ = '0' + (char)(i0 % (u8)10);
+		*p++ = '0' + (char)(i1 / (u8)10);
+		*p++ = '0' + (char)(i1 % (u8)10);
+		*s = p;
+	}
+
+	void render_u16_4u(char ** s, u16 i)
+	{
+		char * p = *s;
+		if (i < (u16)10)
+			*p++ = '0' + (char)i;
+		else if (i < (u16)100)
+		{
+			*p++ = '0' + (char)((u8)i / (u8)10);
+			*p++ = '0' + (char)((u8)i % (u8)10);
+		}
+		else
+		{
+			u8 i0 = (u8)(i / (u16)100), i1 = (u8)(i % (u16)100);
+			if (i < (u16)1000)
+			{
+				*p++ = '0' + (char)i0;
+				*p++ = '0' + (char)(i1 / (u8)10);
+				*p++ = '0' + (char)(i1 % (u8)10);
+			}
+			else
+			{
+				*p++ = '0' + (char)(i0 / (u8)10);
+				*p++ = '0' + (char)(i0 % (u8)10);
+				*p++ = '0' + (char)(i1 / (u8)10);
+				*p++ = '0' + (char)(i1 % (u8)10);
+			}
+		}
+		*s = p;
+	}
+
+	// 数値から文字列へ
+
+	void u32toa(char ** s, u32 i)
+	{
+		if (i < (u32)10000ul)
+			render_u16_4u(s, (u16)i);
+		else if (i < (u32)100000000ul)
+		{
+			render_u16_4u(s, (u16)(i / (u32)10000ul));
+			render_u16_4l(s, (u16)(i % (u32)10000ul));
+		}
+		else
+		{
+			u32 i0 = i / (u32)100000000ul, i1 = i % (u32)100000000ul;
+			render_u16_4u(s, (u16)i0);
+			u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
+			render_u16_4l(s, (u16)i10);
+			render_u16_4l(s, (u16)i11);
+		}
+		**s = '\0';
+	}
+
+	void s32toa(char ** s, s32 i)
+	{
+		if (i < 0)
+		{
+			*(*s)++ = '-';
+			u32toa(s, (u32)-i);
+		}
+		else
+			u32toa(s, (u32)i);
+	}
+
+	void u64toa(char ** s, u64 i)
+	{
+		if (i < (u64)10000ull)
+			render_u16_4u(s, (s16)i);
+		else if (i < (u64)100000000ul)
+		{
+			u16 i10 = (u16)((u32)i / (u32)10000u), i11 = (u16)((u32)i % (u32)10000u);
+			render_u16_4u(s, i10);
+			render_u16_4l(s, i11);
+		}
+		else if (i < (u64)10000000000000000ull)
+		{
+			u32 i0 = (u32)(i / (u64)100000000ul), i1 = (u32)(i % (u64)100000000ul);
+			if (i0 < (u32)10000u)
+			{
+				u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
+				render_u16_4u(s, (u16)i0);
+				render_u16_4l(s, i10);
+				render_u16_4l(s, i11);
+			}
+			else
+			{
+				u16 i00 = (u16)(i0 / (u32)10000u), i01 = (u16)(i0 % (u32)10000u);
+				u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
+				render_u16_4u(s, i00);
+				render_u16_4l(s, i01);
+				render_u16_4l(s, i10);
+				render_u16_4l(s, i11);
+			}
+		}
+		else
+		{
+			u64 iu = i / (u64)10000000000000000ull, il = i % (u64)10000000000000000ull;
+			u32 i0 = (u32)(il / (u64)100000000ul), i1 = (u32)(il % (u64)100000000ul);
+			u16 i00 = (u16)(i0 / (u32)10000u), i01 = (u16)(i0 % (u32)10000u);
+			u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
+			render_u16_4u(s, (u16)iu);
+			render_u16_4l(s, i00);
+			render_u16_4l(s, i01);
+			render_u16_4l(s, i10);
+			render_u16_4l(s, i11);
+		}
+		**s = '\0';
+	}
+
+	void s64toa(char ** s, s64 i)
+	{
+		if (i < 0)
+		{
+			*(*s)++ = '-';
+			u64toa(s, (u64)-i);
+		}
+		else
+			u64toa(s, (u64)i);
+	}
+
+	void u32toa(char * s, u32 i) { u32toa(&s, i); }
+	void s32toa(char * s, s32 i) { s32toa(&s, i); }
+	void u64toa(char * s, u64 i) { u64toa(&s, i); }
+	void s64toa(char * s, s64 i) { s64toa(&s, i); }
+
+	// 文字列から数値へ
+
+	u32 atou32(const char ** s)
+	{
+		const char * _s = *s;
+		u32 ru32 = 0u;
+		char c = *_s;
+		while (c == ' ') c = *++_s;
+		while (c == '0') c = *++_s;
+		if (c < '0' || c > '9') goto _ru32; else ru32 = (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32;
+		if (ru32 > (u32)429496729lu) goto _overlimit; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if (ru32 < (u32)UINT16_MAX) goto _overlimit;
+		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
+	_ru32:;
+		*s = _s;
+		return ru32;
+	_overlimit:;
+		while ((c = *++_s) >= '0' && c <= '9');
+		*s = _s;
+		return UINT32_MAX;
+	}
+
+	s32 atos32(const char ** s)
+	{
+		const char * _s = *s;
+		s32 rs32 = 0;
+		bool minus = false;
+		char c = *_s;
+		while (c == ' ') c = *++_s;
+		if (c == '-')
+		{
+			minus = true;
+			c = *++_s;
+		}
+		else if (c == '+')
+			c = *++_s;
+		while (c == '0') c = *++_s;
+		if (c < '0' || c > '9') goto _rs32; else rs32 = (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32;
+		if (rs32 > (s32)214748364l) goto _overlimit; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if (rs32 < (s32)0) goto _overlimit;
+		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
+	_rs32:;
+		*s = _s;
+		return minus ? -rs32 : rs32;
+	_overlimit:;
+		while ((c = *++_s) >= '0' && c <= '9');
+		*s = _s;
+		return minus ? INT32_MIN : INT32_MAX;
+	}
+
+	u64 atou64(const char ** s)
+	{
+		const char * _s = *s;
+		u32 ru32 = 0u;
+		u64 ru64 = 0u;
+		char c = *_s;
+		while (c == ' ') c = *++_s;
+		while (c == '0') c = *++_s;
+		if (c < '0' || c > '9') goto _ru32; else ru32 = (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
+		ru64 = (u64)ru32;
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _ru64;
+		if (ru64 > (u64)1844674407370955161ull) goto _overlimit; else ru64 = ru64 * 10u + (u64)(c - '0');
+		if (ru64 < (u64)UINT32_MAX) goto _overlimit;
+		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
+	_ru64:;
+		*s = _s;
+		return ru64;
+	_ru32:;
+		*s = _s;
+		return (u64)ru32;
+	_overlimit:;
+		while ((c = *++_s) >= '0' && c <= '9');
+		*s = _s;
+		return UINT64_MAX;
+	}
+
+	s64 atos64(const char ** s)
+	{
+		const char * _s = *s;
+		s32 rs32 = 0;
+		s64 rs64 = 0;
+		bool minus = false;
+		char c = *_s;
+		while (c == ' ') c = *++_s;
+		if (c == '-')
+		{
+			minus = true;
+			c = *++_s;
+		}
+		else if (c == '+')
+			c = *++_s;
+		while (c == '0') c = *++_s;
+		if (c < '0' || c > '9') goto _rs32; else rs32 = (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
+		rs64 = (s64)rs32;
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if (rs64 < (s64)0) goto _overlimit;
+		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
+	_rs64:;
+		*s = _s;
+		return minus ? -rs64 : rs64;
+	_rs32:;
+		*s = _s;
+		return minus ? (s64)-rs32 : (s64)rs32;
+	_overlimit:;
+		while ((c = *++_s) >= '0' && c <= '9');
+		*s = _s;
+		return minus ? INT64_MIN : INT64_MAX;
+	}
+
+	u32 atou32(const char * s) { return atou32(&s); }
+	s32 atos32(const char * s) { return atos32(&s); }
+	u64 atou64(const char * s) { return atou64(&s); }
+	s64 atos64(const char * s) { return atos64(&s); }
+
+}
+
+// --------------------
 //  全プロセッサを使う
 // --------------------
 
