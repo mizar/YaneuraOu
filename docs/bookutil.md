@@ -45,7 +45,7 @@ options:
   [blackonly] : black手番の局面のみ思考して登録
   [whiteonly] : white手番の局面のみ思考して登録
 
-bookutil {to_sfen | to_kif1 | to_kif2 | to_csa1} <book_filename> <sfen_filename> [(options)...]
+bookutil {to_sfen | to_kif1 | to_kif2 | to_csa1 | to_csa} <book_filename> <sfen_filename> [(options)...]
 options:
   [moves <value>] : 最大手数(default: 256)
   [evaldiff <value>] : 候補手分岐幅（最善手からの評価値の差）
