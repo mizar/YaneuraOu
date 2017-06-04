@@ -134,6 +134,7 @@ namespace BookUtil
 		bool to_kif1 = token == "to_kif1";
 		bool to_kif2 = token == "to_kif2";
 		bool to_csa1 = token == "to_csa1";
+		bool to_csa = token == "to_csa";
 		// apery形式bookからの変換
 		bool from_apery = token == "from_apery";
 
@@ -452,7 +453,9 @@ namespace BookUtil
 				std::cout << "finished." << std::endl;
 			}
 
-		} else if (to_sfen || to_kif1 || to_kif2 || to_csa1)
+		}
+#ifdef USE_KIF_CONVERT_TOOLS
+		else if (to_sfen || to_kif1 || to_kif2 || to_csa1 || to_csa)
 		{
 			// 定跡からsfenを生成する
 
@@ -474,7 +477,7 @@ namespace BookUtil
 			int unregscore = -30000;
 			bool comment = false;
 			std::string opening = "";
-			SquareFormat sqfmt = SqFmt_ASCII;
+			int sqfmt = 0;
 
 			while (true)
 			{
@@ -565,13 +568,14 @@ namespace BookUtil
 			};
 
 			// 文字列化
-			auto to_movestr = [&](Position & _pos, Move _m, Move _m_back = MOVE_NONE)
+			auto to_movestr = [&](Position & _pos, Move _m)
 			{
 				return
 					to_sfen ? to_usi_string(_m) :
-					to_kif1 ? to_kif1_string(_m, _pos, _m_back, sqfmt) :
-					to_kif2 ? to_kif2_string(_m, _pos, _m_back, sqfmt) :
-					to_csa1 ? to_csa1_string(_m, _pos) :
+					to_kif1 ? KifConvertTools::to_kif_u8string(_pos, _m, (KifConvertTools::SquareFormat)sqfmt) :
+					to_kif2 ? KifConvertTools::to_kif2_u8string(_pos, _m, (KifConvertTools::SquareFormat)sqfmt) :
+					to_csa1 ? KifConvertTools::to_csa1_string(_pos, _m) :
+					to_csa ? KifConvertTools::to_csa_string(_pos, _m) :
 					"";
 			};
 
@@ -656,7 +660,7 @@ namespace BookUtil
 				{
 					Move nowMove = bpit->bestMove;
 					// 探索スタック積み
-					sf.push_back(to_movestr(pos, nowMove, m.empty() ? MOVE_NONE : m.back()));
+					sf.push_back(to_movestr(pos, nowMove));
 					m.push_back(nowMove);
 					SetupStates->push(StateInfo());
 					pos.do_move(nowMove, SetupStates->top());
@@ -689,7 +693,7 @@ namespace BookUtil
 					Move _mv = pos.move16_to_move(move_from_usi(movetoken));
 					if (!(is_ok(_mv) && pos.pseudo_legal(_mv) && pos.legal(_mv)))
 						break;
-					sf.push_back(to_movestr(pos, _mv, m.empty() ? MOVE_NONE : m.back()));
+					sf.push_back(to_movestr(pos, _mv));
 					m.push_back(_mv);
 					SetupStates->push(StateInfo());
 					pos.do_move(_mv, SetupStates->top());
@@ -704,7 +708,9 @@ namespace BookUtil
 			std::cout << ".finished!" << std::endl;
 			std::cout << count_sfens << " lines exported." << std::endl;
 
-		} else if (from_apery)
+		}
+#endif // #ifdef USE_KIF_CONVERT_TOOLS
+		else if (from_apery)
 		{
 			std::string book_name[2];
 			is >> book_name[0] >> book_name[1];

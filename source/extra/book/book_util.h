@@ -3,6 +3,7 @@
 
 #include "book.h"
 #include "apery_book.h"
+#include "../kif_converter/kif_convert_tools.h"
 #if (__cplusplus > 201412L || _LIBCPP_STD_VER > 14)
 #include <optional>
 #else
