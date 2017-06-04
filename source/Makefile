@@ -98,6 +98,9 @@ SOURCES  = shogi.cpp                                                           \
 	thread.cpp                                                                 \
 	tt.cpp                                                                     \
 	extra/book/apery_book.cpp                                                  \
+	extra/book/book_util_deq.cpp                                               \
+	extra/book/book_util_misc.cpp                                              \
+	extra/book/book_util.cpp                                                   \
 	extra/book/book.cpp                                                        \
 	extra/bitop.cpp                                                            \
 	extra/entering_king_win.cpp                                                \
@@ -137,11 +140,11 @@ SOURCES  = shogi.cpp                                                           \
 	learn/learner.cpp                                                          \
 	learn/learning_tools.cpp                                                   \
 	learn/multi_think.cpp                                                      \
-	learn/evaluate_kppt_learn.cpp   
+	learn/evaluate_kppt_learn.cpp
 
-#ifeq ($(YANEURAOU_EDITION),YANEURAOU_2017_GOKU_ENGINE)                        
+#ifeq ($(YANEURAOU_EDITION),YANEURAOU_2017_GOKU_ENGINE)
 #	SOURCES += engine/2017-goku-engine/2017-goku-search.cpp                    \
-#	           eval/evaluate_ppap.cpp                                          
+#	           eval/evaluate_ppap.cpp
 #endif
 
 OBJECTS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
@@ -166,6 +169,11 @@ tournament:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi2 -mavx2 -DFOR_TOURNAMENT -march=corei7-avx' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 tournament-sse42:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_SSE42 -msse4.2 -DFOR_TOURNAMENT -march=corei7' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
+
+bookutil:
+	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi2 -mavx2 -DUSE_KIF_CONVERT_TOOLS -march=corei7-avx' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
+bookutil-sse42:
+	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_SSE42 -msse4.2 -DUSE_KIF_CONVERT_TOOLS -march=corei7' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 
 avx2:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi2 -mavx2 -march=corei7-avx' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
