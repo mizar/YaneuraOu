@@ -80,7 +80,7 @@ LDFLAGS += -Wl,-s
 # ※ 学習部ではOpenMpを用いるので、学習用のビルドではこのオプションを指定する。
 OPENMP   = -fopenmp
 
-CFLAGS += -DNO_EXCEPTIONS
+CFLAGS += -DNO_EXCEPTIONS -DUSE_KIF_CONVERT_TOOLS
 LDFLAGS += -lpthread
 LDFLAGS += -v
 
