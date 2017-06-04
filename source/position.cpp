@@ -298,7 +298,7 @@ void Position::set(std::string sfen , Thread* th)
 
 // 局面のsfen文字列を取得する。
 // Position::set()の逆変換。
-const std::string Position::sfen() const
+const std::string Position::sfen(bool trim_ply) const
 {
 	std::ostringstream ss;
 
@@ -361,10 +361,10 @@ const std::string Position::sfen() const
 		}
 
 	// 手駒がない場合はハイフンを出力
-	ss << (found ? " " : "- ");
+	ss << (found ? "" : "-");
 
 	// --- 初期局面からの手数
-	ss << gamePly;
+	if (!trim_ply) ss << " " << gamePly;
 
 	return ss.str();
 }
