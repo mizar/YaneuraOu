@@ -26,6 +26,7 @@
 #include "mt64bit.h"
 #include "../../shogi.h"
 #include "../../position.h"
+#include "../stx/optional.h"
 
 namespace Book {
 
@@ -39,10 +40,14 @@ struct AperyBookEntry {
     Score score;
 };
 
+    typedef stx::optional<std::vector<AperyBookEntry>> AperyBookResOpt;
+
 class AperyBook {
 public:
     explicit AperyBook(const char* fName);
     const std::vector<AperyBookEntry>& get_entries(const Position& pos) const;
+    const AperyBookResOpt get_entries_opt(const Position& pos) const;
+    const AperyBookResOpt get_entries_opt(const Key book_key) const;
     static Key bookKey(const Position& pos);
     size_t size() const { return book_.size(); }
 
