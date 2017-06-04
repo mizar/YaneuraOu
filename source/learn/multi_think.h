@@ -44,6 +44,26 @@ struct MultiThink
 	// workerが処理する(Search::think()を呼び出す)回数を設定する。
 	void set_loop_max(u64 loop_max_) { loop_max = loop_max_; }
 
+	// 処理待ち局面数(処理中の局面数[0～スレッド数]は含まず)
+	u64 get_remain_loop_count()
+	{
+		std::unique_lock<Mutex> lk(loop_mutex);
+		return loop_max - std::min(loop_count, loop_max);
+	}
+
+	// 局面投入回数
+	u64 get_loop_count()
+	{
+		std::unique_lock<Mutex> lk(loop_mutex);
+		return std::min(loop_count, loop_max);
+	}
+
+	// 局面最大投入回数
+	u64 get_loop_max()
+	{
+		return loop_max;
+	}
+
 	// [ASYNC] ループカウンターの値を取り出して、取り出し後にループカウンターを加算する。
 	// もしループカウンターがloop_maxに達していたらUINT64_MAXを返す。
 	// 局面を生成する場合などは、局面を生成するタイミングでこの関数を呼び出すようにしないと、
