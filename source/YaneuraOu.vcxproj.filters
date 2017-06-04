@@ -172,10 +172,16 @@
     <ClInclude Include="extra\book\apery_book.h">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClInclude>
+    <ClInclude Include="extra\book\book_util.h">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClInclude>
     <ClInclude Include="extra\book\book.h">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClInclude>
     <ClInclude Include="extra\book\mt64bit.h">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClInclude>
+    <ClInclude Include="extra\book\optional.h">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClInclude>
     <ClInclude Include="eval\progress.h">
@@ -333,6 +339,15 @@
     <ClCompile Include="extra\book\apery_book.cpp">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClCompile>
+    <ClCompile Include="extra\book\book_util_deq.cpp">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClCompile>
+    <ClCompile Include="extra\book\book_util_misc.cpp">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClCompile>
+    <ClCompile Include="extra\book\book_util.cpp">
+      <Filter>リソース ファイル\extra\book</Filter>
+    </ClCompile>
     <ClCompile Include="extra\book\book.cpp">
       <Filter>リソース ファイル\extra\book</Filter>
     </ClCompile>
@@ -422,6 +437,9 @@
       <Filter>script</Filter>
     </None>
     <None Include="..\docs\README2017.md">
+      <Filter>docs</Filter>
+    </None>
+    <None Include="..\docs\bookutil.md">
       <Filter>docs</Filter>
     </None>
   </ItemGroup>
