@@ -207,9 +207,9 @@ namespace BookUtil
 					is >> start_moves;
 				else if (from_thinking && token == "cluster")
 					is >> cluster_id >> cluster_num;
-				else if (from_thinking && token == "blackonly")
+				else if (token == "blackonly")
 					blackonly = true;
-				else if (from_thinking && token == "whiteonly")
+				else if (token == "whiteonly")
 					whiteonly = true;
 				else if (from_thinking && token == "progresstype")
 					is >> progress_type;
