@@ -58,6 +58,18 @@ namespace Eval
 			{ 0x3aa68b055a020a8 , "Yomita(WCSC27)" } ,
 			{ 0x702fb2ee5672156 , "Qhapaq(WCSC27)" } ,
 			{ 0x6c54a1bcb654e37 , "tanuki(WCSC27)" } ,
+			{ 0x000000000000000 , "ReZero-epoch0(201706)" } ,
+			{ 0x4625f541c89c16e , "ReZero-epoch0.1(201706)" } ,
+			{ 0x4a8aa0a7ef9f507 , "ReZero-epoch1(201706)" } ,
+			{ 0x4cf0cd7f21c169a , "ReZero-epoch2(201706)" } ,
+			{ 0x4deaf5702a6ee6e , "ReZero-epoch3(201706)" } ,
+			{ 0x4e7562db3366cf2 , "ReZero-epoch4(201706)" } ,
+			{ 0x4edbd5bc0c0ab12 , "ReZero-epoch5(201706)" } ,
+			{ 0x4f36ba83ed99e91 , "ReZero-epoch6(201706)" } ,
+			{ 0x57e8e00bde3a55f , "ReZero-epoch7(201706)" } ,
+			{ 0x58e206e66c06a58 , "ReZero-epoch8(201706)" } ,
+			{ 0x64dccf2f61f17f8 , "EloQhappa(20170511v1.0)" } ,
+			{ 0x64a4b49026085c0 , "EloQhappa(20170521v1.1)" } ,
 	};
 		if (list.count(check_sum))
 			softname = list[check_sum];
