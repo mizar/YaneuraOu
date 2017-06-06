@@ -1,0 +1,24 @@
+root = true
+
+[*]
+indent_style = tab
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[{*.md,Makefile*}]
+trim_trailing_whitespace = false
+
+[*.{vcxproj*,props}]
+indent_style = space
+indent_size = 2
+insert_final_newline = false
+charset = utf-8-bom
+
+[*.{cpp,h,hpp,sln,txt}]
+charset = utf-8-bom
+
+[*_{ja,en}.txt]
+charset = utf-8
