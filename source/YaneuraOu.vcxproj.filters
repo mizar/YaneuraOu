@@ -334,5 +334,6 @@
     <None Include="..\docs\README2017.md">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\.editorconfig" />
   </ItemGroup>
 </Project>
