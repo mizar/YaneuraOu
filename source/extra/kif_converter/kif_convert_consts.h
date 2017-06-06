@@ -1,130 +1,127 @@
 ﻿#if defined(USE_KIF_CONVERT_TOOLS)
 
+#include <tuple>
+#include "../../shogi.h"
+
 // kif_convert_tools.cppで用いる文字列定数。
-// SJIS、utf-8/16/32それぞれの文字列を用意してある。
-// ここの文字列を修正するときは、それぞれの文字列を修正すること。
+// SJIS(build時のlocale依存)、UTF-8/16/32それぞれの文字列を用意してある。
 
 namespace KifConvertTools
 {
 
-	template <typename T> struct KifConstBase {};
+#define SC(I, S) (std::get<I>(std::make_tuple(std::string(S), std::string(u8"" S), std::u16string(u"" S), std::u32string(U"" S), std::wstring(L"" S))))
 
-	struct KifConstLocale : KifConstBase<char>
+	// 文字定数群
+	template <typename T> struct KifCharBase {};
+	template <std::size_t I, typename T> struct KifConst : KifCharBase<T>
 	{
-		const char * const color_black = "▲";
-		const char * const color_white = "△";
-		const char * const move_none = "エラー";
-		const char * const move_null = "パス";
-		const char * const move_resign = "投了";
-		const char * const move_win = "勝ち宣言";
-		const char * const move_samepos = "同";
-		const char * const move_drop = "打";
-		const char * const move_not = "不";
-		const char * const move_promote = "成";
-		const char * const move_straight = "直";
-		const char * const move_upper = "上";
-		const char * const move_lower = "引";
-		const char * const move_slide = "寄";
-		const char * const move_left = "左";
-		const char * const move_right = "右";
-		const char * const lbrack = "(";
-		const char * const rbrack = ")";
-		const char * const char1to9_ascii[9] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
-		const char * const char1to9_kanji[9] = { "一", "二", "三", "四", "五", "六", "七", "八", "九" };
-		const char * const char1to9_full_width_arabic[9] = { "１", "２", "３", "４", "５", "６", "７", "８", "９" };
-		const char * const piece_strings[16] = {
-			"空", "歩", "香"  , "桂"   , "銀"   , "角" , "飛" , "金" ,
-			"玉", "と", "成香", "成桂" , "成銀" , "馬" , "龍" , "女" ,
+		typedef T char_type;
+		typedef std::basic_string<T> string_type;
+		const string_type lf = SC(I,"\n");
+		const string_type csa_color_black = SC(I,"+");
+		const string_type csa_color_white = SC(I,"-");
+		const string_type csa_move_none = SC(I,"%%ERROR");
+		const string_type csa_move_null = SC(I,"%%PASS");
+		const string_type csa_move_resign = SC(I,"%%TORYO");
+		const string_type csa_move_win = SC(I,"%%WIN");
+		const string_type csa_cap_sq = SC(I,"00");
+		const string_type csa_piece[16] = {
+			SC(I,"**"), SC(I,"FU"), SC(I,"KY"), SC(I,"KE"), SC(I,"GI"), SC(I,"KA"), SC(I,"HI"), SC(I,"KI"),
+			SC(I,"OU"), SC(I,"TO"), SC(I,"NY"), SC(I,"NK"), SC(I,"NG"), SC(I,"UM"), SC(I,"RY"), SC(I,"QU"),
+		};
+		const string_type csa_ver = SC(I,"V2.2");
+		const string_type csa_comment = SC(I,"'");
+		const string_type csa_pos_ini = SC(I,"PI");
+		const string_type csa_pos_rank[9] = {
+			SC(I,"P1"), SC(I,"P2"), SC(I,"P3"), SC(I,"P4"), SC(I,"P5"), SC(I,"P6"), SC(I,"P7"), SC(I,"P8"), SC(I,"P9"),
+		};
+		const string_type csa_pos_piece[32] = {
+			SC(I," * "), SC(I,"+FU"), SC(I,"+KY"), SC(I,"+KE"), SC(I,"+GI"), SC(I,"+KA"), SC(I,"+HI"), SC(I,"+KI"),
+			SC(I,"+OU"), SC(I,"+TO"), SC(I,"+NY"), SC(I,"+NK"), SC(I,"+NG"), SC(I,"+UM"), SC(I,"+RY"), SC(I,"+QU"),
+			SC(I," * "), SC(I,"-FU"), SC(I,"-KY"), SC(I,"-KE"), SC(I,"-GI"), SC(I,"-KA"), SC(I,"-HI"), SC(I,"-KI"),
+			SC(I,"-OU"), SC(I,"-TO"), SC(I,"-NY"), SC(I,"-NK"), SC(I,"-NG"), SC(I,"-UM"), SC(I,"-RY"), SC(I,"-QU"),
+		};
+		const string_type csa_hand_black = SC(I,"P+");
+		const string_type csa_hand_white = SC(I,"P-");
+		const string_type kif_color_black = SC(I,"▲");
+		const string_type kif_color_white = SC(I,"△");
+		const string_type kif_color_blackinv = SC(I,"▼");
+		const string_type kif_color_whiteinv = SC(I,"▽");
+		const string_type piece_color_black = SC(I,"☗");
+		const string_type piece_color_white = SC(I,"☖");
+		const string_type piece_color_blackinv = SC(I,"⛊");
+		const string_type piece_color_whiteinv = SC(I,"⛉");
+		const string_type kif_move_none = SC(I,"エラー");
+		const string_type kif_move_null = SC(I,"パス");
+		const string_type kif_move_resign = SC(I,"投了");
+		const string_type kif_move_win = SC(I,"勝ち宣言");
+		const string_type kif_move_samepos = SC(I,"同");
+		const string_type kif_fwsp = SC(I,"　");
+		const string_type kif_move_drop = SC(I,"打");
+		const string_type kif_move_not = SC(I,"不");
+		const string_type kif_move_promote = SC(I,"成");
+		const string_type kif_move_straight = SC(I,"直");
+		const string_type kif_move_upper = SC(I,"上");
+		const string_type kif_move_lower = SC(I,"引");
+		const string_type kif_move_slide = SC(I,"寄");
+		const string_type kif_move_left = SC(I,"左");
+		const string_type kif_move_right = SC(I,"右");
+		const string_type kif_lbrack = SC(I,"(");
+		const string_type kif_rbrack = SC(I,")");
+		const string_type char1to9_ascii[9] = {
+			SC(I,"1"), SC(I,"2"), SC(I,"3"), SC(I,"4"), SC(I,"5"), SC(I,"6"), SC(I,"7"), SC(I,"8"), SC(I,"9"),
+		};
+		const string_type char1to9_kanji[9] = {
+			SC(I,"一"), SC(I,"二"), SC(I,"三"), SC(I,"四"), SC(I,"五"), SC(I,"六"), SC(I,"七"), SC(I,"八"), SC(I,"九"),
+		};
+		const string_type char1to9_full_width_arabic[9] = {
+			SC(I,"１"), SC(I,"２"), SC(I,"３"), SC(I,"４"), SC(I,"５"), SC(I,"６"), SC(I,"７"), SC(I,"８"), SC(I,"９"),
+		};
+		const string_type kif_piece[16] = {
+			SC(I,"・"), SC(I,"歩"), SC(I,"香"), SC(I,"桂"), SC(I,"銀"), SC(I,"角"), SC(I,"飛"), SC(I,"金"),
+			SC(I,"玉"), SC(I,"と"), SC(I,"成香"), SC(I,"成桂"), SC(I,"成銀"), SC(I,"馬"), SC(I,"龍"), SC(I,"女"),
+		};
+		const string_type bod_fline = SC(I,"  ９ ８ ７ ６ ５ ４ ３ ２ １");
+		const string_type bod_hline = SC(I,"+---------------------------+");
+		const string_type bod_vline = SC(I,"|");
+		const string_type bod_rank[9] = {
+			SC(I,"一"), SC(I,"二"), SC(I,"三"), SC(I,"四"), SC(I,"五"), SC(I,"六"), SC(I,"七"), SC(I,"八"), SC(I,"九"),
+		};
+		const string_type bod_piece[32] = {
+			SC(I," ・"), SC(I," 歩"), SC(I," 香"), SC(I," 桂"), SC(I," 銀"), SC(I," 角"), SC(I," 飛"), SC(I," 金"),
+			SC(I," 玉"), SC(I," と"), SC(I," 杏"), SC(I," 圭"), SC(I," 全"), SC(I," 馬"), SC(I," 龍"), SC(I," 女"),
+			SC(I," ・"), SC(I,"v歩"), SC(I,"v香"), SC(I,"v桂"), SC(I,"v銀"), SC(I,"v角"), SC(I,"v飛"), SC(I,"v金"),
+			SC(I,"v玉"), SC(I,"vと"), SC(I,"v杏"), SC(I,"v圭"), SC(I,"v全"), SC(I,"v馬"), SC(I,"v龍"), SC(I,"v女"),
+		};
+		const string_type bod_hand_color_black = SC(I,"先手の持駒：");
+		const string_type bod_hand_color_white = SC(I,"後手の持駒：");
+		const string_type bod_hand_piece[16] = {
+			SC(I,"・"), SC(I,"歩"), SC(I,"香"), SC(I,"桂"), SC(I,"銀"), SC(I,"角"), SC(I,"飛"), SC(I,"金"),
+			SC(I,"玉"), SC(I,"と"), SC(I,"杏"), SC(I,"圭"), SC(I,"全"), SC(I,"馬"), SC(I,"龍"), SC(I,"女"),
+		};
+		const string_type bod_hand_pad = SC(I," ");
+		const string_type bod_hand_none = SC(I,"なし");
+		const string_type bod_hand_num[19] = {
+			SC(I,""), SC(I,""), SC(I,"二"), SC(I,"三"), SC(I,"四"), SC(I,"五"), SC(I,"六"), SC(I,"七"), SC(I,"八"), SC(I,"九"),
+			SC(I,"十"), SC(I,"十一"), SC(I,"十二"), SC(I,"十三"), SC(I,"十四"), SC(I,"十五"), SC(I,"十六"), SC(I,"十七"), SC(I,"十八"),
+		};
+		const string_type bod_turn_black = SC(I,"先手番");
+		const string_type bod_turn_white = SC(I,"後手番");
+		const string_type kiflist_head = SC(I,"手数----指手---------消費時間--");
+		const string_type kiflist_pad = SC(I," ");
+		const string_type char0to9_ascii[10] = {
+			SC(I,"0"),SC(I,"１"), SC(I,"２"), SC(I,"３"), SC(I,"４"), SC(I,"５"), SC(I,"６"), SC(I,"７"), SC(I,"８"), SC(I,"９"),
 		};
 	};
 
-	struct KifConstUtf8 : KifConstBase<char>
-	{
-		const char * const color_black = u8"▲";
-		const char * const color_white = u8"△";
-		const char * const move_none = u8"エラー";
-		const char * const move_null = u8"パス";
-		const char * const move_resign = u8"投了";
-		const char * const move_win = u8"勝ち宣言";
-		const char * const move_samepos = u8"同";
-		const char * const move_drop = u8"打";
-		const char * const move_not = u8"不";
-		const char * const move_promote = u8"成";
-		const char * const move_straight = u8"直";
-		const char * const move_upper = u8"上";
-		const char * const move_lower = u8"引";
-		const char * const move_slide = u8"寄";
-		const char * const move_left = u8"左";
-		const char * const move_right = u8"右";
-		const char * const lbrack = u8"(";
-		const char * const rbrack = u8")";
-		const char * const char1to9_ascii[9] = { u8"1", u8"2", u8"3", u8"4", u8"5", u8"6", u8"7", u8"8", u8"9" };
-		const char * const char1to9_kanji[9] = { u8"一", u8"二", u8"三", u8"四", u8"五", u8"六", u8"七", u8"八", u8"九" };
-		const char * const char1to9_full_width_arabic[9] = { u8"１", u8"２", u8"３", u8"４", u8"５", u8"６", u8"７", u8"８", u8"９" };
-		const char * const piece_strings[16] = {
-			u8"空", u8"歩", u8"香"  , u8"桂"   , u8"銀"   , u8"角" , u8"飛" , u8"金" ,
-			u8"玉", u8"と", u8"成香", u8"成桂" , u8"成銀" , u8"馬" , u8"龍" , u8"女" ,
-		};
-	};
+	struct KifConstLocale : KifConst<0, char>     {};
+	struct KifConstUtf8   : KifConst<1, char>     {};
+	struct KifConstUtf16  : KifConst<2, char16_t> {};
+	struct KifConstUtf32  : KifConst<3, char32_t> {};
+	struct KifConstWchar  : KifConst<4, wchar_t>  {};
 
-	struct KifConstUtf16 : KifConstBase<char16_t>
-	{
-		const char16_t * const color_black = u"▲";
-		const char16_t * const color_white = u"△";
-		const char16_t * const move_none = u"エラー";
-		const char16_t * const move_null = u"パス";
-		const char16_t * const move_resign = u"投了";
-		const char16_t * const move_win = u"勝ち宣言";
-		const char16_t * const move_samepos = u"同";
-		const char16_t * const move_drop = u"打";
-		const char16_t * const move_not = u"不";
-		const char16_t * const move_promote = u"成";
-		const char16_t * const move_straight = u"直";
-		const char16_t * const move_upper = u"上";
-		const char16_t * const move_lower = u"引";
-		const char16_t * const move_slide = u"寄";
-		const char16_t * const move_left = u"左";
-		const char16_t * const move_right = u"右";
-		const char16_t * const lbrack = u"(";
-		const char16_t * const rbrack = u")";
-		const char16_t * const char1to9_ascii[9] = { u"1", u"2", u"3", u"4", u"5", u"6", u"7", u"8", u"9" };
-		const char16_t * const char1to9_kanji[9] = { u"一", u"二", u"三", u"四", u"五", u"六", u"七", u"八", u"九" };
-		const char16_t * const char1to9_full_width_arabic[9] = { u"１", u"２", u"３", u"４", u"５", u"６", u"７", u"８", u"９" };
-		const char16_t * const piece_strings[16] = {
-			u"空", u"歩", u"香"  , u"桂"   , u"銀"   , u"角" , u"飛" , u"金" ,
-			u"玉", u"と", u"成香", u"成桂" , u"成銀" , u"馬" , u"龍" , u"女" ,
-		};
-	};
-
-	struct KifConstUtf32 : KifConstBase<char32_t>
-	{
-		const char32_t * const color_black = U"▲";
-		const char32_t * const color_white = U"△";
-		const char32_t * const move_none = U"エラー";
-		const char32_t * const move_null = U"パス";
-		const char32_t * const move_resign = U"投了";
-		const char32_t * const move_win = U"勝ち宣言";
-		const char32_t * const move_samepos = U"同";
-		const char32_t * const move_drop = U"打";
-		const char32_t * const move_not = U"不";
-		const char32_t * const move_promote = U"成";
-		const char32_t * const move_straight = U"直";
-		const char32_t * const move_upper = U"上";
-		const char32_t * const move_lower = U"引";
-		const char32_t * const move_slide = U"寄";
-		const char32_t * const move_left = U"左";
-		const char32_t * const move_right = U"右";
-		const char32_t * const lbrack = U"(";
-		const char32_t * const rbrack = U")";
-		const char32_t * const char1to9_ascii[9] = { U"1", U"2", U"3", U"4", U"5", U"6", U"7", U"8", U"9" };
-		const char32_t * const char1to9_kanji[9] = { U"一", U"二", U"三", U"四", U"五", U"六", U"七", U"八", U"九" };
-		const char32_t * const char1to9_full_width_arabic[9] = { U"１", U"２", U"３", U"４", U"５", U"６", U"７", U"８", U"９" };
-		const char32_t * const piece_strings[16] = {
-			U"空", U"歩", U"香"  , U"桂"   , U"銀"   , U"角" , U"飛" , U"金" ,
-			U"玉", U"と", U"成香", U"成桂" , U"成銀" , U"馬" , U"龍" , U"女" ,
-		};
-	};
+#undef SC
 
 }
 
-#endif
+#endif // ifdef USE_KIF_CONVERT_TOOLS
