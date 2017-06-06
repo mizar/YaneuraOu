@@ -769,6 +769,7 @@
     <Text Include="..\script\readme.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\.editorconfig" />
     <None Include="..\docs\README2017.md" />
     <None Include="..\exe\book\standard_book.db" />
     <None Include="..\README.md" />
