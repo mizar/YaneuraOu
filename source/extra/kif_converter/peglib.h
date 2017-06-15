@@ -22,6 +22,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "../stx/any.h"
 
 // guard for older versions of VC++
 #ifdef _MSC_VER
@@ -47,6 +48,10 @@ extern void* enabler;
  *  any
  *---------------------------------------------------------------------------*/
 
+using stx::any;
+using stx::any_cast;
+
+#if 0
 class any
 {
 public:
@@ -157,6 +162,7 @@ private:
 
     placeholder* content_;
 };
+#endif
 
 /*-----------------------------------------------------------------------------
  *  scope_exit
@@ -258,7 +264,7 @@ struct SemanticValues : protected std::vector<any>
 
     template <typename T>
     auto transform(size_t beg = 0, size_t end = static_cast<size_t>(-1)) const -> vector<T> {
-        return this->transform(beg, end, [](const any& v) { return v.get<T>(); });
+        return this->transform(beg, end, [](const any& v) { return any_cast<T>(v); });
     }
 
 private:
@@ -1261,8 +1267,8 @@ public:
         SemanticValues sv;
         any dt;
         auto r = parse_core(s, n, sv, dt, path);
-        if (r.ret && !sv.empty() && !sv.front().is_undefined()) {
-            val = sv[0].get<T>();
+        if (r.ret && !sv.empty() && !sv.front().empty()) {
+            val = any_cast<T>(sv[0]);
         }
         return r;
     }
@@ -1277,8 +1283,8 @@ public:
     Result parse_and_get_value(const char* s, size_t n, any& dt, T& val, const char* path = nullptr) const {
         SemanticValues sv;
         auto r = parse_core(s, n, sv, dt, path);
-        if (r.ret && !sv.empty() && !sv.front().is_undefined()) {
-            val = sv[0].get<T>();
+        if (r.ret && !sv.empty() && !sv.front().empty()) {
+            val = any_cast<T>(sv[0]);
         }
         return r;
     }
@@ -1823,13 +1829,13 @@ private:
 
     void setup_actions() {
         g["Definition"] = [&](const SemanticValues& sv, any& dt) {
-            Data& data = *dt.get<Data*>();
+            Data& data = any_cast<Data&>(dt);
 
             auto ignore = (sv.size() == 4);
             auto baseId = ignore ? 1u : 0u;
 
-            const auto& name = sv[baseId].get<std::string>();
-            auto ope = sv[baseId + 2].get<std::shared_ptr<Ope>>();
+            const auto& name = any_cast<std::string>(sv[baseId]);
+            auto ope = any_cast<std::shared_ptr<Ope>>(sv[baseId + 2]);
 
             auto& grammar = *data.grammar;
             if (!grammar.count(name)) {
@@ -1848,11 +1854,11 @@ private:
 
         g["Expression"] = [&](const SemanticValues& sv) {
             if (sv.size() == 1) {
-                return sv[0].get<std::shared_ptr<Ope>>();
+                return any_cast<std::shared_ptr<Ope>>(sv[0]);
             } else {
                 std::vector<std::shared_ptr<Ope>> opes;
                 for (auto i = 0u; i < sv.size(); i++) {
-                    opes.emplace_back(sv[i].get<std::shared_ptr<Ope>>());
+                    opes.emplace_back(any_cast<std::shared_ptr<Ope>>(sv[i]));
                 }
                 const std::shared_ptr<Ope> ope = std::make_shared<PrioritizedChoice>(opes);
                 return ope;
@@ -1861,11 +1867,11 @@ private:
 
         g["Sequence"] = [&](const SemanticValues& sv) {
             if (sv.size() == 1) {
-                return sv[0].get<std::shared_ptr<Ope>>();
+                return any_cast<std::shared_ptr<Ope>>(sv[0]);
             } else {
                 std::vector<std::shared_ptr<Ope>> opes;
                 for (const auto& x: sv) {
-                    opes.emplace_back(x.get<std::shared_ptr<Ope>>());
+                    opes.emplace_back(any_cast<std::shared_ptr<Ope>>(x));
                 }
                 const std::shared_ptr<Ope> ope = std::make_shared<Sequence>(opes);
                 return ope;
@@ -1875,11 +1881,11 @@ private:
         g["Prefix"] = [&](const SemanticValues& sv) {
             std::shared_ptr<Ope> ope;
             if (sv.size() == 1) {
-                ope = sv[0].get<std::shared_ptr<Ope>>();
+                ope = any_cast<std::shared_ptr<Ope>>(sv[0]);
             } else {
                 assert(sv.size() == 2);
-                auto tok = sv[0].get<char>();
-                ope = sv[1].get<std::shared_ptr<Ope>>();
+                auto tok = any_cast<char>(sv[0]);
+                ope = any_cast<std::shared_ptr<Ope>>(sv[1]);
                 if (tok == '&') {
                     ope = apd(ope);
                 } else { // '!'
@@ -1890,12 +1896,12 @@ private:
         };
 
         g["Suffix"] = [&](const SemanticValues& sv) {
-            auto ope = sv[0].get<std::shared_ptr<Ope>>();
+            auto ope = any_cast<std::shared_ptr<Ope>>(sv[0]);
             if (sv.size() == 1) {
                 return ope;
             } else {
                 assert(sv.size() == 2);
-                auto tok = sv[1].get<char>();
+                auto tok = any_cast<char>(sv[1]);
                 if (tok == '?') {
                     return opt(ope);
                 } else if (tok == '*') {
@@ -1907,14 +1913,14 @@ private:
         };
 
         g["Primary"] = [&](const SemanticValues& sv, any& dt) -> std::shared_ptr<Ope> {
-            Data& data = *dt.get<Data*>();
+            Data& data = any_cast<Data&>(dt);
 
             switch (sv.choice()) {
                 case 0: { // Reference
                     auto ignore = (sv.size() == 2);
                     auto baseId = ignore ? 1u : 0u;
 
-                    const auto& ident = sv[baseId].get<std::string>();
+                    const auto& ident = any_cast<std::string>(sv[baseId]);
 
                     if (!data.references.count(ident)) {
                         data.references[ident] = sv.c_str(); // for error handling
@@ -1927,18 +1933,18 @@ private:
                     }
                 }
                 case 1: { // (Expression)
-                    return sv[1].get<std::shared_ptr<Ope>>();
+                    return any_cast<std::shared_ptr<Ope>>(sv[1]);
                 }
                 case 2: { // TokenBoundary
-                    return tok(sv[1].get<std::shared_ptr<Ope>>());
+                    return tok(any_cast<std::shared_ptr<Ope>>(sv[1]));
                 }
                 case 3: { // Capture
-                    const auto& name = sv[0].get<std::string>();
-                    auto ope = sv[1].get<std::shared_ptr<Ope>>();
+                    const auto& name = any_cast<std::string>(sv[0]);
+                    auto ope = any_cast<std::shared_ptr<Ope>>(sv[1]);
                     return cap(ope, data.match_action, ++data.capture_count, name);
                 }
                 default: {
-                    return sv[0].get<std::shared_ptr<Ope>>();
+                    return any_cast<std::shared_ptr<Ope>>(sv[0]);
                 }
             }
         };
