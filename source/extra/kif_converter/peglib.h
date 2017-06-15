@@ -1405,7 +1405,12 @@ inline size_t TokenBoundary::parse(const char* s, size_t n, SemanticValues& sv, 
 
 inline size_t Holder::parse(const char* s, size_t n, SemanticValues& sv, Context& c, any& dt) const {
     if (!ope_) {
+#ifdef NO_EXCEPTIONS
+        std::cerr << ("Uninitialized definition ope was used...") << std::endl;
+        return static_cast<size_t>(-1);
+#else
         throw std::logic_error("Uninitialized definition ope was used...");
+#endif
     }
 
     c.trace(outer_->name.c_str(), s, n, sv, dt);
@@ -1438,6 +1443,9 @@ inline size_t Holder::parse(const char* s, size_t n, SemanticValues& sv, Context
             chldsv.s_ = s;
             chldsv.n_ = len;
 
+#ifdef NO_EXCEPTIONS
+            a_val = reduce(chldsv, dt);
+#else
             try {
                 a_val = reduce(chldsv, dt);
             } catch (const parse_error& e) {
@@ -1449,6 +1457,7 @@ inline size_t Holder::parse(const char* s, size_t n, SemanticValues& sv, Context
                 }
                 len = static_cast<size_t>(-1);
             }
+#endif
         }
     });
 
