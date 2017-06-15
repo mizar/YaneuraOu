@@ -106,7 +106,11 @@ SOURCES  = shogi.cpp                                                           \
 	extra/timeman.cpp                                                          \
 	extra/see.cpp                                                              \
 	extra/sfen_packer.cpp                                                      \
+	extra/kif_converter/charset_convert.cpp                                    \
 	extra/kif_converter/kif_convert_tools.cpp                                  \
+	extra/kif_converter/parser_csa.cpp                                         \
+	extra/kif_converter/parser_ki2.cpp                                         \
+	extra/kif_converter/parser_kif.cpp                                         \
 	eval/evaluate_bona_piece.cpp                                               \
 	eval/evaluate_kpp.cpp                                                      \
 	eval/evaluate_kppt.cpp                                                     \
