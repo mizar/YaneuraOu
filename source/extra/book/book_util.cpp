@@ -65,7 +65,7 @@ namespace BookUtil
 				continue;
 
 			// depth手読みの評価値とPV(最善応手列)
-			search(pos, search_depth);
+			Learner::search(pos, search_depth);
 
 			// MultiPVで局面を足す、的な
 
