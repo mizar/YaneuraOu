@@ -516,6 +516,8 @@ namespace BookUtil
 					is >> sameposfmt;
 				else if (token == "opening")
 					is >> quoted(opening);
+				else if (token == "opening_ply2all")
+					opening = OPENING_PLY2ALL;
 				else if (token == "comment")
 					comment = true;
 				else
@@ -555,7 +557,6 @@ namespace BookUtil
 				<< " evalblacklimit " << evalblacklimit
 				<< " evalwhitelimit " << evalwhitelimit
 				<< " depthlimit " << depthlimit
-				<< " opening " << quoted(opening)
 				<< std::endl;
 
 			// 探索結果種別
