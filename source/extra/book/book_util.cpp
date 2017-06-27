@@ -640,7 +640,7 @@ namespace BookUtil
 					return BOOKRES_UNFILLED;
 				auto & be = *it;
 				// 探索済み局面(BookEntryのplyをフラグ代わり)なら戻る
-				if (be.ply == 0)
+				if (be.ply <= 0 && -be.ply <= pos.game_ply())
 					return BOOKRES_DUPEPOS;
 				// move_listが空なら戻る
 				if (be.move_list.empty())
@@ -648,7 +648,7 @@ namespace BookUtil
 				// Move正規化
 				move_update(pos, be.move_list);
 				// 到達済み局面のフラグ立て
-				be.ply = 0;
+				be.ply = -pos.game_ply();
 				// 最善手が駄目なら戻る
 				auto & bp0 = be.move_list.front();
 				int evaldiff = ~pos.side_to_move() ? evalblackdiff : evalwhitediff;
