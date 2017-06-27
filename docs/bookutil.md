@@ -1,9 +1,9 @@
 <!-- Markdown -->
-# 定跡ツール(bookutil)拡張コマンドまとめ (2017Early + work_book fork)
+# 定跡ツール(bookutil)拡張コマンドまとめ (2017Early + bookutil fork)
 
 定跡関連、あわせて参照:
-- [./解説.txt](./解説.txt)
-- [./やねうら大定跡.txt](./やねうら大定跡.txt)
+- [/docs/解説.txt](https://github.com/yaneurao/YaneuraOu/blob/master/docs/%E8%A7%A3%E8%AA%AC.txt)
+- [/docs/やねうら大定跡.txt](https://github.com/yaneurao/YaneuraOu/blob/master/docs/%E3%82%84%E3%81%AD%E3%81%86%E3%82%89%E5%A4%A7%E5%AE%9A%E8%B7%A1.txt)
 - [将棋ソフト用の標準定跡ファイルフォーマットの提案(2016-02-05)](http://yaneuraou.yaneu.com/2016/02/05/%E5%B0%86%E6%A3%8B%E3%82%BD%E3%83%95%E3%83%88%E7%94%A8%E3%81%AE%E6%A8%99%E6%BA%96%E5%AE%9A%E8%B7%A1%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E3%83%95%E3%82%A9%E3%83%BC%E3%83%9E%E3%83%83%E3%83%88%E3%81%AE/)
 - [やねうら大定跡はじめました(2016-07-10)](http://yaneuraou.yaneu.com/2016/07/10/%E3%82%84%E3%81%AD%E3%81%86%E3%82%89%E5%A4%A7%E5%AE%9A%E8%B7%A1%E3%81%AF%E3%81%98%E3%82%81%E3%81%BE%E3%81%97%E3%81%9F/)
 - [やねうら王を使って定跡を作る(2016-07-11)](http://yaneuraou.yaneu.com/2016/07/11/%E3%82%84%E3%81%AD%E3%81%86%E3%82%89%E7%8E%8B%E3%82%92%E4%BD%BF%E3%81%A3%E3%81%A6%E5%AE%9A%E8%B7%A1%E3%82%92%E4%BD%9C%E3%82%8B/)
@@ -115,4 +115,18 @@ test kifconvert [(options)...]
   [csa1]
   [kif]
   [kif2]
+  [colorformat <num>]
+    0: { black: "", white: "" }
+    1: { black: "+", white: "-" }
+    2: { black: "▲", white: "△" }
+    3: { black: "☗", white: "☖" }
+  [squareformat <num>]
+    0: 「55歩」
+    1: 「５５歩」
+    2: 「５五歩」
+  [sameposformat <num>]
+    0: 「同金」「同成銀」「同桂成」
+    1: 「同　金」「同　成銀」「同　桂成」
+    2: 「同　金」「同成銀」「同桂成」
+    3: 「３二同金」「３二同成銀」「３二同桂成」
 ```
