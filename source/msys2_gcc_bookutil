@@ -6,6 +6,7 @@ COMPILER=g++
 BUILDDIR=../build/msys2/2017Early
 EDITION=YANEURAOU_2017_EARLY_ENGINE
 TARGET=YaneuraOu-2017-early-gcc
+WCFLAGS="-fexec-charset=CP932"
 declare -A TGTAIL=([bookutil-sse42]=-bookutil-sse42 [bookutil]=-bookutil-avx2)
 
 mkdir -p ${BUILDDIR}
@@ -13,7 +14,7 @@ mkdir -p ${BUILDDIR}
 for key in ${!TGTAIL[*]}
 do
 	${MAKE} -f ${MAKEFILE} clean
-	${MAKE} -f ${MAKEFILE} -j8 ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	${MAKE} -f ${MAKEFILE} -j8 ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} WCFLAGS=${WCFLAGS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 done
 
