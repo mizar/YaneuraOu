@@ -70,6 +70,7 @@ options:
   [opening <quoted_string>] : 開始局面・手順
     sfen形式、引用符""で囲む、複数指定時は引用符中でカンマ","区切り
     (default: "")
+  [opening_ply2all] : 先手・後手共に初手の全パターン
   [comment] : 末尾にコメント付与
     "#UNFILLED" : 未登録局面到達
     "#DUPEPOS" : 重複局面到達（既出局面に合流、または千日手模様）
