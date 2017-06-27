@@ -10,6 +10,11 @@ namespace KifConvertTools
 {
 
 #define SC(I, S) (std::get<I>(std::make_tuple(std::string(S), std::string(u8"" S), std::u16string(u"" S), std::u32string(U"" S), std::wstring(L"" S))))
+#if defined _LINUX
+#define SCU(I, S, R) (std::get<I>(std::make_tuple(std::string(S), std::string(u8"" S), std::u16string(u"" S), std::u32string(U"" S), std::wstring(L"" S))))
+#else
+#define SCU(I, S, R) (std::get<I>(std::make_tuple(std::string(R), std::string(u8"" S), std::u16string(u"" S), std::u32string(U"" S), std::wstring(L"" S))))
+#endif
 
 	// 文字定数群
 	template <typename T> struct KifCharBase {};
@@ -47,10 +52,10 @@ namespace KifConvertTools
 		const string_type kif_color_white = SC(I,"△");
 		const string_type kif_color_blackinv = SC(I,"▼");
 		const string_type kif_color_whiteinv = SC(I,"▽");
-		const string_type piece_color_black = SC(I,"☗");
-		const string_type piece_color_white = SC(I,"☖");
-		const string_type piece_color_blackinv = SC(I,"⛊");
-		const string_type piece_color_whiteinv = SC(I,"⛉");
+		const string_type piece_color_black = SCU(I,"☗","▲");
+		const string_type piece_color_white = SCU(I,"☖","△");
+		const string_type piece_color_blackinv = SCU(I,"⛊","▼");
+		const string_type piece_color_whiteinv = SCU(I,"⛉","▽");
 		const string_type kif_move_none = SC(I,"エラー");
 		const string_type kif_move_null = SC(I,"パス");
 		const string_type kif_move_resign = SC(I,"投了");
@@ -121,6 +126,7 @@ namespace KifConvertTools
 	struct KifConstWchar  : KifConst<4, wchar_t>  {};
 
 #undef SC
+#undef SCU
 
 }
 
