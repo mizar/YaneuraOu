@@ -65,13 +65,27 @@ options:
     (default: Options["BookEvalWhiteLimit"])
   [depthlimit <value>] : 探索深さ制限
     (default: Options["BookDepthLimit"])
-  [squareformat <value>] : マス目表記(to_kif1, to_kif2)
-    0:"55" 1:"５５" 2:"５五"
+  [colorformat <num>] : 手番表記 (to_kif1, to_kif2)
+    0: { black: "", white: "" }
+    1: { black: "+", white: "-" }
+    2: { black: "▲", white: "△" }
+    3: { black: "☗", white: "☖" }
+    (default: 0)
+  [squareformat <num>] : マス目座標表記 (to_kif1, to_kif2)
+    0: 「55歩」
+    1: 「５５歩」
+    2: 「５五歩」
+    (default: 0)
+  [sameposformat <num>] : 同座標表記 (to_kif1, to_kif2)
+    0: 「同金」「同成銀」「同桂成」
+    1: 「同　金」「同　成銀」「同　桂成」
+    2: 「同　金」「同成銀」「同桂成」
+    3: 「３二同金」「３二同成銀」「３二同桂成」
     (default: 0)
   [opening <quoted_string>] : 開始局面・手順
     sfen形式、引用符""で囲む、複数指定時は引用符中でカンマ","区切り
     (default: "")
-  [opening_ply2all] : 先手・後手共に初手の全パターン
+  [opening_ply2all] : 先手初手・後手初手までの全900パターン
   [comment] : 末尾にコメント付与
     "#UNFILLED" : 未登録局面到達
     "#DUPEPOS" : 重複局面到達（既出局面に合流、または千日手模様）
@@ -117,18 +131,21 @@ test kifconvert [(options)...]
   [csa1]
   [kif]
   [kif2]
-  [colorformat <num>]
+  [colorformat <num>] : 手番表記 (to_kif1, to_kif2)
     0: { black: "", white: "" }
     1: { black: "+", white: "-" }
     2: { black: "▲", white: "△" }
     3: { black: "☗", white: "☖" }
-  [squareformat <num>]
+    (default: 0)
+  [squareformat <num>] : マス目座標表記 (to_kif1, to_kif2)
     0: 「55歩」
     1: 「５５歩」
     2: 「５五歩」
-  [sameposformat <num>]
+    (default: 0)
+  [sameposformat <num>] : 同座標表記 (to_kif1, to_kif2)
     0: 「同金」「同成銀」「同桂成」
     1: 「同　金」「同　成銀」「同　桂成」
     2: 「同　金」「同成銀」「同桂成」
     3: 「３二同金」「３二同成銀」「３二同桂成」
+    (default: 0)
 ```
