@@ -117,6 +117,8 @@ namespace BookUtil
 		std::string token;
 		is >> token;
 
+		bool sfen_bool[KIFEXPORT_NB] = {};
+
 		// sfenから生成する
 		bool from_sfen = token == "from_sfen";
 		// 自ら思考して生成する
@@ -127,13 +129,13 @@ namespace BookUtil
 		bool book_softfilter = token == "softfilter";
 		// 定跡のsort
 		bool book_sort = token == "sort";
-		// 定跡からsfenを生成する
-		bool to_sfen = token == "to_sfen";
 		// 定跡から棋譜文字列を生成する
-		bool to_kif1 = token == "to_kif1";
-		bool to_kif2 = token == "to_kif2";
-		bool to_csa1 = token == "to_csa1";
-		bool to_csa = token == "to_csa";
+		bool kifexport = token == "kifexport";
+		kifexport |= (sfen_bool[KIFEXPORT_SFEN] = token == "to_sfen");
+		kifexport |= (sfen_bool[KIFEXPORT_KIF1] = token == "to_kif1");
+		kifexport |= (sfen_bool[KIFEXPORT_KIF2] = token == "to_kif2");
+		kifexport |= (sfen_bool[KIFEXPORT_CSA1] = token == "to_csa1");
+		kifexport |= (sfen_bool[KIFEXPORT_CSA] = token == "to_csa");
 		// apery形式bookからの変換
 		bool from_apery = token == "from_apery";
 
@@ -454,7 +456,7 @@ namespace BookUtil
 
 		}
 #ifdef USE_KIF_CONVERT_TOOLS
-		else if (to_sfen || to_kif1 || to_kif2 || to_csa1 || to_csa)
+		else if (kifexport)
 		{
 			// 定跡からsfenを生成する
 
@@ -462,9 +464,17 @@ namespace BookUtil
 			std::string book_name;
 			is >> book_name;
 
+			std::string sfen_name[KIFEXPORT_NB] = {};
+			std::fstream fs[KIFEXPORT_NB] = {};
+			std::vector<std::string> sf[KIFEXPORT_NB] = {};
+
 			// sfenファイル名
-			std::string sfen_name;
-			is >> sfen_name;
+			for (int i = 0; i < KIFEXPORT_NB; ++i)
+				if (sfen_bool[i])
+				{
+					is >> sfen_name[i];
+					break;
+				}
 
 			// 探索・出力オプション
 			int moves = 256;
@@ -484,7 +494,32 @@ namespace BookUtil
 				is >> token;
 				if (token == "")
 					break;
-				if (token == "moves")
+				else if (token == "to_sfen")
+				{
+					sfen_bool[KIFEXPORT_SFEN] = true;
+					is >> sfen_name[KIFEXPORT_SFEN];
+				}
+				else if (token == "to_kif1")
+				{
+					sfen_bool[KIFEXPORT_KIF1] = true;
+					is >> sfen_name[KIFEXPORT_KIF1];
+				}
+				else if (token == "to_kif2")
+				{
+					sfen_bool[KIFEXPORT_KIF2] = true;
+					is >> sfen_name[KIFEXPORT_KIF2];
+				}
+				else if (token == "to_csa1")
+				{
+					sfen_bool[KIFEXPORT_CSA1] = true;
+					is >> sfen_name[KIFEXPORT_CSA1];
+				}
+				else if (token == "to_csa")
+				{
+					sfen_bool[KIFEXPORT_CSA] = true;
+					is >> sfen_name[KIFEXPORT_CSA];
+				}
+				else if (token == "moves")
 					is >> moves;
 				else if (token == "evaldiff")
 				{
@@ -540,17 +575,23 @@ namespace BookUtil
 			u64 count_sfens = 0, count_sfens_part = 0;
 
 			std::vector<Move> m;
-			std::vector<std::string> sf;	// sfen指し手文字列格納用
 
 			auto SetupStates = Search::StateStackPtr(new aligned_stack<StateInfo>);
 			std::vector<StateInfo> si(std::max(moves + 2, 258));
 
-			std::fstream fs;
-			fs.open(sfen_name, std::ios::out);
+			for (int i = 0; i < KIFEXPORT_NB; ++i)
+				if (sfen_bool[i])
+					fs[i].open(sfen_name[i], std::ios::out);
 
 			std::string inisfen;
 
-			std::cout << "export " << (to_sfen ? "sfens" : to_kif1 ? "kif1" : to_kif2 ? "kif2" : to_csa1 ? "csa1" : "") << " :"
+			std::cout << "export "
+				<< (sfen_bool[KIFEXPORT_SFEN] ? "sfen " : "")
+				<< (sfen_bool[KIFEXPORT_KIF1] ? "kif1 " : "")
+				<< (sfen_bool[KIFEXPORT_KIF2] ? "kif2 " : "")
+				<< (sfen_bool[KIFEXPORT_CSA1] ? "csa1 " : "")
+				<< (sfen_bool[KIFEXPORT_CSA] ? "csa " : "")
+				<< ":"
 				<< " moves " << moves
 				<< " evalblackdiff " << evalblackdiff
 				<< " evalwhitediff " << evalwhitediff
@@ -580,47 +621,55 @@ namespace BookUtil
 			// 文字列化
 			auto to_movestr = [&](Position & _pos, Move _m)
 			{
-				return
-					to_sfen ? to_usi_string(_m) :
-					to_kif1 ? KifConvertTools::to_kif_u8string(_pos, _m, fmt) :
-					to_kif2 ? KifConvertTools::to_kif2_u8string(_pos, _m, fmt) :
-					to_csa1 ? KifConvertTools::to_csa_string(_pos, _m, KifConvertTools::Csa1Fmt) :
-					to_csa ? KifConvertTools::to_csa_string(_pos, _m, KifConvertTools::CsaFmt) :
-					"";
+				if (sfen_bool[KIFEXPORT_SFEN])
+					sf[KIFEXPORT_SFEN].push_back(to_usi_string(_m));
+				if (sfen_bool[KIFEXPORT_KIF1])
+					sf[KIFEXPORT_KIF1].push_back(KifConvertTools::to_kif_u8string(_pos, _m, fmt));
+				if (sfen_bool[KIFEXPORT_KIF2])
+					sf[KIFEXPORT_KIF2].push_back(KifConvertTools::to_kif2_u8string(_pos, _m, fmt));
+				if (sfen_bool[KIFEXPORT_CSA1])
+					sf[KIFEXPORT_CSA1].push_back(KifConvertTools::to_csa_string(_pos, _m, KifConvertTools::Csa1Fmt));
+				if (sfen_bool[KIFEXPORT_CSA])
+					sf[KIFEXPORT_CSA].push_back(KifConvertTools::to_csa_string(_pos, _m, KifConvertTools::CsaFmt));
 			};
 
 			// 結果出力
-			auto printstack = [&](std::ostream & os, BookRes res)
+			auto printstack = [&](BookRes res)
 			{
-				if (to_sfen)
+				for (int i = 0; i < KIFEXPORT_NB; ++i)
 				{
-					if (inisfen != SFEN_HIRATE)
-						os << "sfen " << inisfen << "moves";
-					else
-						os << "startpos moves";
-					for (auto & s : sf)
-						os << " " << s;
-				}
-				else if (to_kif1 || to_kif2 || to_csa1)
-				{
-					if (inisfen != SFEN_HIRATE)
-						os << "sfen " << inisfen << "moves ";
-					for (auto & s : sf) { os << s; }
-				}
-				if (comment)
-				{
-					switch (res)
-					{
-					case BOOKRES_UNFILLED:   os << "#UNFILLED"; break;
-					case BOOKRES_DUPEPOS:    os << "#DUPEPOS"; break;
-					case BOOKRES_EMPTYLIST:  os << "#EMPTYLIST"; break;
-					case BOOKRES_DEPTHLIMIT: os << "#DEPTHLIMIT"; break;
-					case BOOKRES_EVALLIMIT:  os << "#EVALLIMIT"; break;
-					case BOOKRES_MOVELIMIT:  os << "#MOVELIMIT"; break;
-					default:;
+					if (sfen_bool[i]) {
+						if (i == KIFEXPORT_SFEN)
+						{
+							if (inisfen != SFEN_HIRATE)
+								fs[i] << "sfen " << inisfen << "moves";
+							else
+								fs[i] << "startpos moves";
+							for (auto & s : sf[i])
+								fs[i] << " " << s;
+						}
+						else
+						{
+							if (inisfen != SFEN_HIRATE)
+								fs[i] << "sfen " << inisfen << "moves ";
+							for (auto & s : sf[i]) { fs[i] << s; }
+						}
 					}
+					if (comment)
+					{
+						switch (res)
+						{
+						case BOOKRES_UNFILLED:   fs[i] << "#UNFILLED"; break;
+						case BOOKRES_DUPEPOS:    fs[i] << "#DUPEPOS"; break;
+						case BOOKRES_EMPTYLIST:  fs[i] << "#EMPTYLIST"; break;
+						case BOOKRES_DEPTHLIMIT: fs[i] << "#DEPTHLIMIT"; break;
+						case BOOKRES_EVALLIMIT:  fs[i] << "#EVALLIMIT"; break;
+						case BOOKRES_MOVELIMIT:  fs[i] << "#MOVELIMIT"; break;
+						default:;
+						}
+					}
+					fs[i] << "\n";
 				}
-				os << "\n";
 				// 出力行数のカウントアップ
 				++count_sfens;
 				if (++count_sfens_part >= count_sfens_threshold)
@@ -670,19 +719,21 @@ namespace BookUtil
 				{
 					Move nowMove = bpit->bestMove;
 					// 探索スタック積み
-					sf.push_back(to_movestr(pos, nowMove));
+					to_movestr(pos, nowMove);
 					m.push_back(nowMove);
 					SetupStates->push(StateInfo());
 					pos.do_move(nowMove, SetupStates->top());
 					// 先の局面で駄目出しされたら、その局面までの手順を出力
 					auto res = (ply >= moves) ? BOOKRES_MOVELIMIT : to_sfen_func();
 					if (res != BOOKRES_SUCCESS)
-						printstack(fs, res);
+						printstack(res);
 					// 探索スタック崩し
 					pos.undo_move(nowMove);
 					SetupStates->pop();
 					m.pop_back();
-					sf.pop_back();
+					for (int i = 0; i < KIFEXPORT_NB; ++i)
+						if (sfen_bool[i])
+							sf[i].pop_back();
 				}
 				return BOOKRES_SUCCESS;
 			};
@@ -693,7 +744,8 @@ namespace BookUtil
 			getline(ssop, opsfen, ',');
 			do
 			{
-				sf.clear();
+				for (int i = 0; i < KIFEXPORT_NB; ++i)
+					sf[i].clear();
 				m.clear();
 				std::istringstream ssopsfen(opsfen);
 				inisfen = fetch_initialpos(pos, ssopsfen);
@@ -703,18 +755,19 @@ namespace BookUtil
 					Move _mv = pos.move16_to_move(move_from_usi(movetoken));
 					if (!(is_ok(_mv) && pos.pseudo_legal(_mv) && pos.legal(_mv)))
 						break;
-					sf.push_back(to_movestr(pos, _mv));
+					to_movestr(pos, _mv);
 					m.push_back(_mv);
 					SetupStates->push(StateInfo());
 					pos.do_move(_mv, SetupStates->top());
 				}
 				BookRes res = to_sfen_func();
 				if (res != BOOKRES_SUCCESS)
-					printstack(fs, res);
+					printstack(res);
 			} while (getline(ssop, opsfen, ','));
 
 			// 探索終了
-			fs.close();
+			for (int i = 0; i < KIFEXPORT_NB; ++i)
+				fs[i].close();
 			std::cout << ".finished!" << std::endl;
 			std::cout << count_sfens << " lines exported." << std::endl;
 
