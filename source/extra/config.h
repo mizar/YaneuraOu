@@ -384,7 +384,7 @@ extern GlobalOptions_ GlobalOptions;
 #include <climits>		// INT_MAX
 #include <cstddef>		// offsetof
 #include <array>
-#include <functional>	// function 
+#include <functional>	// function
 
 
 // --------------------
@@ -401,7 +401,7 @@ extern GlobalOptions_ GlobalOptions;
 #define ASSERT(X) { if (!(X)) *(int*)1 =0; }
 #else
 #define ASSERT(X) { if (!(X)) { std::cout << "\nError : ASSERT(" << #X << ")" << std::endl; \
- std::this_thread::sleep_for(std::chrono::microseconds(3000)); *(int*)1 =0;} }
+ std::this_thread::sleep_for(std::chrono::milliseconds(3000)); *(int*)1 =0;} }
 #endif
 
 // ASSERT LVに応じたassert
@@ -438,7 +438,7 @@ extern GlobalOptions_ GlobalOptions;
 #elif defined(__GNUC__)
 #define ALIGNED(X) __attribute__ ((aligned(X)))
 #else
-#define ALIGNED(X) 
+#define ALIGNED(X)
 #endif
 
 // --- for linux
@@ -589,7 +589,7 @@ inline int MKDIR(std::string dir_name)
 	return _wmkdir(cv.from_bytes(dir_name).c_str());
 //	::CreateDirectory(cv.from_bytes(dir_name).c_str(),NULL);
 }
-#elif defined(__GNUC__) 
+#elif defined(__GNUC__)
 #include <direct.h>
 inline int MKDIR(std::string dir_name)
 {
