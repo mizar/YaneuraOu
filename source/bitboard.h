@@ -52,10 +52,10 @@ struct alignas(16) Bitboard
 
 	// p[0],p[1]の値を直接指定しての初期化。(Bitboard定数の初期化のときのみ用いる)
 	Bitboard(u64 p0, u64 p1);
-	
+
 	// sqの升が1のBitboardとして初期化する。
 	Bitboard(Square sq);
-  
+
 	// 値を直接代入する。
 	void set(u64 p0, u64 p1);
 
@@ -67,7 +67,7 @@ struct alignas(16) Bitboard
 	// bit test命令
 	// if (lhs & rhs)とか(lhs & sq) と書くべきところを
 	// if (lhs.test(rhs)) とか(lhs.test(ssq)) 書くことでSSE命令を用いて高速化する。
-  
+
 	bool test(Bitboard rhs) const;
 	bool test(Square sq) const { return test(Bitboard(sq)); }
 
