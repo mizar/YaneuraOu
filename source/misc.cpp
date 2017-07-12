@@ -116,7 +116,7 @@ const string engine_info() {
 #if defined(FOR_TOURNAMENT)
 			<< " TOURNAMENT"
 #endif
-			<< endl 
+			<< endl
 			<< "id author by yaneurao" << endl;
 	}
 
@@ -308,21 +308,21 @@ void prefetch(void* addr) {
 	// そもそも構造体がalignされていない可能性があり、バグに違いない。
 	ASSERT_LV3(((u64)addr & 0x1f) == 0);
 
-#  if defined(__INTEL_COMPILER)
+#	if defined(__INTEL_COMPILER)
 	// 最適化でprefetch命令を削除するのを回避するhack。MSVCとgccは問題ない。
 	__asm__("");
-#  endif
+#	endif
 
 	// 1 cache lineのprefetch
 	// 64bytesの系もあるかも知れないが、Stockfishではcache line = 32bytesだと仮定してある。
 	// ちなみにRyzenでは32bytesらしい。
 
-#  if defined(__INTEL_COMPILER) || defined(_MSC_VER)
+#	if defined(__INTEL_COMPILER) || defined(_MSC_VER)
 	_mm_prefetch((char*)addr, _MM_HINT_T0);
 //	cout << hex << (u64)addr << endl;
-#  else
+#	else
 	__builtin_prefetch(addr);
-#  endif
+#	endif
 
 #endif
 }
@@ -430,7 +430,7 @@ namespace WinProcGroup {
 	// - 1つのNUMAノードは1つ以上の論理プロセッサーからなる
 	// - 1つのプロセッサーグループには最大で64個までの論理プロセッサーを含めることができる。
 	// https://technet.microsoft.com/ja-jp/windowsserver/ee661585.aspx
-	// 
+	//
 	// Intel Xeon Phi Knights Landings上でWindows Server 2016を動かした場合、
 	// 64論理プロセッサー毎にプロセッサーグループに分割される。
 	// 例えばIntel Xeon Phi Processor 7250の場合、

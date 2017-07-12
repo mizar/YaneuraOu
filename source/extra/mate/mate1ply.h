@@ -6,8 +6,8 @@
 
 namespace Mate1Ply
 {
-  // Mate1Ply関係のテーブル初期化
-  void init();
+	// Mate1Ply関係のテーブル初期化
+	void init();
 }
 
 #endif // MATE_1PLY

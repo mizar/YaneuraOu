@@ -42,7 +42,7 @@ namespace Book { extern void makebook_cmd(Position& pos, istringstream& is); }
 #endif
 
 // 協力詰めsolverモード
-#ifdef    COOPERATIVE_MATE_SOLVER
+#ifdef COOPERATIVE_MATE_SOLVER
 #include "cooperate_mate/cooperative_mate_solver.h"
 #endif
 
@@ -50,11 +50,11 @@ namespace Book { extern void makebook_cmd(Position& pos, istringstream& is); }
 #ifdef EVAL_LEARN
 namespace Learner
 {
-  // 棋譜の自動生成。
-  void gen_sfen(Position& pos, istringstream& is);
+	// 棋譜の自動生成。
+	void gen_sfen(Position& pos, istringstream& is);
 
-  // 生成した棋譜からの学習
-  void learn(Position& pos, istringstream& is);
+	// 生成した棋譜からの学習
+	void learn(Position& pos, istringstream& is);
 }
 #endif
 
@@ -103,7 +103,7 @@ namespace USI
 	//    読み筋の出力
 	// --------------------
 
-	  // スコアを歩の価値を100として正規化して出力する。
+		// スコアを歩の価値を100として正規化して出力する。
 	std::string score_to_usi(Value v)
 	{
 		ASSERT_LV3(-VALUE_INFINITE < v && v < VALUE_INFINITE);
@@ -289,7 +289,7 @@ namespace USI
 	//     USI::Option
 	// --------------------
 
-	  // この関数はUSI::init()から起動時に呼び出されるだけ。
+		// この関数はUSI::init()から起動時に呼び出されるだけ。
 	void Option::operator<<(const Option& o)
 	{
 		static size_t insert_order = 0;
