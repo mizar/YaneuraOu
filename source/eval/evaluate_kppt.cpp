@@ -30,8 +30,8 @@
 
 // EvalShareの機能を使うために必要
 #if defined (USE_SHARED_MEMORY_IN_EVAL) && defined(_WIN32)
-#include <codecvt>	 // mkdirするのにwstringが欲しいのでこれが必要
-#include <locale>    // wstring_convertにこれが必要。
+#include <codecvt>	// mkdirするのにwstringが欲しいのでこれが必要
+#include <locale>	// wstring_convertにこれが必要。
 #include <windows.h>
 #endif
 
@@ -455,7 +455,7 @@ namespace Eval
 		const auto* pkppw = kpp[Inv(sq_wk)][ebp.fw];
 
 #if defined (USE_AVX2)
-		
+
 		__m256i zero = _mm256_setzero_si256();
 		__m256i sum0 = zero;
 		__m256i sum1 = zero;
@@ -615,7 +615,7 @@ namespace Eval
 				diff.p[1][1] = 0;
 
 #if defined(USE_AVX2)
-				
+
 				__m256i zero = _mm256_setzero_si256();
 				__m256i diffp1 = zero;
 				for (int i = 0; i < PIECE_NO_KING; ++i)

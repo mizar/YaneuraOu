@@ -59,22 +59,22 @@ ENABLE_ADD_SUB_OPERATORS_ON(Value)
 
 // enumに対して標準的なビット演算を定義するマクロ
 #define ENABLE_BIT_OPERATORS_ON(T)                                              \
-  inline T operator&(const T d1, const T d2) { return T(int(d1) & int(d2)); }   \
-  inline T& operator&=(T& d1, const T d2) { return d1 = T(int(d1) & int(d2)); } \
-  inline T operator|(const T d1, const T d2) { return T(int(d1) | int(d2)); }   \
-  inline T& operator|=(T& d1, const T d2) { return d1 = T(int(d1) | int(d2)); } \
-  inline T operator^(const T d1, const T d2) { return T(int(d1) ^ int(d2)); }   \
-  inline T& operator^=(T& d1, const T d2) { return d1 = T(int(d1) ^ int(d2)); } \
-  inline T operator~(const T d1) { return T(~int(d1)); }
+	inline T operator&(const T d1, const T d2) { return T(int(d1) & int(d2)); }   \
+	inline T& operator&=(T& d1, const T d2) { return d1 = T(int(d1) & int(d2)); } \
+	inline T operator|(const T d1, const T d2) { return T(int(d1) | int(d2)); }   \
+	inline T& operator|=(T& d1, const T d2) { return d1 = T(int(d1) | int(d2)); } \
+	inline T operator^(const T d1, const T d2) { return T(int(d1) ^ int(d2)); }   \
+	inline T& operator^=(T& d1, const T d2) { return d1 = T(int(d1) ^ int(d2)); } \
+	inline T operator~(const T d1) { return T(~int(d1)); }
 
 ENABLE_BIT_OPERATORS_ON(HandKind)
 
 
 // enumに対してrange forで回せるようにするためのhack(速度低下があるかも知れないので速度の要求されるところでは使わないこと)
 #define ENABLE_RANGE_OPERATORS_ON(X,ZERO,NB)     \
-  inline X operator*(X x) { return x; }          \
-  inline X begin(X) { return ZERO; }             \
-  inline X end(X) { return NB; }
+	inline X operator*(X x) { return x; }          \
+	inline X begin(X) { return ZERO; }             \
+	inline X end(X) { return NB; }
 
 ENABLE_RANGE_OPERATORS_ON(Square, SQ_ZERO, SQ_NB)
 ENABLE_RANGE_OPERATORS_ON(Color, COLOR_ZERO, COLOR_NB)

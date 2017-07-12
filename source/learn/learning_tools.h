@@ -8,7 +8,7 @@
 
 
 #if defined(SGD_UPDATE)
-#include "../misc.h"  // PRNG
+#include "../misc.h"	// PRNG
 #endif
 
 namespace EvalLearningTools
