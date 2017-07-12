@@ -38,10 +38,10 @@ Bitboard FILE_BB[FILE_NB] = { FILE1_BB,FILE2_BB,FILE3_BB,FILE4_BB,FILE5_BB,FILE6
 Bitboard RANK_BB[RANK_NB] = { RANK1_BB,RANK2_BB,RANK3_BB,RANK4_BB,RANK5_BB,RANK6_BB,RANK7_BB,RANK8_BB,RANK9_BB };
 
 Bitboard ForwardRanksBB[COLOR_NB][RANK_NB] = {
-  { ZERO_BB, RANK1_BB, RANK1_BB | RANK2_BB, RANK1_BB | RANK2_BB | RANK3_BB, RANK1_BB | RANK2_BB | RANK3_BB | RANK4_BB,
-  ~(RANK9_BB | RANK8_BB | RANK7_BB | RANK6_BB), ~(RANK9_BB | RANK8_BB | RANK7_BB), ~(RANK9_BB | RANK8_BB), ~RANK9_BB },
-  { ~RANK1_BB, ~(RANK1_BB | RANK2_BB), ~(RANK1_BB | RANK2_BB | RANK3_BB), ~(RANK1_BB | RANK2_BB | RANK3_BB | RANK4_BB),
-  RANK9_BB | RANK8_BB | RANK7_BB | RANK6_BB, RANK9_BB | RANK8_BB | RANK7_BB, RANK9_BB | RANK8_BB, RANK9_BB, ZERO_BB }
+	{ ZERO_BB, RANK1_BB, RANK1_BB | RANK2_BB, RANK1_BB | RANK2_BB | RANK3_BB, RANK1_BB | RANK2_BB | RANK3_BB | RANK4_BB,
+	~(RANK9_BB | RANK8_BB | RANK7_BB | RANK6_BB), ~(RANK9_BB | RANK8_BB | RANK7_BB), ~(RANK9_BB | RANK8_BB), ~RANK9_BB },
+	{ ~RANK1_BB, ~(RANK1_BB | RANK2_BB), ~(RANK1_BB | RANK2_BB | RANK3_BB), ~(RANK1_BB | RANK2_BB | RANK3_BB | RANK4_BB),
+	RANK9_BB | RANK8_BB | RANK7_BB | RANK6_BB, RANK9_BB | RANK8_BB | RANK7_BB, RANK9_BB | RANK8_BB, RANK9_BB, ZERO_BB }
 };
 
 // 敵陣を表現するBitboard。
@@ -88,16 +88,16 @@ Bitboard CheckCandidateBB[SQ_NB_PLUS1][KING-1][COLOR_NB];
 Bitboard CheckCandidateKingBB[SQ_NB_PLUS1];
 
 u8 Slide[SQ_NB_PLUS1] = {
-  1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
-  10, 10, 10, 10, 10, 10, 10, 10, 10,
-  19, 19, 19, 19, 19, 19, 19, 19, 19,
-  28, 28, 28, 28, 28, 28, 28, 28, 28,
-  37, 37, 37, 37, 37, 37, 37, 37, 37,
-  46, 46, 46, 46, 46, 46, 46, 46, 46,
-  55, 55, 55, 55, 55, 55, 55, 55, 55,
-  1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
-  10, 10, 10, 10, 10, 10, 10, 10, 10,
-  0 , // SQ_NB用
+	1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
+	10, 10, 10, 10, 10, 10, 10, 10, 10,
+	19, 19, 19, 19, 19, 19, 19, 19, 19,
+	28, 28, 28, 28, 28, 28, 28, 28, 28,
+	37, 37, 37, 37, 37, 37, 37, 37, 37,
+	46, 46, 46, 46, 46, 46, 46, 46, 46,
+	55, 55, 55, 55, 55, 55, 55, 55, 55,
+	1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
+	10, 10, 10, 10, 10, 10, 10, 10, 10,
+	0 , // SQ_NB用
 };
 
 Bitboard BetweenBB[785];
@@ -109,45 +109,45 @@ SquareWithWall sqww_table[SQ_NB_PLUS1];
 // Bitboardを表示する(USI形式ではない) デバッグ用
 std::ostream& operator<<(std::ostream& os, const Bitboard& board)
 {
-  for (Rank rank = RANK_1; rank <= RANK_9; ++rank)
-  {
-    for (File file = FILE_9; file >= FILE_1; --file)
-      os << ((board & (file | rank)) ? " *" : " .");
-    os << endl;
-  }
-  // 連続して表示させるときのことを考慮して改行を最後に入れておく。
-  os << endl;
-  return os;
+	for (Rank rank = RANK_1; rank <= RANK_9; ++rank)
+	{
+		for (File file = FILE_9; file >= FILE_1; --file)
+			os << ((board & (file | rank)) ? " *" : " .");
+		os << endl;
+	}
+	// 連続して表示させるときのことを考慮して改行を最後に入れておく。
+	os << endl;
+	return os;
 }
 
 // 盤上sqに駒pc(先後の区別あり)を置いたときの利き。
 Bitboard effects_from(Piece pc, Square sq, const Bitboard& occ)
 {
-  switch (pc)
-  {
-  case B_PAWN: return pawnEffect(BLACK, sq);
-  case B_LANCE: return lanceEffect(BLACK, sq, occ);
-  case B_KNIGHT: return knightEffect(BLACK, sq);
-  case B_SILVER: return silverEffect(BLACK, sq);
-  case B_GOLD: case B_PRO_PAWN: case B_PRO_LANCE: case B_PRO_KNIGHT: case B_PRO_SILVER: return goldEffect(BLACK, sq);
+	switch (pc)
+	{
+	case B_PAWN: return pawnEffect(BLACK, sq);
+	case B_LANCE: return lanceEffect(BLACK, sq, occ);
+	case B_KNIGHT: return knightEffect(BLACK, sq);
+	case B_SILVER: return silverEffect(BLACK, sq);
+	case B_GOLD: case B_PRO_PAWN: case B_PRO_LANCE: case B_PRO_KNIGHT: case B_PRO_SILVER: return goldEffect(BLACK, sq);
 
-  case W_PAWN: return pawnEffect(WHITE, sq);
-  case W_LANCE: return lanceEffect(WHITE, sq, occ);
-  case W_KNIGHT: return knightEffect(WHITE, sq);
-  case W_SILVER: return silverEffect(WHITE, sq);
-  case W_GOLD: case W_PRO_PAWN: case W_PRO_LANCE: case W_PRO_KNIGHT: case W_PRO_SILVER: return goldEffect(WHITE, sq);
+	case W_PAWN:	return pawnEffect(WHITE, sq);
+	case W_LANCE:	return lanceEffect(WHITE, sq, occ);
+	case W_KNIGHT:	return knightEffect(WHITE, sq);
+	case W_SILVER:	return silverEffect(WHITE, sq);
+	case W_GOLD: case W_PRO_PAWN: case W_PRO_LANCE: case W_PRO_KNIGHT: case W_PRO_SILVER: return goldEffect(WHITE, sq);
 
-    //　先後同じ移動特性の駒
-  case B_BISHOP: case W_BISHOP: return bishopEffect(sq, occ);
-  case B_ROOK:   case W_ROOK:   return rookEffect(sq, occ);
-  case B_HORSE:  case W_HORSE:  return horseEffect(sq, occ);
-  case B_DRAGON: case W_DRAGON: return dragonEffect(sq, occ);
-  case B_KING:   case W_KING:   return kingEffect(sq);
-  case B_QUEEN:  case W_QUEEN:  return horseEffect(sq, occ) | dragonEffect(sq, occ);
-  case NO_PIECE: case PIECE_WHITE: return ZERO_BB; // これも入れておかないと初期化が面倒になる。
+		//　先後同じ移動特性の駒
+	case B_BISHOP:	case W_BISHOP:	return bishopEffect(sq, occ);
+	case B_ROOK:	case W_ROOK:	return rookEffect(sq, occ);
+	case B_HORSE:	case W_HORSE:	return horseEffect(sq, occ);
+	case B_DRAGON:	case W_DRAGON:	return dragonEffect(sq, occ);
+	case B_KING:	case W_KING:	return kingEffect(sq);
+	case B_QUEEN:	case W_QUEEN:	return horseEffect(sq, occ) | dragonEffect(sq, occ);
+	case NO_PIECE:	case PIECE_WHITE: return ZERO_BB; // これも入れておかないと初期化が面倒になる。
 
-  default: UNREACHABLE; return ALL_BB;
-  }
+	default: UNREACHABLE; return ALL_BB;
+	}
 }
 
 
@@ -251,7 +251,7 @@ void Bitboards::init()
 
 		return result;
 	};
-  
+
 	// 角の利きテーブルの初期化
 	for (int n : { 0 , 1 })
 	{
@@ -292,7 +292,7 @@ void Bitboards::init()
 		// cout << index << endl;
 	}
 
-  
+
 	// 5. 飛車の縦方向の利きテーブルの初期化
 	// ここでは飛車の利きを使わずに初期化しないといけない。
 
@@ -330,7 +330,7 @@ void Bitboards::init()
 	{
 		// sq = SQ_11 , SQ_21 , ... , SQ_NBまで
 		Square sq = file | RANK_1;
-		
+
 		const int num1s = 7;
 		for (int i = 0; i < (1 << num1s); ++i)
 		{
@@ -444,7 +444,7 @@ void Bitboards::init()
 				// 十字方向か、斜め方向かだけを判定して、例えば十字方向なら
 				// rookEffect(sq1,Bitboard(s2)) & rookEffect(sq2,Bitboard(s1))
 				// のように初期化したほうが明快なコードだが、この初期化をそこに依存したくないので愚直にやる。
-					
+
 				// これについてはあとで設定する。
 				if (s1 >= s2)
 					continue;

@@ -9,114 +9,114 @@ using namespace Effect8;
 
 namespace {
 
-  // min_attacker()はsee_ge()で使われるヘルパー関数であり、(目的升toに利く)
-  // 手番側の最も価値の低い攻撃駒の場所を特定し、その見つけた駒をビットボードから取り除き
-  // その背後にあった遠方駒をスキャンする。(あればstmAttackersに追加する)
+	// min_attacker()はsee_ge()で使われるヘルパー関数であり、(目的升toに利く)
+	// 手番側の最も価値の低い攻撃駒の場所を特定し、その見つけた駒をビットボードから取り除き
+	// その背後にあった遠方駒をスキャンする。(あればstmAttackersに追加する)
 
-  // またこの関数はmin_attacker<PAWN>()として最初呼び出され、PAWNの攻撃駒がなければ次に
-  // KNIGHTの..というように徐々に攻撃駒をアップグレードしていく。
+	// またこの関数はmin_attacker<PAWN>()として最初呼び出され、PAWNの攻撃駒がなければ次に
+	// KNIGHTの..というように徐々に攻撃駒をアップグレードしていく。
 
-  // occupied = 駒のある場所のbitboard。今回発見された駒は取り除かれる。
-  // stmAttackers = 手番側の攻撃駒
-  // attackers = toに利く駒(先後両方)。min_attacker(toに利く最小の攻撃駒)を見つけたら、その駒を除去して
-  //  その影にいたtoに利く攻撃駒をattackersに追加する。
-  // stm = 攻撃駒を探すほうの手番
-  // uncapValue = 最後にこの駒が取れなかったときにこの駒が「成り」の指し手だった場合、その価値分の損失が
-  // 出るのでそれが返る。
+	// occupied = 駒のある場所のbitboard。今回発見された駒は取り除かれる。
+	// stmAttackers = 手番側の攻撃駒
+	// attackers = toに利く駒(先後両方)。min_attacker(toに利く最小の攻撃駒)を見つけたら、その駒を除去して
+	//  その影にいたtoに利く攻撃駒をattackersに追加する。
+	// stm = 攻撃駒を探すほうの手番
+	// uncapValue = 最後にこの駒が取れなかったときにこの駒が「成り」の指し手だった場合、その価値分の損失が
+	// 出るのでそれが返る。
 
-  // 返し値は今回発見されたtoに利く最小の攻撃駒。これがtoの地点において成れるなら成ったあとの駒を返すべき。
+	// 返し値は今回発見されたtoに利く最小の攻撃駒。これがtoの地点において成れるなら成ったあとの駒を返すべき。
 
-  template <Color stm>
-  Piece min_attacker(const Position& pos, const Square& to
-	  , const Bitboard& stmAttackers, Bitboard& occupied, Bitboard& attackers
-  ) {
+	template <Color stm>
+	Piece min_attacker(const Position& pos, const Square& to
+		, const Bitboard& stmAttackers, Bitboard& occupied, Bitboard& attackers
+	) {
 
-	  // 駒種ごとのbitboardのうち、攻撃駒の候補を調べる
-  //:      Bitboard b = stmAttackers & bb[Pt];
+		// 駒種ごとのbitboardのうち、攻撃駒の候補を調べる
+	//:      Bitboard b = stmAttackers & bb[Pt];
 
-	  // 歩、香、桂、銀、金(金相当の駒)、角、飛、馬、龍…の順で取るのに使う駒を調べる。
-	  // 金相当の駒については、細かくしたほうが良いかどうかは微妙。
+		// 歩、香、桂、銀、金(金相当の駒)、角、飛、馬、龍…の順で取るのに使う駒を調べる。
+		// 金相当の駒については、細かくしたほうが良いかどうかは微妙。
 
-	  Bitboard b;
-	  b = stmAttackers & pos.pieces(PAWN);   if (b) goto found;
-	  b = stmAttackers & pos.pieces(LANCE);  if (b) goto found;
-	  b = stmAttackers & pos.pieces(KNIGHT); if (b) goto found;
-	  b = stmAttackers & pos.pieces(SILVER); if (b) goto found;
-	  b = stmAttackers & pos.pieces(GOLDS);  if (b) goto found;
-	  b = stmAttackers & pos.pieces(BISHOP); if (b) goto found;
-	  b = stmAttackers & pos.pieces(ROOK);   if (b) goto found;
-	  b = stmAttackers & pos.pieces(HORSE);  if (b) goto found;
-	  b = stmAttackers & pos.pieces(DRAGON); if (b) goto found;
+		Bitboard b;
+		b = stmAttackers & pos.pieces(PAWN);   if (b) goto found;
+		b = stmAttackers & pos.pieces(LANCE);  if (b) goto found;
+		b = stmAttackers & pos.pieces(KNIGHT); if (b) goto found;
+		b = stmAttackers & pos.pieces(SILVER); if (b) goto found;
+		b = stmAttackers & pos.pieces(GOLDS);  if (b) goto found;
+		b = stmAttackers & pos.pieces(BISHOP); if (b) goto found;
+		b = stmAttackers & pos.pieces(ROOK);   if (b) goto found;
+		b = stmAttackers & pos.pieces(HORSE);  if (b) goto found;
+		b = stmAttackers & pos.pieces(DRAGON); if (b) goto found;
 
-	  // 攻撃駒があるというのが前提条件だから、以上の駒で取れなければ、最後は玉でtoの升に移動出来て駒を取れるはず。
-	  // 玉を移動させた結果、影になっていた遠方駒によってこの王が取られることはないから、
-	  // sqに利く遠方駒が追加されることはなく、このままreturnすれば良い。
+		// 攻撃駒があるというのが前提条件だから、以上の駒で取れなければ、最後は玉でtoの升に移動出来て駒を取れるはず。
+		// 玉を移動させた結果、影になっていた遠方駒によってこの王が取られることはないから、
+		// sqに利く遠方駒が追加されることはなく、このままreturnすれば良い。
 
-	  return KING;
+		return KING;
 
-  found:;
+	found:;
 
-	  // bにあった駒を取り除く
+		// bにあった駒を取り除く
 
-	  Square sq = b.pop();
-	  occupied ^= sq;
+		Square sq = b.pop();
+		occupied ^= sq;
 
-	  // このときpinされているかの判定を入れられるなら入れたほうが良いのだが…。
-	  // この攻撃駒の種類によって場合分け
+		// このときpinされているかの判定を入れられるなら入れたほうが良いのだが…。
+		// この攻撃駒の種類によって場合分け
 
-	  // sqにあった駒が消えるので、toから見てsqの延長線上にある駒を追加する。
+		// sqにあった駒が消えるので、toから見てsqの延長線上にある駒を追加する。
 
-	  auto dirs = directions_of(to, sq);
-	  if (dirs) switch (pop_directions(dirs))
-	  {
-	  case DIRECT_RU: case DIRECT_LD:
-		  // 斜め方向なら斜め方向の升をスキャンしてその上にある角・馬を足す
-		  attackers |= bishopEffect0(to, occupied) & pos.pieces(BISHOP_HORSE);
+		auto dirs = directions_of(to, sq);
+		if (dirs) switch (pop_directions(dirs))
+		{
+		case DIRECT_RU: case DIRECT_LD:
+			// 斜め方向なら斜め方向の升をスキャンしてその上にある角・馬を足す
+			attackers |= bishopEffect0(to, occupied) & pos.pieces(BISHOP_HORSE);
 
-		  ASSERT_LV3((bishopStepEffect(to) & sq));
-		  break;
+			ASSERT_LV3((bishopStepEffect(to) & sq));
+			break;
 
-	  case DIRECT_RD: case DIRECT_LU:
-		  attackers |= bishopEffect1(to, occupied) & pos.pieces(BISHOP_HORSE);
-		  ASSERT_LV3((bishopStepEffect(to) & sq));
-		  break;
+		case DIRECT_RD: case DIRECT_LU:
+			attackers |= bishopEffect1(to, occupied) & pos.pieces(BISHOP_HORSE);
+			ASSERT_LV3((bishopStepEffect(to) & sq));
+			break;
 
-	  case DIRECT_U:
-		  // 後手の香 + 先後の飛車
-		  attackers |= lanceEffect(BLACK , to, occupied) & (pos.pieces(ROOK_DRAGON) | pos.pieces(WHITE, LANCE));
+		case DIRECT_U:
+			// 後手の香 + 先後の飛車
+			attackers |= lanceEffect(BLACK , to, occupied) & (pos.pieces(ROOK_DRAGON) | pos.pieces(WHITE, LANCE));
 
-		  ASSERT_LV3((lanceStepEffect(BLACK, to) & sq));
-		  break;
+			ASSERT_LV3((lanceStepEffect(BLACK, to) & sq));
+			break;
 
-	  case DIRECT_D:
-		  // 先手の香 + 先後の飛車
-		  attackers |= lanceEffect(WHITE , to, occupied) & (pos.pieces(ROOK_DRAGON) | pos.pieces(BLACK, LANCE));
+		case DIRECT_D:
+			// 先手の香 + 先後の飛車
+			attackers |= lanceEffect(WHITE , to, occupied) & (pos.pieces(ROOK_DRAGON) | pos.pieces(BLACK, LANCE));
 
-		  ASSERT_LV3((lanceStepEffect(WHITE, to) & sq));
-		  break;
+			ASSERT_LV3((lanceStepEffect(WHITE, to) & sq));
+			break;
 
-	  case DIRECT_L: case DIRECT_R:
-		  // 左右なので先後の飛車
-		  attackers |= rookRankEffect(to, occupied) & pos.pieces(ROOK_DRAGON);
+		case DIRECT_L: case DIRECT_R:
+			// 左右なので先後の飛車
+			attackers |= rookRankEffect(to, occupied) & pos.pieces(ROOK_DRAGON);
 
-		  ASSERT_LV3(((rookStepEffect(to) & sq)));
-		  break;
+			ASSERT_LV3(((rookStepEffect(to) & sq)));
+			break;
 
-	  default:
-		  UNREACHABLE;
-	  }
-	  else {
-		  // DIRECT_MISC
-		  ASSERT_LV3(!(bishopStepEffect(to) & sq));
-		  ASSERT_LV3(!((rookStepEffect(to) & sq)));
-	  }
+		default:
+			UNREACHABLE;
+		}
+		else {
+			// DIRECT_MISC
+			ASSERT_LV3(!(bishopStepEffect(to) & sq));
+			ASSERT_LV3(!((rookStepEffect(to) & sq)));
+		}
 
-	  attackers &= occupied;
+		attackers &= occupied;
 
-	  // この駒が成れるなら、成りの値を返すほうが良いかも。
-	  // ※　最後にこの地点に残る駒を返すべきなのか。相手が取る/取らないを選択するので。
-	  return type_of(pos.piece_on(sq));
-  }
+		// この駒が成れるなら、成りの値を返すほうが良いかも。
+		// ※　最後にこの地点に残る駒を返すべきなのか。相手が取る/取らないを選択するので。
+		return type_of(pos.piece_on(sq));
+	}
 
 } // namespace
 
@@ -215,7 +215,7 @@ bool Position::see_ge(Move m, Value threshold) const
 			return relativeStm == bool(attackers & pieces(~stm));
 
 		balance = relativeStm ? balance + (Value)Eval::CapturePieceValue[nextVictim]
-							  : balance - (Value)Eval::CapturePieceValue[nextVictim];
+								: balance - (Value)Eval::CapturePieceValue[nextVictim];
 		relativeStm = !relativeStm;
 
 		if (relativeStm == (balance >= threshold))
