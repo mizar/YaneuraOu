@@ -8,11 +8,11 @@
 namespace Eval
 {
 #if !defined (EVAL_NO_USE)
-  // 何らかの評価関数を用いる以上、駒割りの計算は必須。
-  // すなわち、EVAL_NO_USE以外のときはこの関数が必要。
+	// 何らかの評価関数を用いる以上、駒割りの計算は必須。
+	// すなわち、EVAL_NO_USE以外のときはこの関数が必要。
 
-  // 駒割りの計算
-  // 手番側から見た評価値
+	// 駒割りの計算
+	// 手番側から見た評価値
 	Value material(const Position& pos)
 	{
 		int v = VALUE_ZERO;

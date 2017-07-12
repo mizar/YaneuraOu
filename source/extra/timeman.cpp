@@ -7,11 +7,11 @@
 
 namespace {
 
-  // これぐらい自分が指すと終局すると考えて計画を練る。
-  const int MoveHorizon = 80;
+	// これぐらい自分が指すと終局すると考えて計画を練る。
+	const int MoveHorizon = 80;
 
-  // 思考時間のrtimeが指定されたときに用いる乱数
-  PRNG prng;
+	// 思考時間のrtimeが指定されたときに用いる乱数
+	PRNG prng;
 
 } // namespace
 
@@ -34,7 +34,7 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 		// ゲーム開始時に1回だけ
 		if (!availableNodes)
 			availableNodes = npmsec * limits.time[us];
-		
+
 		// ミリ秒をnode数に変換する
 		limits.time[us] = (int)availableNodes;
 		for (auto c : COLOR)
