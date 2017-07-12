@@ -165,13 +165,13 @@ namespace Eval
 	u64 calc_check_sum()
 	{
 		u64 sum = 0;
-		
+
 		auto add_sum = [&](u32*ptr , size_t t)
 		{
 			for (size_t i = 0; i < t; ++i)
 				sum += ptr[i];
 		};
-		
+
 		add_sum(reinterpret_cast<u32*>(kk) , sizeof(kk ) / sizeof(u32));
 		add_sum(reinterpret_cast<u32*>(kkp), sizeof(kkp) / sizeof(u32));
 		add_sum(reinterpret_cast<u32*>(kpp), sizeof(kpp) / sizeof(u32));
@@ -186,7 +186,7 @@ namespace Eval
 
 #include <windows.h>
 #include <codecvt>	// mkdirするのにwstringが欲しいのでこれが必要
-#include <locale>   // wstring_convertにこれが必要。
+#include <locale>	// wstring_convertにこれが必要。
 
 	void load_eval()
 	{

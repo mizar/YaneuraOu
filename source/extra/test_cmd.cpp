@@ -1490,7 +1490,7 @@ struct KKPT_reader
 				for (auto p = Eval::BONA_PIECE_ZERO; p < Eval::fe_end; ++p)
 					for (int i = 0; i < 2; ++i)
 						(*kkp_)[k1][k2][p][i] = kp[k1][p][i] + kp[Inv(k2)][inv_piece(p)][i];
-		
+
 		// あまりいい合成の仕方ではない。
 		// ここに追加学習してどうなるか見るべきだと思う。
 #endif
@@ -1572,9 +1572,9 @@ void eval_merge(istringstream& is)
 	cout << "..done" << endl;
 }
 
-/* 
-   逆行列計算。ライブラリを使うほうが早くて正確なのだが、クッソ小さい行列の計算如きで
-   ライブラリ依存を増やすのが許せないので自前実装
+/*
+	逆行列計算。ライブラリを使うほうが早くて正確なのだが、クッソ小さい行列の計算如きで
+	ライブラリ依存を増やすのが許せないので自前実装
 */
 void GZ(const  vector< vector<double> > &prodaa, const vector<double>  &prodva, vector<double> &out)
 {

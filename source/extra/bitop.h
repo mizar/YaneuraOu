@@ -25,7 +25,7 @@
 #elif defined (USE_SSE2)
 #include <emmintrin.h>
 #else
-#if defined (__GNUC__) 
+#if defined (__GNUC__)
 #include <mm_malloc.h> // for _mm_alloc()
 #endif
 #endif
@@ -76,15 +76,15 @@ typedef  int64_t s64;
 // for non-AVX2 : software emulationによるpext実装(やや遅い。とりあえず動くというだけ。)
 inline uint64_t pext(uint64_t val, uint64_t mask)
 {
-  uint64_t res = 0;
-  for (uint64_t bb = 1; mask; bb += bb) {
-    if ((int64_t)val & (int64_t)mask & -(int64_t)mask)
-      res |= bb;
-    // マスクを1bitずつ剥がしていく実装なので処理時間がbit長に依存しない。
-    // ゆえに、32bit用のpextを別途用意する必要がない。
-    mask &= mask - 1;
-  }
-  return res;
+	uint64_t res = 0;
+	for (uint64_t bb = 1; mask; bb += bb) {
+		if ((int64_t)val & (int64_t)mask & -(int64_t)mask)
+			res |= bb;
+		// マスクを1bitずつ剥がしていく実装なので処理時間がbit長に依存しない。
+		// ゆえに、32bit用のpextを別途用意する必要がない。
+		mask &= mask - 1;
+	}
+	return res;
 }
 
 inline uint32_t PEXT32(uint32_t a, uint32_t b) { return (uint32_t)pext(a, b); }
@@ -115,20 +115,20 @@ inline uint64_t PEXT64(uint64_t a, uint64_t b) { return pext(a, b); }
 // software emulationによるpopcnt(やや遅い)
 
 inline int32_t POPCNT32(uint32_t a) {
-  a = (a & UINT32_C(0x55555555)) + (a >> 1 & UINT32_C(0x55555555));
-  a = (a & UINT32_C(0x33333333)) + (a >> 2 & UINT32_C(0x33333333));
-  a = (a & UINT32_C(0x0f0f0f0f)) + (a >> 4 & UINT32_C(0x0f0f0f0f));
-  a = (a & UINT32_C(0x00ff00ff)) + (a >> 8 & UINT32_C(0x00ff00ff));
-  a = (a & UINT32_C(0x0000ffff)) + (a >> 16 & UINT32_C(0x0000ffff));
-  return (int32_t)a;
+	a = (a & UINT32_C(0x55555555)) + (a >> 1 & UINT32_C(0x55555555));
+	a = (a & UINT32_C(0x33333333)) + (a >> 2 & UINT32_C(0x33333333));
+	a = (a & UINT32_C(0x0f0f0f0f)) + (a >> 4 & UINT32_C(0x0f0f0f0f));
+	a = (a & UINT32_C(0x00ff00ff)) + (a >> 8 & UINT32_C(0x00ff00ff));
+	a = (a & UINT32_C(0x0000ffff)) + (a >> 16 & UINT32_C(0x0000ffff));
+	return (int32_t)a;
 }
 inline int32_t POPCNT64(uint64_t a) {
-  a = (a & UINT64_C(0x5555555555555555)) + (a >> 1 & UINT64_C(0x5555555555555555));
-  a = (a & UINT64_C(0x3333333333333333)) + (a >> 2 & UINT64_C(0x3333333333333333));
-  a = (a & UINT64_C(0x0f0f0f0f0f0f0f0f)) + (a >> 4 & UINT64_C(0x0f0f0f0f0f0f0f0f));
-  a = (a & UINT64_C(0x00ff00ff00ff00ff)) + (a >> 8 & UINT64_C(0x00ff00ff00ff00ff));
-  a = (a & UINT64_C(0x0000ffff0000ffff)) + (a >> 16 & UINT64_C(0x0000ffff0000ffff));
-  return (int32_t)a + (int32_t)(a >> 32);
+	a = (a & UINT64_C(0x5555555555555555)) + (a >> 1 & UINT64_C(0x5555555555555555));
+	a = (a & UINT64_C(0x3333333333333333)) + (a >> 2 & UINT64_C(0x3333333333333333));
+	a = (a & UINT64_C(0x0f0f0f0f0f0f0f0f)) + (a >> 4 & UINT64_C(0x0f0f0f0f0f0f0f0f));
+	a = (a & UINT64_C(0x00ff00ff00ff00ff)) + (a >> 8 & UINT64_C(0x00ff00ff00ff00ff));
+	a = (a & UINT64_C(0x0000ffff0000ffff)) + (a >> 16 & UINT64_C(0x0000ffff0000ffff));
+	return (int32_t)a + (int32_t)(a >> 32);
 }
 #endif
 
@@ -176,94 +176,94 @@ FORCE_INLINE int MSB64(const u64 v) { ASSERT_LV3(v != 0); return 63 ^ __builtin_
 // Byteboardの直列化で使うAVX2命令
 struct alignas(32) ymm
 {
-  union {
-    __m256i m;
-    u64 _u64[4];
-    u32 _u32[8];
+	union {
+		__m256i m;
+		u64 _u64[4];
+		u32 _u32[8];
 	// typedef名と同じ変数名にするとg++で警告が出るようだ。
-  };
+	};
 
-  ymm(const __m256i m_) : m(_mm256_loadu_si256((__m256i*)(&m_))) {}
-  ymm operator = (const __m256i &m_) { this->m = _mm256_loadu_si256((__m256i*)(&m_)); return *this; }
+	ymm(const __m256i m_) : m(_mm256_loadu_si256((__m256i*)(&m_))) {}
+	ymm operator = (const __m256i &m_) { this->m = _mm256_loadu_si256((__m256i*)(&m_)); return *this; }
 
-  // アライメント揃っていないところからの読み込みに対応させるためにloadではなくloaduのほうを用いる。
-  ymm(const void* p) :m(_mm256_loadu_si256((__m256i*)p)) {}
-  ymm(const uint8_t t) { for (int i = 0; i < 32; ++i) ((u8*)this)[i] = t; }
-  //      /*  m.m256i_u8[i] = t; // これだとg++対応できない。 */
+	// アライメント揃っていないところからの読み込みに対応させるためにloadではなくloaduのほうを用いる。
+	ymm(const void* p) :m(_mm256_loadu_si256((__m256i*)p)) {}
+	ymm(const uint8_t t) { for (int i = 0; i < 32; ++i) ((u8*)this)[i] = t; }
+	//      /*  m.m256i_u8[i] = t; // これだとg++対応できない。 */
 
-  ymm() {}
+	ymm() {}
 
-  // MSBが1なら1にする
-  uint32_t to_uint32() const { return _mm256_movemask_epi8(m); }
+	// MSBが1なら1にする
+	uint32_t to_uint32() const { return _mm256_movemask_epi8(m); }
 
-  ymm& operator |= (const ymm& b1) { m = _mm256_or_si256(m, b1.m); return *this; }
-  ymm& operator &= (const ymm& b1) { m = _mm256_and_si256(m, b1.m); return *this; }
-  ymm operator & (const ymm& rhs) const { return ymm(*this) &= rhs; }
-  ymm operator | (const ymm& rhs) const { return ymm(*this) |= rhs; }
+	ymm& operator |= (const ymm& b1) { m = _mm256_or_si256(m, b1.m); return *this; }
+	ymm& operator &= (const ymm& b1) { m = _mm256_and_si256(m, b1.m); return *this; }
+	ymm operator & (const ymm& rhs) const { return ymm(*this) &= rhs; }
+	ymm operator | (const ymm& rhs) const { return ymm(*this) |= rhs; }
 
-  // packed byte単位で符号つき比較してthisのほうが大きければMSBを1にする。(このあとto_uint32()で直列化するだとか)
-  // ※　AVX2には符号つき比較する命令しかない…。
-  ymm cmp(const ymm& rhs) const { ymm t; t.m = _mm256_cmpgt_epi8(m, rhs.m); return t; }
+	// packed byte単位で符号つき比較してthisのほうが大きければMSBを1にする。(このあとto_uint32()で直列化するだとか)
+	// ※　AVX2には符号つき比較する命令しかない…。
+	ymm cmp(const ymm& rhs) const { ymm t; t.m = _mm256_cmpgt_epi8(m, rhs.m); return t; }
 
-  // packed byte単位で比較して、等しいなら0xffにする。(このあとto_uint32()で直列化するだとか)
-  // ※　AVXにはnot equal命令がない…。
-  ymm eq(const ymm& rhs) const { ymm t; t.m = _mm256_cmpeq_epi8(m, rhs.m); return t; }
+	// packed byte単位で比較して、等しいなら0xffにする。(このあとto_uint32()で直列化するだとか)
+	// ※　AVXにはnot equal命令がない…。
+	ymm eq(const ymm& rhs) const { ymm t; t.m = _mm256_cmpeq_epi8(m, rhs.m); return t; }
 };
 
 #else
 
 struct ymm
 {
-  union {
-    uint8_t m8[32];
-    uint16_t m16[16];
-    uint64_t m64[4];
-  };
+	union {
+		uint8_t m8[32];
+		uint16_t m16[16];
+		uint64_t m64[4];
+	};
 
-  ymm(const void* p) { const auto p64 = (uint64_t*)p;  m64[0] = p64[0]; m64[1] = p64[1]; m64[2] = p64[2]; m64[3] = p64[3]; }
-  ymm(const uint8_t t) { for (int i = 0; i < 32; ++i) m8[i] = t; }
-  ymm() {}
+	ymm(const void* p) { const auto p64 = (uint64_t*)p;  m64[0] = p64[0]; m64[1] = p64[1]; m64[2] = p64[2]; m64[3] = p64[3]; }
+	ymm(const uint8_t t) { for (int i = 0; i < 32; ++i) m8[i] = t; }
+	ymm() {}
 
-  // MSBを直列化する
-  uint32_t to_uint32() const {
-    uint32_t r = 0;
-    for (int i = 0; i < 32; ++i)
-      r |= uint32_t(m8[i] >> 7) << i;
-    return r;
-  }
+	// MSBを直列化する
+	uint32_t to_uint32() const {
+		uint32_t r = 0;
+		for (int i = 0; i < 32; ++i)
+			r |= uint32_t(m8[i] >> 7) << i;
+		return r;
+	}
 
-  ymm& operator |= (const ymm& b1) {
-    m64[0] = m64[0] | b1.m64[0];
-    m64[1] = m64[1] | b1.m64[1];
-    m64[2] = m64[2] | b1.m64[2];
-    m64[3] = m64[3] | b1.m64[3];
-    return *this;
-  }
-  ymm& operator &= (const ymm& b1) {
-    m64[0] = m64[0] & b1.m64[0];
-    m64[1] = m64[1] & b1.m64[1];
-    m64[2] = m64[2] & b1.m64[2];
-    m64[3] = m64[3] & b1.m64[3];
-    return *this;
-  }
-  ymm operator & (const ymm& rhs) const { return ymm(*this) &= rhs; }
-  ymm operator | (const ymm& rhs) const { return ymm(*this) |= rhs; }
+	ymm& operator |= (const ymm& b1) {
+		m64[0] = m64[0] | b1.m64[0];
+		m64[1] = m64[1] | b1.m64[1];
+		m64[2] = m64[2] | b1.m64[2];
+		m64[3] = m64[3] | b1.m64[3];
+		return *this;
+	}
+	ymm& operator &= (const ymm& b1) {
+		m64[0] = m64[0] & b1.m64[0];
+		m64[1] = m64[1] & b1.m64[1];
+		m64[2] = m64[2] & b1.m64[2];
+		m64[3] = m64[3] & b1.m64[3];
+		return *this;
+	}
+	ymm operator & (const ymm& rhs) const { return ymm(*this) &= rhs; }
+	ymm operator | (const ymm& rhs) const { return ymm(*this) |= rhs; }
 
-  // packed byte単位で比較してthisのほうが大きければMSBを1にする。(このあとto_uint32()で直列化するだとか)
-  ymm cmp(const ymm& rhs) const {
-    ymm t;
-    for (int i = 0; i < 32; ++i)
-      t.m8[i] = ((int8_t)m8[i] > (int8_t)rhs.m8[i]) ? 0xff : 0;
-    return t;
-  }
+	// packed byte単位で比較してthisのほうが大きければMSBを1にする。(このあとto_uint32()で直列化するだとか)
+	ymm cmp(const ymm& rhs) const {
+		ymm t;
+		for (int i = 0; i < 32; ++i)
+			t.m8[i] = ((int8_t)m8[i] > (int8_t)rhs.m8[i]) ? 0xff : 0;
+		return t;
+	}
 
-  // packed byte単位で比較して、等しいなら0xffにする。(このあとto_uint32()で直列化するだとか)
-  ymm eq(const ymm& rhs) const {
-    ymm t;
-    for (int i = 0; i < 32; ++i)
-      t.m8[i] = (m8[i] == rhs.m8[i]) ? 0xff : 0;
-    return t;
-  }
+	// packed byte単位で比較して、等しいなら0xffにする。(このあとto_uint32()で直列化するだとか)
+	ymm eq(const ymm& rhs) const {
+		ymm t;
+		for (int i = 0; i < 32; ++i)
+			t.m8[i] = (m8[i] == rhs.m8[i]) ? 0xff : 0;
+		return t;
+	}
 };
 
 #endif
