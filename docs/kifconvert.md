@@ -1,0 +1,33 @@
+<!-- Markdown -->
+# 参考リンク
+
+- 日本将棋連盟
+  - [棋譜の表記方法](https://www.shogi.or.jp/faq/kihuhyouki.html)
+- USI, SFEN
+  - [The Universal Shogi Interface, draft 1 (2007-01-24)](https://web.archive.org/web/20080131070731/http://www.glaurungchess.com/shogi/usi.html)
+  - [将棋所：USIプロトコルとは](http://www.geocities.jp/shogidokoro/usi.html)
+  - [ShogiGUI開発情報（旧）](https://sites.google.com/site/shogixyz/home/shogigui/shogigui-kai-fa-qing-bao)
+  - [sfen文字列は一意に定まらない件](http://yaneuraou.yaneu.com/2016/07/15/sfen%E6%96%87%E5%AD%97%E5%88%97%E3%81%AF%E4%B8%80%E6%84%8F%E3%81%AB%E5%AE%9A%E3%81%BE%E3%82%89%E3%81%AA%E3%81%84%E4%BB%B6/)
+  - [sfen文字列は本来は一意に定まる件](http://yaneuraou.yaneu.com/2016/07/15/sfen%E6%96%87%E5%AD%97%E5%88%97%E3%81%AF%E6%9C%AC%E6%9D%A5%E3%81%AF%E4%B8%80%E6%84%8F%E3%81%AB%E5%AE%9A%E3%81%BE%E3%82%8B%E4%BB%B6/)
+- CSA
+  - [CSA通信プロトコル](http://www2.computer-shogi.org/protocol/)
+  - [CSA標準棋譜ファイル形式 1997-08-25 (V1)](http://www.computer-shogi.org/wcsc12/record.html)
+  - [CSA標準棋譜ファイル形式 2002-11-15 (V2)](http://www2.computer-shogi.org/protocol/record_v2.html)
+  - [CSA標準棋譜ファイル形式 2005-09-10 (V2.1)](http://www2.computer-shogi.org/protocol/record_v21.html)
+  - [CSA標準棋譜ファイル形式 2008-01-12 (V2.2)](http://www.computer-shogi.org/protocol/record_v22.html)
+- 柿木形式(KIF, KI2)
+  - [柿木の将棋ソフトウェア](http://kakinoki.o.oo7.jp/)
+  - [kif形式詳細 (bod形式)](http://d.hatena.ne.jp/mozuyama/20030909/p5)
+- Parser
+  - [na2hiro/json-kifu-format/tree/master/lib](https://github.com/na2hiro/json-kifu-format/tree/master/lib)
+- Converter
+  - [ak110/Blunder.Converter](https://github.com/ak110/Blunder.Converterhttps://github.com/ak110/Blunder.Converter)
+  - [ak110/Blunder.Converter/releases](https://github.com/ak110/Blunder.Converter/releases)
+  - [将棋棋譜ファイル形式変換](https://shogi.zukeran.org/shogi-file-management-and-converter/)
+  - [分岐棋譜→単一棋譜変換プログラム](http://www.hakusa.net/computer/free/kifuconv.html)
+  - [棋譜コンバーター](http://kifu-converter.herokuapp.com/)
+- 棋譜用紙・図面用紙
+  - [日本将棋連盟 DigitalShop 棋譜ノート](http://item.rakuten.co.jp/shogi/305547/)
+  - [日本将棋連盟 DigitalShop 図面用紙](http://item.rakuten.co.jp/shogi/305544/)
+  - [道路上将棋 将棋棋譜用紙](http://do.rojo.jp/shogi/help/help_kifupaper.html)
+  - [棋譜用紙と図面用紙](http://blog.hangame.co.jp/meijin/article/34238533/)
