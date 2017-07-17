@@ -11,104 +11,100 @@ namespace BookUtil
 
 	// 内部実装
 
-	void render_u16_4l(char ** s, u16 i)
+	void render_u16_4l(char *& s, u16 i)
 	{
-		char * p = *s;
-		u8 i0 = (u8)(i / (u16)100), i1 = (u8)(i % (u16)100);
-		*p++ = '0' + (char)(i0 / (u8)10);
-		*p++ = '0' + (char)(i0 % (u8)10);
-		*p++ = '0' + (char)(i1 / (u8)10);
-		*p++ = '0' + (char)(i1 % (u8)10);
-		*s = p;
+		u8 i0 = static_cast<u8>(i / static_cast<u16>(100u)), i1 = static_cast<u8>(i % static_cast<u16>(100u));
+		*s++ = '0' + static_cast<char>(i0 / static_cast<u8>(10u));
+		*s++ = '0' + static_cast<char>(i0 % static_cast<u8>(10u));
+		*s++ = '0' + static_cast<char>(i1 / static_cast<u8>(10u));
+		*s++ = '0' + static_cast<char>(i1 % static_cast<u8>(10u));
 	}
 
-	void render_u16_4u(char ** s, u16 i)
+	void render_u16_4u(char *& s, u16 i)
 	{
-		char * p = *s;
-		if (i < (u16)10)
-			*p++ = '0' + (char)i;
-		else if (i < (u16)100)
+		if (i < static_cast<u16>(10u))
+			*s++ = '0' + static_cast<char>(i);
+		else if (i < static_cast<u16>(100u))
 		{
-			*p++ = '0' + (char)((u8)i / (u8)10);
-			*p++ = '0' + (char)((u8)i % (u8)10);
+			*s++ = '0' + static_cast<char>(static_cast<u8>(i) / static_cast<u8>(10u));
+			*s++ = '0' + static_cast<char>(static_cast<u8>(i) % static_cast<u8>(10u));
 		}
 		else
 		{
-			u8 i0 = (u8)(i / (u16)100), i1 = (u8)(i % (u16)100);
-			if (i < (u16)1000)
+			u8 i0 = static_cast<u8>(i / static_cast<u16>(100u)), i1 = static_cast<u8>(i % static_cast<u16>(100u));
+			if (i < static_cast<u16>(1000u))
 			{
-				*p++ = '0' + (char)i0;
-				*p++ = '0' + (char)(i1 / (u8)10);
-				*p++ = '0' + (char)(i1 % (u8)10);
+				*s++ = '0' + static_cast<char>(i0);
+				*s++ = '0' + static_cast<char>(i1 / static_cast<u8>(10u));
+				*s++ = '0' + static_cast<char>(i1 % static_cast<u8>(10u));
 			}
 			else
 			{
-				*p++ = '0' + (char)(i0 / (u8)10);
-				*p++ = '0' + (char)(i0 % (u8)10);
-				*p++ = '0' + (char)(i1 / (u8)10);
-				*p++ = '0' + (char)(i1 % (u8)10);
+				*s++ = '0' + static_cast<char>(i0 / static_cast<u8>(10u));
+				*s++ = '0' + static_cast<char>(i0 % static_cast<u8>(10u));
+				*s++ = '0' + static_cast<char>(i1 / static_cast<u8>(10u));
+				*s++ = '0' + static_cast<char>(i1 % static_cast<u8>(10u));
 			}
 		}
-		*s = p;
 	}
 
 	// 数値から文字列へ
 
-	void u32toa(char ** s, u32 i)
+	void u32toa(char *& s, u32 i)
 	{
-		if (i < (u32)10000ul)
-			render_u16_4u(s, (u16)i);
-		else if (i < (u32)100000000ul)
+		if (i < static_cast<u32>(10000ul))
+			render_u16_4u(s, static_cast<u16>(i));
+		else if (i < static_cast<u32>(100000000ul))
 		{
-			render_u16_4u(s, (u16)(i / (u32)10000ul));
-			render_u16_4l(s, (u16)(i % (u32)10000ul));
+			render_u16_4u(s, static_cast<u16>(i / static_cast<u32>(10000ul)));
+			render_u16_4l(s, static_cast<u16>(i % static_cast<u32>(10000ul)));
 		}
 		else
 		{
-			u32 i0 = i / (u32)100000000ul, i1 = i % (u32)100000000ul;
-			render_u16_4u(s, (u16)i0);
-			u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
-			render_u16_4l(s, (u16)i10);
-			render_u16_4l(s, (u16)i11);
+			u32 i0 = i / static_cast<u32>(100000000ul), i1 = i % static_cast<u32>(100000000ul);
+			render_u16_4u(s, static_cast<u16>(i0));
+			u16 i10 = static_cast<u16>(i1 / static_cast<u32>(10000u)), i11 = static_cast<u16>(i1 % static_cast<u32>(10000u));
+			render_u16_4l(s, static_cast<u16>(i10));
+			render_u16_4l(s, static_cast<u16>(i11));
 		}
-		**s = '\0';
+		*s = '\0';
 	}
 
-	void s32toa(char ** s, s32 i)
+	void s32toa(char *& s, s32 i)
 	{
 		if (i < 0)
 		{
-			*(*s)++ = '-';
-			u32toa(s, (u32)-i);
+			*s++ = '-';
+			u32toa(s, static_cast<u32>(-i));
 		}
 		else
-			u32toa(s, (u32)i);
+			u32toa(s, static_cast<u32>(i));
 	}
 
-	void u64toa(char ** s, u64 i)
+	void u64toa(char *& s, u64 i)
 	{
-		if (i < (u64)10000ull)
-			render_u16_4u(s, (s16)i);
-		else if (i < (u64)100000000ul)
+		if (i < static_cast<u64>(10000ull))
+			render_u16_4u(s, static_cast<s16>(i));
+		else if (i < static_cast<u64>(100000000ul))
 		{
-			u16 i10 = (u16)((u32)i / (u32)10000u), i11 = (u16)((u32)i % (u32)10000u);
+			u16 i10 = static_cast<u16>(static_cast<u32>(i) / static_cast<u32>(10000u)), i11 = static_cast<u16>(static_cast<u32>(i) % static_cast<u32>(10000u));
 			render_u16_4u(s, i10);
 			render_u16_4l(s, i11);
 		}
-		else if (i < (u64)10000000000000000ull)
+		else if (i < static_cast<u64>(10000000000000000ull))
 		{
-			u32 i0 = (u32)(i / (u64)100000000ul), i1 = (u32)(i % (u64)100000000ul);
-			if (i0 < (u32)10000u)
+			u32 i0 = static_cast<u32>(i / static_cast<u64>(100000000ul)), i1 = static_cast<u32>(i % static_cast<u64>(100000000ul));
+			if (i0 < static_cast<u32>(10000u))
 			{
-				u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
-				render_u16_4u(s, (u16)i0);
+				u16 i10 = static_cast<u16>(i1 / static_cast<u32>(10000u)), i11 = static_cast<u16>(i1 % static_cast<u32>(10000u));
+				render_u16_4u(s, static_cast<u16>(i0));
 				render_u16_4l(s, i10);
 				render_u16_4l(s, i11);
 			}
 			else
 			{
-				u16 i00 = (u16)(i0 / (u32)10000u), i01 = (u16)(i0 % (u32)10000u);
-				u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
+				u16 i00 = static_cast<u16>(i0 / static_cast<u32>(10000u)), i01 = static_cast<u16>(i0 % static_cast<u32>(10000u));
+				u16 i10 = static_cast<u16>(i1 / static_cast<u32>(10000u)), i11 = static_cast<u16>(i1 % static_cast<u32>(10000u));
 				render_u16_4u(s, i00);
 				render_u16_4l(s, i01);
 				render_u16_4l(s, i10);
@@ -117,205 +113,183 @@ namespace BookUtil
 		}
 		else
 		{
-			u64 iu = i / (u64)10000000000000000ull, il = i % (u64)10000000000000000ull;
-			u32 i0 = (u32)(il / (u64)100000000ul), i1 = (u32)(il % (u64)100000000ul);
-			u16 i00 = (u16)(i0 / (u32)10000u), i01 = (u16)(i0 % (u32)10000u);
-			u16 i10 = (u16)(i1 / (u32)10000u), i11 = (u16)(i1 % (u32)10000u);
-			render_u16_4u(s, (u16)iu);
+			u64 iu = i / static_cast<u64>(10000000000000000ull), il = i % static_cast<u64>(10000000000000000ull);
+			u32 i0 = static_cast<u32>(il / static_cast<u64>(100000000ul)), i1 = static_cast<u32>(il % static_cast<u64>(100000000ul));
+			u16 i00 = static_cast<u16>(i0 / static_cast<u32>(10000u)), i01 = static_cast<u16>(i0 % static_cast<u32>(10000u));
+			u16 i10 = static_cast<u16>(i1 / static_cast<u32>(10000u)), i11 = static_cast<u16>(i1 % static_cast<u32>(10000u));
+			render_u16_4u(s, static_cast<u16>(iu));
 			render_u16_4l(s, i00);
 			render_u16_4l(s, i01);
 			render_u16_4l(s, i10);
 			render_u16_4l(s, i11);
 		}
-		**s = '\0';
+		*s = '\0';
 	}
 
-	void s64toa(char ** s, s64 i)
+	void s64toa(char *& s, s64 i)
 	{
 		if (i < 0)
 		{
-			*(*s)++ = '-';
-			u64toa(s, (u64)-i);
+			*s++ = '-';
+			u64toa(s, static_cast<u64>(-i));
 		}
 		else
-			u64toa(s, (u64)i);
+			u64toa(s, static_cast<u64>(i));
 	}
 
 	// 文字列から数値へ
 
-	u32 atou32(const char ** s)
+	u32 atou32(const char *& s)
 	{
-		const char * _s = *s;
 		u32 ru32 = 0u;
-		char c = *_s;
-		while (c == ' ') c = *++_s;
-		while (c == '0') c = *++_s;
-		if (c < '0' || c > '9') goto _ru32; else ru32 = (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32;
-		if (ru32 > (u32)429496729lu) goto _overlimit; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if (ru32 < (u32)UINT16_MAX) goto _overlimit;
-		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
-	_ru32:;
-		*s = _s;
+		char c = *s;
+		while (c == ' ') c = *++s;
+		while (c == '0') c = *++s;
+		if (c < '0' || c > '9') return ru32; else ru32 = static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru32;
+		if (ru32 > static_cast<u32>(429496729lu)) goto _overlimit; else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if (ru32 < static_cast<u32>(UINT16_MAX)) goto _overlimit;
+		if ((c = *++s) >= '0' && c <= '9') goto _overlimit;
 		return ru32;
 	_overlimit:;
-		while ((c = *++_s) >= '0' && c <= '9');
-		*s = _s;
+		while ((c = *++s) >= '0' && c <= '9');
 		return UINT32_MAX;
 	}
 
-	s32 atos32(const char ** s)
+	s32 atos32(const char *& s)
 	{
-		const char * _s = *s;
 		s32 rs32 = 0;
 		bool minus = false;
-		char c = *_s;
-		while (c == ' ') c = *++_s;
+		char c = *s;
+		while (c == ' ') c = *++s;
 		if (c == '-')
 		{
 			minus = true;
-			c = *++_s;
+			c = *++s;
 		}
 		else if (c == '+')
-			c = *++_s;
-		while (c == '0') c = *++_s;
-		if (c < '0' || c > '9') goto _rs32; else rs32 = (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32;
-		if (rs32 > (s32)214748364l) goto _overlimit; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if (rs32 < (s32)0) goto _overlimit;
-		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
-	_rs32:;
-		*s = _s;
+			c = *++s;
+		while (c == '0') c = *++s;
+		if (c < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return minus ? -rs32 : rs32;
+		if (rs32 > static_cast<s32>(214748364l)) goto _overlimit; else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if (rs32 < static_cast<s32>(0)) goto _overlimit;
+		if ((c = *++s) >= '0' && c <= '9') goto _overlimit;
 		return minus ? -rs32 : rs32;
 	_overlimit:;
-		while ((c = *++_s) >= '0' && c <= '9');
-		*s = _s;
+		while ((c = *++s) >= '0' && c <= '9');
 		return minus ? INT32_MIN : INT32_MAX;
 	}
 
-	u64 atou64(const char ** s)
+	u64 atou64(const char *& s)
 	{
-		const char * _s = *s;
 		u32 ru32 = 0u;
 		u64 ru64 = 0u;
-		char c = *_s;
-		while (c == ' ') c = *++_s;
-		while (c == '0') c = *++_s;
-		if (c < '0' || c > '9') goto _ru32; else ru32 = (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru32; else ru32 = ru32 * 10u + (u32)(c - '0');
-		ru64 = (u64)ru32;
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _ru64;
-		if (ru64 > (u64)1844674407370955161ull) goto _overlimit; else ru64 = ru64 * 10u + (u64)(c - '0');
-		if (ru64 < (u64)UINT32_MAX) goto _overlimit;
-		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
-	_ru64:;
-		*s = _s;
+		char c = *s;
+		while (c == ' ') c = *++s;
+		while (c == '0') c = *++s;
+		if (c < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<u64>(ru32); else ru32 = ru32 * 10u + static_cast<u32>(c - '0');
+		ru64 = static_cast<u64>(ru32);
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return ru64;
+		if (ru64 > static_cast<u64>(1844674407370955161ull)) goto _overlimit; else ru64 = ru64 * 10u + static_cast<u64>(c - '0');
+		if (ru64 < static_cast<u64>(UINT32_MAX)) goto _overlimit;
+		if ((c = *++s) >= '0' && c <= '9') goto _overlimit;
 		return ru64;
-	_ru32:;
-		*s = _s;
-		return (u64)ru32;
 	_overlimit:;
-		while ((c = *++_s) >= '0' && c <= '9');
-		*s = _s;
+		while ((c = *++s) >= '0' && c <= '9');
 		return UINT64_MAX;
 	}
 
-	s64 atos64(const char ** s)
+	s64 atos64(const char *& s)
 	{
-		const char * _s = *s;
 		s32 rs32 = 0;
 		s64 rs64 = 0;
 		bool minus = false;
-		char c = *_s;
-		while (c == ' ') c = *++_s;
+		char c = *s;
+		while (c == ' ') c = *++s;
 		if (c == '-')
 		{
 			minus = true;
-			c = *++_s;
+			c = *++s;
 		}
 		else if (c == '+')
-			c = *++_s;
-		while (c == '0') c = *++_s;
-		if (c < '0' || c > '9') goto _rs32; else rs32 = (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs32; else rs32 = rs32 * 10 + (s32)(c - '0');
-		rs64 = (s64)rs32;
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if ((c = *++_s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
-		if (rs64 < (s64)0) goto _overlimit;
-		if ((c = *++_s) >= '0' && c <= '9') goto _overlimit;
+			c = *++s;
+		while (c == '0') c = *++s;
+		if (c < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		if ((c = *++s) < '0' || c > '9') return static_cast<s64>(minus ? -rs32 : rs32); else rs32 = rs32 * 10 + static_cast<s32>(c - '0');
+		rs64 = static_cast<s64>(rs32);
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if ((c = *++s) < '0' || c > '9') goto _rs64; else rs64 = rs64 * 10 + (s64)(c - '0');
+		if (rs64 < static_cast<s64>(0)) goto _overlimit;
+		if ((c = *++s) >= '0' && c <= '9') goto _overlimit;
 	_rs64:;
-		*s = _s;
 		return minus ? -rs64 : rs64;
-	_rs32:;
-		*s = _s;
-		return minus ? (s64)-rs32 : (s64)rs32;
 	_overlimit:;
-		while ((c = *++_s) >= '0' && c <= '9');
-		*s = _s;
+		while ((c = *++s) >= '0' && c <= '9');
 		return minus ? INT64_MIN : INT64_MAX;
 	}
 
-	void u32toa(char * s, u32 i) { u32toa(&s, i); }
-	void s32toa(char * s, s32 i) { s32toa(&s, i); }
-	void s64toa(char * s, s64 i) { s64toa(&s, i); }
-	void u64toa(char * s, u64 i) { u64toa(&s, i); }
-	u32 atou32(const char * s) { return atou32(&s); }
-	s32 atos32(const char * s) { return atos32(&s); }
-	u64 atou64(const char * s) { return atou64(&s); }
-	s64 atos64(const char * s) { return atos64(&s); }
+	void _u32toa(char * s, u32 i) { u32toa(s, i); }
+	void _s32toa(char * s, s32 i) { s32toa(s, i); }
+	void _s64toa(char * s, s64 i) { s64toa(s, i); }
+	void _u64toa(char * s, u64 i) { u64toa(s, i); }
+	u32 _atou32(const char * s) { return atou32(s); }
+	s32 _atos32(const char * s) { return atos32(s); }
+	u64 _atou64(const char * s) { return atou64(s); }
+	s64 _atos64(const char * s) { return atos64(s); }
 
 	// Move 書き出し
-	void movetoa(char ** s, const Move m)
+	void movetoa(char *& s, const Move m)
 	{
-		char * _s = *s;
 		if (!is_ok(m))
 		{
 			// 頻度が低いのでstringで手抜き
@@ -337,97 +311,91 @@ namespace BookUtil
 			default:;
 			}
 			size_t movelen = str.size();
-			std::char_traits<char>::copy(_s, str.c_str(), movelen);
-			_s += movelen;
+			std::char_traits<char>::copy(s, str.c_str(), movelen);
+			s += movelen;
 		}
 		else if (is_drop(m))
 		{
 			Square sq_to = move_to(m);
-			*_s++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_dropped_piece(m) & 15) * 2];
-			*_s++ = '*';
-			*_s++ = (char)('1' + file_of(sq_to));
-			*_s++ = (char)('a' + rank_of(sq_to));
+			*s++ = USI_PIECE[(m >> 6) & 30]; // == USIsIECE[(move_droppedsiece(m) & 15) * 2];
+			*s++ = '*';
+			*s++ = static_cast<char>('1' + file_of(sq_to));
+			*s++ = static_cast<char>('a' + rank_of(sq_to));
 		}
 		else
 		{
 			Square sq_from = move_from(m), sq_to = move_to(m);
-			*_s++ = (char)('1' + file_of(sq_from));
-			*_s++ = (char)('a' + rank_of(sq_from));
-			*_s++ = (char)('1' + file_of(sq_to));
-			*_s++ = (char)('a' + rank_of(sq_to));
+			*s++ = static_cast<char>('1' + file_of(sq_from));
+			*s++ = static_cast<char>('a' + rank_of(sq_from));
+			*s++ = static_cast<char>('1' + file_of(sq_to));
+			*s++ = static_cast<char>('a' + rank_of(sq_to));
 			if (is_promote(m))
-				*_s++ = '+';
+				*s++ = '+';
 		}
-		*_s = '\0'; // 念のためNULL文字出力
-		*s = _s;
+		*s = '\0'; // 念のためNULL文字出力
 	}
-	void movetoa(char * s, const Move m) { movetoa(&s, m); }
+	void _movetoa(char * s, const Move m) { movetoa(s, m); }
 
 	// 文字列 → Move
-	Move atomove(const char ** p)
+	Move atomove(const char *& s)
 	{
-		const char * _p = *p;
-		char c0 = *_p;
+		char c0 = *s;
 		if (c0 >= '1' && c0 <= '9')
 		{
-			char c1 = *++_p; if (c1 < 'a' || c1 > 'i') goto _atomove_none;
-			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
-			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
-			char c4 = *++_p;
+			char c1 = *++s; if (c1 < 'a' || c1 > 'i') goto _atomove_none;
+			char c2 = *++s; if (c2 < '1' || c2 > '9') goto _atomove_none;
+			char c3 = *++s; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
+			char c4 = *++s;
 			if (c4 == '+')
 			{
-				*p = _p + 1;
+				++s;
 				return make_move_promote(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
 			}
 			else
 			{
-				*p = _p;
 				return make_move(toFile(c0) | toRank(c1), toFile(c2) | toRank(c3));
 			}
 		}
 		else if (c0 >= 'A' && c0 <= 'Z')
 		{
-			char c1 = *++_p; if (c1 != '*') goto _atomove_none;
-			char c2 = *++_p; if (c2 < '1' || c2 > '9') goto _atomove_none;
-			char c3 = *++_p; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
-			*p = _p + 1;
+			char c1 = *++s; if (c1 != '*') goto _atomove_none;
+			char c2 = *++s; if (c2 < '1' || c2 > '9') goto _atomove_none;
+			char c3 = *++s; if (c3 < 'a' || c3 > 'i') goto _atomove_none;
+			++s;
 			for (int i = 1; i <= 7; ++i)
 				if (PieceToCharBW[i] == c0)
 					return make_move_drop((Piece)i, toFile(c2) | toRank(c3));
 		}
 		else if (c0 == '0' || (c0 >= 'a' && c0 <= 'z'))
 		{
-			if (!memcmp(_p, "win", 3)) { *p = _p + 3; return MOVE_WIN; }
-			if (!memcmp(_p, "null", 4)) { *p = _p + 4; return MOVE_NULL; }
-			if (!memcmp(_p, "pass", 4)) { *p = _p + 4; return MOVE_NULL; }
-			if (!memcmp(_p, "0000", 4)) { *p = _p + 4; return MOVE_NULL; }
+			if (!memcmp(s, "win", 3)) { s += 3; return MOVE_WIN; }
+			if (!memcmp(s, "null", 4)) { s += 4; return MOVE_NULL; }
+			if (!memcmp(s, "pass", 4)) { s += 4; return MOVE_NULL; }
+			if (!memcmp(s, "0000", 4)) { s += 4; return MOVE_NULL; }
 		}
 	_atomove_none:;
-		while (*_p >= '*') ++_p;
-		*p = _p;
+		while (*s >= '*') ++s;
 		return MOVE_NONE;
 	}
-	Move atomove(const char * p) { return atomove(&p); }
+	Move _atomove(const char * p) { return atomove(p); }
 
 	// BookEntry 書き出し
-	void betoa(char ** s, const BookEntry & be)
+	void betoa(char *& s, const BookEntry & be)
 	{
-		char * _s = *s;
-
 		// 先頭の"sfen "と末尾の指し手手数を除いた sfen文字列 の長さは最大で 95bytes?
 		// "+l+n+sgkg+s+n+l/1+r5+b1/+p+p+p+p+p+p+p+p+p/9/9/9/+P+P+P+P+P+P+P+P+P/1+B5+R1/+L+N+SGKG+S+N+L b -"
 		// 128bytes を超えたら明らかにおかしいので抑止。
-		*_s++ = 's';
-		*_s++ = 'f';
-		*_s++ = 'e';
-		*_s++ = 'n';
-		*_s++ = ' ';
+		*s++ = 's';
+		*s++ = 'f';
+		*s++ = 'e';
+		*s++ = 'n';
+		*s++ = ' ';
 		size_t sfenlen = std::min(be.sfenPos.size(), (size_t)128);
-		std::char_traits<char>::copy(_s, be.sfenPos.c_str(), sfenlen);
-		_s += sfenlen;
-		*_s++ = ' ';
-		s32toa(&_s, be.ply);
-		*_s++ = '\n';
+		std::char_traits<char>::copy(s, be.sfenPos.c_str(), sfenlen);
+		s += sfenlen;
+		*s++ = ' ';
+		s32toa(s, be.ply);
+		*s++ = '\n';
 		// BookPosは改行文字を含めても 62bytes を超えないので、
 		// be.move_list->size() <= 1000 なら64kiBの _buffer を食い尽くすことは無いはず
 		// 1局面の合法手の最大は593（歩不成・2段香不成・飛不成・角不成も含んだ場合、以下局面例）なので、
@@ -436,21 +404,20 @@ namespace BookUtil
 		if (be.move_list->size() <= 1000)
 			for (auto & bp : *be.move_list)
 			{
-				movetoa(&_s, bp.bestMove);
-				*_s++ = ' ';
-				movetoa(&_s, bp.nextMove);
-				*_s++ = ' ';
-				s32toa(&_s, bp.value);
-				*_s++ = ' ';
-				s32toa(&_s, bp.depth);
-				*_s++ = ' ';
-				u64toa(&_s, bp.num);
-				*_s++ = '\n';
+				movetoa(s, bp.bestMove);
+				*s++ = ' ';
+				movetoa(s, bp.nextMove);
+				*s++ = ' ';
+				s32toa(s, bp.value);
+				*s++ = ' ';
+				s32toa(s, bp.depth);
+				*s++ = ' ';
+				u64toa(s, bp.num);
+				*s++ = '\n';
 			}
-		*_s = '\0'; // 念のためNULL文字出力
-		*s = _s;
+		*s = '\0'; // 念のためNULL文字出力
 	}
-	void betoa(char * s, const BookEntry & be) { return betoa(&s, be); }
+	void _betoa(char * s, const BookEntry & be) { return betoa(s, be); }
 
 	// char文字列 の BookPos 化
 	void BookEntry::init(const char * sfen, const size_t length, const bool sfen_n11n, Thread* th)
@@ -468,7 +435,7 @@ namespace BookUtil
 		{
 			auto cur = trimlen_sfen(sfen, length);
 			sfenPos = std::string(sfen, cur);
-			ply = atos32(sfen + cur);
+			ply = _atos32(sfen + cur);
 		}
 	}
 
@@ -536,21 +503,21 @@ namespace BookUtil
 	}
 
 	// バイト文字列からの BookPos 読み込み
-	void BookPos::init(const char * p)
+	void BookPos::init(const char * s)
 	{
 		// 解析実行
 		// 0x00 - 0x1f, 0x21 - 0x29, 0x80 - 0xff の文字が現れ次第中止
 		// 特に、NULL, CR, LF 文字に反応する事を企図。TAB 文字でも中止。SP 文字連続でも中止。
-		if (*p < '*') return;
-		bestMove = atomove(&p);
-		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		nextMove = atomove(&p);
-		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		value = atos32(&p);
-		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		depth = atos32(&p);
-		while (*p >= '*') ++p; if (*p != ' ' || *++p < '*') return;
-		num = atou64(&p);
+		if (*s < '*') return;
+		bestMove = atomove(s);
+		while (*s >= '*') ++s; if (*s != ' ' || *++s < '*') return;
+		nextMove = atomove(s);
+		while (*s >= '*') ++s; if (*s != ' ' || *++s < '*') return;
+		value = atos32(s);
+		while (*s >= '*') ++s; if (*s != ' ' || *++s < '*') return;
+		depth = atos32(s);
+		while (*s >= '*') ++s; if (*s != ' ' || *++s < '*') return;
+		num = atou64(s);
 	}
 
 	// 出力ストリーム
@@ -607,7 +574,7 @@ namespace BookUtil
 		auto cur = trimlen_sfen(sfen);
 		std::string s = sfen;
 		s.resize(cur);
-		int ply = atos32(sfen.c_str() + cur);
+		int ply = _atos32(sfen.c_str() + cur);
 		return make_pair(s, ply);
 	}
 
