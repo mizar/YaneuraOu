@@ -380,32 +380,32 @@ namespace BookUtil
 	};
 
 	// 数値 ←→ 文字列 変換
-	void u32toa(char ** s, u32 i);
-	void u32toa(char * s, u32 i);
-	void s32toa(char ** s, s32 i);
-	void s32toa(char * s, s32 i);
-	void s64toa(char ** s, s64 i);
-	void s64toa(char * s, s64 i);
-	void u64toa(char ** s, u64 i);
-	void u64toa(char * s, u64 i);
-	u32 atou32(const char ** s);
-	u32 atou32(const char * s);
-	s32 atos32(const char ** s);
-	s32 atos32(const char * s);
-	u64 atou64(const char ** s);
-	u64 atou64(const char * s);
-	s64 atos64(const char ** s);
-	s64 atos64(const char * s);
+	void u32toa(char *& s, u32 i);
+	void _u32toa(char * s, u32 i);
+	void s32toa(char *& s, s32 i);
+	void _s32toa(char * s, s32 i);
+	void s64toa(char *& s, s64 i);
+	void _s64toa(char * s, s64 i);
+	void u64toa(char *& s, u64 i);
+	void _u64toa(char * s, u64 i);
+	u32 atou32(const char *& s);
+	u32 _atou32(const char * s);
+	s32 atos32(const char *& s);
+	s32 _atos32(const char * s);
+	u64 atou64(const char *& s);
+	u64 _atou64(const char * s);
+	s64 atos64(const char *& s);
+	s64 _atos64(const char * s);
 
 	// Move ←→ 文字列 変換
-	void movetoa(char ** s, const Move m);
-	void movetoa(char * s, const Move m);
-	Move atomove(const char ** p);
-	Move atomove(const char * p);
+	void movetoa(char *& s, const Move m);
+	void _movetoa(char * s, const Move m);
+	Move atomove(const char *& p);
+	Move _atomove(const char * p);
 
 	// BookEntry → 文字列 変換
-	void betoa(char ** s, const BookEntry & be);
-	void betoa(char * s, const BookEntry & be);
+	void betoa(char *& s, const BookEntry & be);
+	void _betoa(char * s, const BookEntry & be);
 
 	// 出力ストリーム
 	std::ostream & operator << (std::ostream & os, const BookPos & bp);

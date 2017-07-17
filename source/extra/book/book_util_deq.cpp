@@ -393,7 +393,7 @@ namespace BookUtil
 			// 採択回数でソートしておく。
 			be.sort_pos();
 			// 出力
-			betoa(&p, be);
+			betoa(p, be);
 			// _bufth (16320kiB) を超えて出力が溜まったらファイルに書き出す
 			if (p - renderbuf > renderbufth)
 			{
