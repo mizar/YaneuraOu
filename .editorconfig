@@ -1,0 +1,26 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+root = true
+
+# All files
+[*]
+insert_final_newline = true
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+# Code files
+[*.{cs,csx,vb,vbx}]
+indent_size = 4
+indent_style = tab
+insert_final_newline = true
+
+# XML files
+[*.{csproj,xml,xslt}]
+insert_final_newline = false
+
+# Windows files
+[*.{bat,cmd}]
+end_of_line = crlf
