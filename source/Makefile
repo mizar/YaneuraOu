@@ -70,6 +70,14 @@ LDFLAGS += -Wl,-s
 # デバッグ情報を付加
 # CFLAGS  += -g3 -ggdb
 
+# w64-mingw32 クロスコンパイル時の追加オプション
+ifeq ($(findstring w64-mingw32,$(COMPILER)),w64-mingw32)
+	ifeq ($(findstring g++,$(COMPILER)),g++)
+	endif
+	ifeq ($(findstring clang++,$(COMPILER)),clang++)
+	endif
+endif
+
 # OpenMPを使うときにCFLAGSとして指定するオプション
 # ※ 学習部ではOpenMpを用いるので、学習用のビルドではこのオプションを指定する。
 # clangでOPENMPを有効にしてビルドする方法については、解説.txtを参照のこと。
@@ -106,7 +114,8 @@ ifeq "$(strip $(OBJDIR))" ""
 	OBJDIR = ..
 endif
 #SOURCES  = $(wildcard *.cpp)
-SOURCES  = shogi.cpp                                                           \
+SOURCES  = \
+	shogi.cpp                                                                  \
 	bitboard.cpp                                                               \
 	misc.cpp                                                                   \
 	movegen.cpp                                                                \
@@ -155,17 +164,19 @@ SOURCES  = shogi.cpp                                                           \
 	learn/multi_think.cpp
 
 ifeq ($(YANEURAOU_EDITION),MATE_ENGINE)
-	SOURCES += engine/mate-engine/mate-search.cpp
+	SOURCES += \
+		engine/mate-engine/mate-search.cpp
 endif
 
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_2018_TNK_ENGINE)
-	SOURCES += eval/nnue/evaluate_nnue.cpp                                     \
-	           eval/nnue/evaluate_nnue_learner.cpp                             \
-	           eval/nnue/nnue_test_command.cpp                                 \
-	           eval/nnue/features/k.cpp                                        \
-	           eval/nnue/features/p.cpp                                        \
-	           eval/nnue/features/half_kp.cpp                                  \
-	           eval/nnue/features/half_relative_kp.cpp
+	SOURCES += \
+		eval/nnue/evaluate_nnue.cpp                                             \
+		eval/nnue/evaluate_nnue_learner.cpp                                     \
+		eval/nnue/nnue_test_command.cpp                                         \
+		eval/nnue/features/k.cpp                                                \
+		eval/nnue/features/p.cpp                                                \
+		eval/nnue/features/half_kp.cpp                                          \
+		eval/nnue/features/half_relative_kp.cpp
 endif
 
 OBJECTS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
