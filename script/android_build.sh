@@ -1,0 +1,18 @@
+#!/usr/bin/bash
+
+cd `dirname $0`
+cd ..
+mkdir -p build/android
+
+ndk-build clean ENGINE_TARGET=YANEURAOU_2018_OTAFUKU_ENGINE_KPPT
+ndk-build ENGINE_TARGET=YANEURAOU_2018_OTAFUKU_ENGINE_KPPT
+cp -r libs build/android
+ndk-build clean ENGINE_TARGET=YANEURAOU_2018_OTAFUKU_ENGINE_KPP_KKPT
+ndk-build ENGINE_TARGET=YANEURAOU_2018_OTAFUKU_ENGINE_KPP_KKPT
+cp -r libs build/android
+ndk-build clean ENGINE_TARGET=YANEURAOU_2018_OTAFUKU_ENGINE_MATERIAL
+ndk-build ENGINE_TARGET=YANEURAOU_2018_OTAFUKU_ENGINE_MATERIAL
+cp -r libs build/android
+ndk-build clean ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE
+ndk-build ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE
+cp -r libs build/android
