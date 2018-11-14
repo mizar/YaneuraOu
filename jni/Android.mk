@@ -33,11 +33,15 @@ ARCH_DEF := -DTARGET_ARCH="$(TARGET_ARCH_ABI)"
 # example: 2018 T.N.K. (EVAL_NNUE)
 # $ ndk-build ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE
 
+# example: tnk- Mate (MATE_ENGINE)
+# $ ndk-build MATE_ENGINE
+
 ENGINE_TARGET := YANEURAOU_2018_OTAFUKU_ENGINE
 #ENGINE_TARGET := YANEURAOU_2018_OTAFUKU_ENGINE_KPPT
 #ENGINE_TARGET := YANEURAOU_2018_OTAFUKU_ENGINE_KPP_KKPT
 #ENGINE_TARGET := YANEURAOU_2018_OTAFUKU_ENGINE_MATERIAL
 #ENGINE_TARGET := YANEURAOU_2018_TNK_ENGINE
+#ENGINE_TARGET := MATE_ENGINE
 
 ifeq ($(ENGINE_TARGET),YANEURAOU_2018_OTAFUKU_ENGINE)
   ARCH_DEF += -DUSE_MAKEFILE -DYANEURAOU_2018_OTAFUKU_ENGINE
@@ -64,6 +68,11 @@ ifeq ($(ENGINE_TARGET),YANEURAOU_2018_TNK_ENGINE)
   ENGINE_NAME := YaneuraOu2018tnk
 endif
 
+ifeq ($(ENGINE_TARGET),MATE_ENGINE)
+  ARCH_DEF += -DUSE_MAKEFILE -DMATE_ENGINE
+  ENGINE_NAME := tnk-mate
+endif
+
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
   ARCH_DEF += -DIS_64BIT -DIS_ARM -mfpu=neon
   LOCAL_ARM_NEON := true
@@ -74,7 +83,7 @@ ifeq ($(TARGET_ARCH_ABI),x86_64)
 endif
 
 ifeq ($(TARGET_ARCH_ABI),x86)
-  ARCH_DEF += 
+  ARCH_DEF +=
 endif
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
@@ -86,8 +95,8 @@ LOCAL_MODULE    := $(ENGINE_NAME)-$(TARGET_ARCH_ABI)
 LOCAL_CXXFLAGS  := -std=c++14 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fpermissive -D__STDINT_MACROS -D__STDC_LIMIT_MACROS $(ARCH_DEF)
 LOCAL_CXXFLAGS += -fPIE -Wno-unused-parameter
 LOCAL_LDFLAGS += -fPIE -pie -flto
-LOCAL_LDLIBS = 
-LOCAL_C_INCLUDES := 
+LOCAL_LDLIBS =
+LOCAL_C_INCLUDES :=
 LOCAL_CPP_FEATURES += exceptions rtti
 #LOCAL_STATIC_LIBRARIES    := -lpthread
 
@@ -139,6 +148,11 @@ LOCAL_SRC_FILES := \
   ../source/learn/learner.cpp                                          \
   ../source/learn/learning_tools.cpp                                   \
   ../source/learn/multi_think.cpp
+
+ifeq ($(ENGINE_TARGET),MATE_ENGINE)
+LOCAL_SRC_FILES += \
+	../source/engine/mate-engine/mate-search.cpp
+endif
 
 ifeq ($(ENGINE_TARGET),YANEURAOU_2018_TNK_ENGINE)
 LOCAL_SRC_FILES += \
