@@ -24,3 +24,7 @@ insert_final_newline = false
 # Windows files
 [*.{bat,cmd}]
 end_of_line = crlf
+
+# Makefile
+[Makefile]
+indent_style = tab
