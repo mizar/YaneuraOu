@@ -21,7 +21,10 @@ INCLUDE  = # -I../include
 # clang用にCFLAGSなどを変更
 ifeq ($(findstring clang++,$(COMPILER)),clang++)
 	# stdlib
-	CFLAGS += -stdlib=libstdc++
+	#CFLAGS += -stdlib=platform -rtlib=platform
+	CFLAGS += -stdlib=libstdc++ -rtlib=libgcc
+	#CFLAGS += -stdlib=libstdc++
+	#CFLAGS += -stdlib=libc++
 
 	# 関数の引数が関数本体で使われていないときに警告出るのうざすぎるので抑制。
 	CFLAGS += -Wno-unused-parameter
@@ -75,6 +78,13 @@ ifeq ($(findstring w64-mingw32,$(COMPILER)),w64-mingw32)
 	ifeq ($(findstring g++,$(COMPILER)),g++)
 	endif
 	ifeq ($(findstring clang++,$(COMPILER)),clang++)
+		CFLAGS += -static-libstdc++ -static-libgcc
+		# Ubuntu mingw-w64 clang++ env (experimental)
+		# 現在、librt周りでビルドがコケる
+		# Clang: add support to mingw driver for compiler-rt, libc++ and lld : https://reviews.llvm.org/D11077
+		# /usr/bin/x86_64-w64-mingw32-ld: /usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/libstdc++.a(chrono.o):(.text$_ZNSt6chrono3_V212system_clock3nowEv+0xc): undefined reference to `clock_gettime'
+		# /usr/bin/x86_64-w64-mingw32-ld: /usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/libstdc++.a(chrono.o):(.text$_ZNSt6chrono3_V212steady_clock3nowEv+0xf): undefined reference to `clock_gettime'
+		#CFLAGS += -rtlib=libgcc
 	endif
 endif
 
@@ -94,8 +104,26 @@ ifeq ($(findstring g++,$(COMPILER)),g++)
 	endif
 endif
 ifeq ($(findstring clang++,$(COMPILER)),clang++)
-	OPENMP   = -fopenmp
-	OPENMP_LDFLAGS = -lomp
+	ifeq ($(MSYSTEM),MINGW64)
+		# MSYS2 MINGW64 env
+		# libgompを指定した場合、ビルドは通るがOpenMPは無効化される？
+		OPENMP = -fopenmp=libgomp
+		OPENMP_LDFLAGS =
+#		# gccのインクルードファイル群を読み込ませるのは良くなさそう(intrinsic周りでコケるようになる)
+#		# [MinGWToolChain] Don't use GCC headers on Win32 : https://reviews.llvm.org/D29464
+#		OPENMP = -fopenmp=libiomp5 -I$(shell cygpath -aw /mingw64/lib/gcc/x86_64-w64-mingw32/$(shell g++ -dumpversion)/include)
+#		OPENMP_LDFLAGS = -liomp5
+	else
+		ifeq ($(findstring w64-mingw32,$(COMPILER)),w64-mingw32)
+			# Ubuntu mingw-w64 clang++ env (experimental)
+			OPENMP = -fopenmp=libgomp
+			OPENMP_LDFLAGS =
+		else
+			# Other (normal clang++/libomp env)
+			OPENMP = -fopenmp
+			OPENMP_LDFLAGS = -lomp
+		endif
+	endif
 	ifeq ($(YANEURAOU_EDITION),YANEURAOU_2018_TNK_ENGINE)
 		BLAS = -DUSE_BLAS
 		BLAS_LDFLAGS = -lopenblas

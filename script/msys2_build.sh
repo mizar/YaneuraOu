@@ -21,7 +21,7 @@ TARGET=YaneuraOu-2018-otafuku-kppt-msys2-clang
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [evallearn]=-evallearn-avx2 [evallearn-sse42]=-evallearn-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 done
 ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
@@ -34,7 +34,7 @@ TARGET=YaneuraOu-2018-otafuku-kpp_kkpt-msys2-clang
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [evallearn]=-evallearn-avx2 [evallearn-sse42]=-evallearn-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -47,7 +47,7 @@ TARGET=YaneuraOu-2018-otafuku-material-msys2-clang
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -60,7 +60,7 @@ TARGET=YaneuraOu-2018-tnk-msys2-clang
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [evallearn]=-evallearn-avx2 [evallearn-sse42]=-evallearn-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -73,7 +73,7 @@ TARGET=YaneuraOu-mate-msys2-clang
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -86,7 +86,7 @@ TARGET=YaneuraOu-2018-otafuku-kppt-msys2-gcc
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [evallearn]=-evallearn-avx2 [evallearn-sse42]=-evallearn-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -99,7 +99,7 @@ TARGET=YaneuraOu-2018-otafuku-kpp_kkpt-msys2-gcc
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [evallearn]=-evallearn-avx2 [evallearn-sse42]=-evallearn-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -112,7 +112,7 @@ TARGET=YaneuraOu-2018-otafuku-material-msys2-gcc
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -125,7 +125,7 @@ TARGET=YaneuraOu-2018-tnk-msys2-gcc
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [evallearn]=-evallearn-avx2 [evallearn-sse42]=-evallearn-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
@@ -138,7 +138,7 @@ TARGET=YaneuraOu-mate-msys2-gcc
 declare -A TGTAIL=([avx2]=-avx2 [sse42]=-sse42 [tournament]=-tournament-avx2 [tournament-sse42]=-tournament-sse42 [sse41]=-sse41 [sse2]=-sse2)
 for key in ${!TGTAIL[*]}; do
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-	${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
+	nice -n 15 ${MAKE} -f ${MAKEFILE} -j${JOBS} ${key} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} OS=${OS} 2>&1 | tee $BUILDDIR/${TARGET}${TGTAIL[$key]}.log
 	cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TARGET}${TGTAIL[$key]}.exe
 	${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
 done
