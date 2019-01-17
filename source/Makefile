@@ -124,7 +124,7 @@ ifeq ($(findstring clang++,$(COMPILER)),clang++)
 			OPENMP_LDFLAGS = -lomp
 		endif
 	endif
-	ifeq ($(YANEURAOU_EDITION),YANEURAOU_2018_TNK_ENGINE)
+	ifeq ($(findstring YANEURAOU_2018_TNK_ENGINE,$(YANEURAOU_EDITION)),YANEURAOU_2018_TNK_ENGINE)
 		BLAS = -DUSE_BLAS
 		BLAS_LDFLAGS = -lopenblas
 		ifeq ($(MSYSTEM),MINGW64)
@@ -196,7 +196,7 @@ ifeq ($(YANEURAOU_EDITION),MATE_ENGINE)
 		engine/mate-engine/mate-search.cpp
 endif
 
-ifeq ($(YANEURAOU_EDITION),YANEURAOU_2018_TNK_ENGINE)
+ifeq ($(findstring YANEURAOU_2018_TNK_ENGINE,$(YANEURAOU_EDITION)),YANEURAOU_2018_TNK_ENGINE)
 	SOURCES += \
 		eval/nnue/evaluate_nnue.cpp                                             \
 		eval/nnue/evaluate_nnue_learner.cpp                                     \

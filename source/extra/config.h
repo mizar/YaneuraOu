@@ -353,9 +353,15 @@
 #endif
 
 
-#if defined(YANEURAOU_2018_TNK_ENGINE)
+#if defined(YANEURAOU_2018_TNK_ENGINE) || defined(YANEURAOU_2018_TNK_ENGINE_HALFKP) || defined(YANEURAOU_2018_TNK_ENGINE_K_P)
 #define ENGINE_NAME "YaneuraOu 2018 T.N.K."
 #define EVAL_NNUE
+#if defined(YANEURAOU_2018_TNK_ENGINE_HALFKP)
+#define EVAL_NNUE_HALFKP_256x2_32_32
+#endif
+#if defined(YANEURAOU_2018_TNK_ENGINE_K_P)
+#define EVAL_NNUE_K_P_256x2_32_32
+#endif
 
 #define USE_EVAL_HASH
 #define USE_SEE
@@ -524,7 +530,7 @@ extern GlobalOptions_ GlobalOptions;
 #include <climits>		// INT_MAX
 #include <cstddef>		// offsetof
 #include <array>
-#include <functional>	// function 
+#include <functional>	// function
 #include <limits>       // numeric_limits
 
 // --------------------
@@ -578,7 +584,7 @@ extern GlobalOptions_ GlobalOptions;
 #elif defined(__GNUC__)
 #define ALIGNED(X) __attribute__ ((aligned(X)))
 #else
-#define ALIGNED(X) 
+#define ALIGNED(X)
 #endif
 
 // --- for linux
@@ -731,7 +737,7 @@ inline int MKDIR(std::string dir_name)
 	return _wmkdir(cv.from_bytes(dir_name).c_str());
 //	::CreateDirectory(cv.from_bytes(dir_name).c_str(),NULL);
 }
-#elif defined(__GNUC__) 
+#elif defined(__GNUC__)
 #include <direct.h>
 inline int MKDIR(std::string dir_name)
 {
