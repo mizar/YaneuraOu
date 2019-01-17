@@ -26,6 +26,12 @@ call ndk-build ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE
 xcopy libs build\android\2018tnk /s /y
 call ndk-build clean ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE
 
+if not exist build\android mkdir build\android\2018tnk-k-p
+call ndk-build clean ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE_K_P
+call ndk-build ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE_K_P
+xcopy libs build\android\2018tnk-k-p /s /y
+call ndk-build clean ENGINE_TARGET=YANEURAOU_2018_TNK_ENGINE_K_P
+
 if not exist build\android mkdir build\android\tnk-mate
 call ndk-build clean ENGINE_TARGET=MATE_ENGINE
 call ndk-build ENGINE_TARGET=MATE_ENGINE
