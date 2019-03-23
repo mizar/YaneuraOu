@@ -42,8 +42,9 @@ if(-not (Test-Path $Dir)){
 ndk-build.cmd clean ENGINE_TARGET=$Target;
 
 "`n* Build Binary"|Out-Host;
-ndk-build.cmd ENGINE_TARGET=$Target -j $Jobs|
-Tee-Object (Join-Path $Dir "build.log");
+$log = $null;
+ndk-build.cmd ENGINE_TARGET=$Target -j $Jobs|Tee-Object -Variable log;
+$log|Out-File -Encoding utf8 -Force (Join-Path $Dir "build.log");
 
 "`n* Copy Binary"|Out-Host;
 Get-ChildItem .\libs -File -Recurse|
