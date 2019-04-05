@@ -22,7 +22,7 @@ insert_final_newline = true
 insert_final_newline = false
 
 # Windows files
-[*.{bat,cmd}]
+[*.{bat,cmd,ps1}]
 end_of_line = crlf
 
 # Makefile
