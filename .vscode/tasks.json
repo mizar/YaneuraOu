@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "msys2 update check on Windows Docker container",
+      "type": "shell",
+      "command": "docker run --rm mizarjp/winci-msys2:latest C:\\msys64\\usr\\bin\\bash.exe -lc 'pacman --noconfirm -Syp'",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2 full-build on Windows Docker container",
+      "type": "shell",
+      "command": "cmd /c docker run --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-msys2:latest powershell C:\\YaneuraOu\\script\\msys2_build.ps1",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "andk full-build on Windows Docker container",
+      "type": "shell",
+      "command": "cmd /c docker run --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-andk:latest powershell C:\\YaneuraOu\\script\\android_build.ps1",
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
