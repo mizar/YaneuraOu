@@ -1,16 +1,93 @@
-﻿# escape=`
-FROM mcr.microsoft.com/windows/servercore:1809
-WORKDIR C:\
-RUN ["powershell", "-ExecutionPolicy", "Bypass", "-EncodedCommand", "JABFAHIAcgBvAHIAQQBjAHQAaQBvAG4AUAByAGUAZgBlAHIAZQBuAGMAZQAgAD0AIAAnAFMAdABvAHAAJwA7AA0ACgAkAFAAcgBvAGcAcgBlAHMAcwBQAHIAZQBmAGUAcgBlAG4AYwBlACAAPQAgACcAUwBpAGwAZQBuAHQAbAB5AEMAbwBuAHQAaQBuAHUAZQAnADsADQAKAFMAZQB0AC0ATABvAGMAYQB0AGkAbwBuACAAQwA6AFwAOwANAAoAWwBOAGUAdAAuAFMAZQByAHYAaQBjAGUAUABvAGkAbgB0AE0AYQBuAGEAZwBlAHIAXQA6ADoAUwBlAGMAdQByAGkAdAB5AFAAcgBvAHQAbwBjAG8AbAAgAD0AIABbAE4AZQB0AC4AUwBlAGMAdQByAGkAdAB5AFAAcgBvAHQAbwBjAG8AbABUAHkAcABlAF0AOgA6AFQAbABzADEAMgA7AA0ACgBJAG4AdgBvAGsAZQAtAFcAZQBiAFIAZQBxAHUAZQBzAHQAIAAnAGgAdAB0AHAAcwA6AC8ALwBnAGkAdABoAHUAYgAuAGMAbwBtAC8AZwBpAHQALQBmAG8AcgAtAHcAaQBuAGQAbwB3AHMALwBnAGkAdAAvAHIAZQBsAGUAYQBzAGUAcwAvAGQAbwB3AG4AbABvAGEAZAAvAHYAMgAuADEAOQAuADEALgB3AGkAbgBkAG8AdwBzAC4AMQAvAEcAaQB0AC0AMgAuADEAOQAuADEALQA2ADQALQBiAGkAdAAuAGUAeABlACcAIAAtAE8AdQB0AEYAaQBsAGUAIABDADoAXABXAGkAbgBkAG8AdwBzAFwAVABlAG0AcABcAEcAaQB0AC0AeAA2ADQALgBlAHgAZQA7AA0ACgBTAHQAYQByAHQALQBQAHIAbwBjAGUAcwBzACAALQBGAGkAbABlAFAAYQB0AGgAIABDADoAXABXAGkAbgBkAG8AdwBzAFwAVABlAG0AcABcAEcAaQB0AC0AeAA2ADQALgBlAHgAZQAgAC0AQQByAGcAdQBtAGUAbgB0AEwAaQBzAHQAIAAvAFYARQBSAFkAUwBJAEwARQBOAFQALAAgAC8ATgBPAFIARQBTAFQAQQBSAFQALAAgAC8ATgBPAEMAQQBOAEMARQBMACwAIAAvAFMAUAAtACAALQBOAG8ATgBlAHcAVwBpAG4AZABvAHcAIAAtAFAAYQBzAHMAVABoAHIAdQAgAC0AVwBhAGkAdAA7AA0ACgBJAG4AdgBvAGsAZQAtAFcAZQBiAFIAZQBxAHUAZQBzAHQAIAAnAGgAdAB0AHAAcwA6AC8ALwB3AHcAdwAuADcALQB6AGkAcAAuAG8AcgBnAC8AYQAvADcAegAxADkAMAAwAC0AeAA2ADQALgBlAHgAZQAnACAALQBPAHUAdABGAGkAbABlACAAQwA6AFwAVwBpAG4AZABvAHcAcwBcAFQAZQBtAHAAXAA3AHoALQB4ADYANAAuAGUAeABlADsADQAKAFMAdABhAHIAdAAtAFAAcgBvAGMAZQBzAHMAIAAtAEYAaQBsAGUAUABhAHQAaAAgAEMAOgBcAFcAaQBuAGQAbwB3AHMAXABUAGUAbQBwAFwANwB6AC0AeAA2ADQALgBlAHgAZQAgAC0AQQByAGcAdQBtAGUAbgB0AEwAaQBzAHQAIAAvAFMAIAAtAE4AbwBOAGUAdwBXAGkAbgBkAG8AdwAgAC0AUABhAHMAcwBUAGgAcgB1ACAALQBXAGEAaQB0ADsADQAKAEkAbgB2AG8AawBlAC0AVwBlAGIAUgBlAHEAdQBlAHMAdAAgACcAaAB0AHQAcABzADoALwAvAGcAaQB0AGgAdQBiAC4AYwBvAG0ALwBBAGQAbwBwAHQATwBwAGUAbgBKAEQASwAvAG8AcABlAG4AagBkAGsAOAAtAGIAaQBuAGEAcgBpAGUAcwAvAHIAZQBsAGUAYQBzAGUAcwAvAGQAbwB3AG4AbABvAGEAZAAvAGoAZABrADgAdQAyADAAMgAtAGIAMAA4AC8ATwBwAGUAbgBKAEQASwA4AFUALQBqAGQAawBfAHgANgA0AF8AdwBpAG4AZABvAHcAcwBfAGgAbwB0AHMAcABvAHQAXwA4AHUAMgAwADIAYgAwADgALgBtAHMAaQAnACAALQBPAHUAdABGAGkAbABlACAAQwA6AFwAVwBpAG4AZABvAHcAcwBcAFQAZQBtAHAAXABPAHAAZQBuAEoARABLADgAVQAtAGoAZABrAF8AeAA2ADQAXwB3AGkAbgBkAG8AdwBzAC4AbQBzAGkAOwANAAoAUwB0AGEAcgB0AC0AUAByAG8AYwBlAHMAcwAgAC0ARgBpAGwAZQBQAGEAdABoACAAQwA6AFwAVwBpAG4AZABvAHcAcwBcAFMAeQBzAHQAZQBtADMAMgBcAG0AcwBpAGUAeABlAGMALgBlAHgAZQAgAC0AQQByAGcAdQBtAGUAbgB0AEwAaQBzAHQAIAAvAGkALAAgAEMAOgBcAFcAaQBuAGQAbwB3AHMAXABUAGUAbQBwAFwATwBwAGUAbgBKAEQASwA4AFUALQBqAGQAawBfAHgANgA0AF8AdwBpAG4AZABvAHcAcwAuAG0AcwBpACwAIAAvAHAAYQBzAHMAaQB2AGUAIAAtAE4AbwBOAGUAdwBXAGkAbgBkAG8AdwAgAC0AUABhAHMAcwBUAGgAcgB1ACAALQBXAGEAaQB0ADsADQAKAEkAbgB2AG8AawBlAC0AVwBlAGIAUgBlAHEAdQBlAHMAdAAgACcAaAB0AHQAcAA6AC8ALwByAGUAcABvAC4AbQBzAHkAcwAyAC4AbwByAGcALwBkAGkAcwB0AHIAaQBiAC8AbQBzAHkAcwAyAC0AeAA4ADYAXwA2ADQALQBsAGEAdABlAHMAdAAuAHQAYQByAC4AeAB6ACcAIAAtAE8AdQB0AEYAaQBsAGUAIABDADoAXABXAGkAbgBkAG8AdwBzAFwAVABlAG0AcABcAG0AcwB5AHMAMgAtAHgAOAA2AF8ANgA0AC0AbABhAHQAZQBzAHQALgB0AGEAcgAuAHgAegA7AA0ACgBTAHQAYQByAHQALQBQAHIAbwBjAGUAcwBzACAALQBOAG8ATgBlAHcAVwBpAG4AZABvAHcAIAAtAFAAYQBzAHMAVABoAHIAdQAgAC0AVwBhAGkAdAAgAC0ARgBpAGwAZQBQAGEAdABoACAAJwBDADoAXABQAHIAbwBnAHIAYQBtACAARgBpAGwAZQBzAFwANwAtAFoAaQBwAFwANwB6AC4AZQB4AGUAJwAgAC0AQQByAGcAdQBtAGUAbgB0AEwAaQBzAHQAIABlACwAIABDADoAXABXAGkAbgBkAG8AdwBzAFwAVABlAG0AcABcAG0AcwB5AHMAMgAtAHgAOAA2AF8ANgA0AC0AbABhAHQAZQBzAHQALgB0AGEAcgAuAHgAegAsACAAJwAtAG8AQwA6AFwAVwBpAG4AZABvAHcAcwBcAFQAZQBtAHAAXAAnADsADQAKAFMAdABhAHIAdAAtAFAAcgBvAGMAZQBzAHMAIAAtAE4AbwBOAGUAdwBXAGkAbgBkAG8AdwAgAC0AUABhAHMAcwBUAGgAcgB1ACAALQBXAGEAaQB0ACAALQBGAGkAbABlAFAAYQB0AGgAIAAnAEMAOgBcAFAAcgBvAGcAcgBhAG0AIABGAGkAbABlAHMAXAA3AC0AWgBpAHAAXAA3AHoALgBlAHgAZQAnACAALQBBAHIAZwB1AG0AZQBuAHQATABpAHMAdAAgAHgALAAgAEMAOgBcAFcAaQBuAGQAbwB3AHMAXABUAGUAbQBwAFwAbQBzAHkAcwAyAC0AeAA4ADYAXwA2ADQALQBsAGEAdABlAHMAdAAuAHQAYQByACwAIAAnAC0AbwBDADoAXAAnADsADQAKAEkAbgB2AG8AawBlAC0AVwBlAGIAUgBlAHEAdQBlAHMAdAAgACcAaAB0AHQAcABzADoALwAvAGQAbAAuAGcAbwBvAGcAbABlAC4AYwBvAG0ALwBhAG4AZAByAG8AaQBkAC8AcgBlAHAAbwBzAGkAdABvAHIAeQAvAHMAZABrAC0AdABvAG8AbABzAC0AdwBpAG4AZABvAHcAcwAtADQAMwAzADMANwA5ADYALgB6AGkAcAAnACAALQBPAHUAdABGAGkAbABlACAAQwA6AFwAVwBpAG4AZABvAHcAcwBcAFQAZQBtAHAAXABzAGQAawAtAHQAbwBvAGwAcwAtAHcAaQBuAGQAbwB3AHMALgB6AGkAcAA7AA0ACgBFAHgAcABhAG4AZAAtAEEAcgBjAGgAaQB2AGUAIAAtAFAAYQB0AGgAIABDADoAXABXAGkAbgBkAG8AdwBzAFwAVABlAG0AcABcAHMAZABrAC0AdABvAG8AbABzAC0AdwBpAG4AZABvAHcAcwAuAHoAaQBwACAALQBEAGUAcwB0AGkAbgBhAHQAaQBvAG4AUABhAHQAaAAgAEMAOgBcAEEAbgBkAHIAbwBpAGQAXABhAG4AZAByAG8AaQBkAC0AcwBkAGsAOwANAAoAUgBlAG0AbwB2AGUALQBJAHQAZQBtACAAQAAoACcAQwA6AFwAVwBpAG4AZABvAHcAcwBcAFQAZQBtAHAAXAAqACcALAAgACcAQwA6AFwAVQBzAGUAcgBzAFwAKgBcAEEAcABwAGQAYQB0AGEAXABMAG8AYwBhAGwAXABUAGUAbQBwAFwAKgAnACkAIAAtAEYAbwByAGMAZQAgAC0AUgBlAGMAdQByAHMAZQA7AA0ACgBbAEUAbgB2AGkAcgBvAG4AbQBlAG4AdABdADoAOgBTAGUAdABFAG4AdgBpAHIAbwBuAG0AZQBuAHQAVgBhAHIAaQBhAGIAbABlACgAJwBKAEEAVgBBAF8ASABPAE0ARQAnACwAIAAnAEMAOgBcAFAAcgBvAGcAcgBhAG0AIABGAGkAbABlAHMAXABBAGQAbwBwAHQATwBwAGUAbgBKAEQASwBcAGoAZABrAC0AOAAuADAALgAyADAAMgAuADAAOAAnACwAIABbAEUAbgB2AGkAcgBvAG4AbQBlAG4AdABWAGEAcgBpAGEAYgBsAGUAVABhAHIAZwBlAHQAXQA6ADoATQBhAGMAaABpAG4AZQApADsADQAKACQAZQBuAHYAOgBQAEEAVABIACAAKwA9ACAAJwA7AEMAOgBcAFAAcgBvAGcAcgBhAG0AIABGAGkAbABlAHMAXABHAGkAdABcAGMAbQBkADsAQwA6AFwAbQBzAHkAcwA2ADQAOwBDADoAXABBAG4AZAByAG8AaQBkAFwAYQBuAGQAcgBvAGkAZAAtAHMAZABrAFwAbgBkAGsALQBiAHUAbgBkAGwAZQAnADsADQAKAFsARQBuAHYAaQByAG8AbgBtAGUAbgB0AF0AOgA6AFMAZQB0AEUAbgB2AGkAcgBvAG4AbQBlAG4AdABWAGEAcgBpAGEAYgBsAGUAKAAnAFAAQQBUAEgAJwAsACAAJABlAG4AdgA6AFAAQQBUAEgALAAgAFsARQBuAHYAaQByAG8AbgBtAGUAbgB0AFYAYQByAGkAYQBiAGwAZQBUAGEAcgBnAGUAdABdADoAOgBNAGEAYwBoAGkAbgBlACkAOwA="]
-RUN ["C:\\msys64\\msys2_shell.cmd", "-msys2", "-defterm", "-no-start", "-lc", "exit"]
-RUN `
-C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm --noprogressbar -Syuu'; `
-C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm --noprogressbar -Syu'; `
-C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm --noprogressbar -Su'; `
-C:\msys64\usr\bin\bash.exe -lc 'pacman --noconfirm -Scc';
-RUN `
-C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm --noprogressbar -S toolchain:m clang:m openblas:m automake: autoconf: make: intltool: libtool: zip: unzip:'; `
-C:\msys64\usr\bin\bash.exe -lc 'pacman --noconfirm -Scc';
-RUN ["C:\\msys64\\usr\\bin\\bash.exe", "-lc 'yes | /C/Android/android-sdk/tools/bin/sdkmanager.bat ndk-bundle'"]
-RUN git.exe clone https://github.com/mizar/YaneuraOu.git
-WORKDIR C:\YaneuraOu\
+FROM ubuntu:18.10
+
+WORKDIR /root
+
+# Dockerfile: YaneuraOu Build Environment
+
+# Using IIJ archive mirror
+RUN sed -i.bak -e "s%http://archive.ubuntu.com/ubuntu/%http://ftp.iij.ad.jp/pub/linux/ubuntu/archive/%g" /etc/apt/sources.list
+
+# apt install
+RUN \
+  apt-get update -y && \
+  apt-get upgrade -y && \
+  apt-get install -y software-properties-common && \
+  add-apt-repository ppa:mati865/wclang && \
+  apt-get update -y && \
+  apt-get install -y build-essential clang clang-7 cmake curl debhelper git libomp-7-dev libopenblas-dev mingw-w64 openjdk-8-jdk p7zip-full unzip vim wclang && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* && \
+  update-alternatives --set i686-w64-mingw32-gcc /usr/bin/i686-w64-mingw32-gcc-posix && \
+  update-alternatives --set i686-w64-mingw32-g++ /usr/bin/i686-w64-mingw32-g++-posix && \
+  update-alternatives --set x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc-posix && \
+  update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+# wclang install
+#RUN git clone https://github.com/tpoechtrager/wclang && \
+#  cd wclang && \
+#  debian/rules build && \
+#  fakeroot debian/rules binary && \
+#  cd .. && \
+#  dpkg -i wclang_*.deb && \
+#  rm -rf wclang*
+
+# Android-SDK install
+# - https://developer.android.com/studio/#downloads
+# - https://developer.android.com/studio/terms
+# - Android SDK の再配布 (Android SDK を含む Docker Image の公開など) は禁じられている (see terms 3.4) ので注意
+RUN curl -O https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip && \
+  mkdir -p /usr/local/android-sdk && \
+  unzip -d /usr/local/android-sdk sdk-tools-linux-4333796.zip && \
+  rm -f sdk-tools-linux-4333796.zip && \
+  yes | /usr/local/android-sdk/tools/bin/sdkmanager "ndk-bundle"
+
+# Environment variables
+ENV \
+  JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
+  ANDROID_HOME=/usr/local/android-sdk \
+  PATH=/usr/local/android-sdk/platform-tools:/usr/local/android-sdk/tools:/usr/local/android-sdk/ndk-bundle:$PATH
+
+# Copy build batches
+COPY script/mingw_*.sh script/linux_build.sh script/android_build.sh script/sha256sums ./
+
+# Modify path of build batches
+RUN sed -i -e "s%cd \.\.%cd YaneuraOu%" *.sh
+
+RUN \
+  curl -O https://www.gnu.org/licenses/gpl.md && \
+  curl -L -O https://github.com/HiraokaTakuya/apery/releases/download/WCSC28/apery_wcsc28.zip && \
+  curl -L -O https://github.com/qhapaq-49/qhapaq-bin/releases/download/tagtest/qhwcsc28.7z && \
+  curl -L -O https://www.qhapaq.org/static/media/bin/orqha.7z && \
+  curl -L -O https://github.com/nodchip/tnk-/releases/download/wcsc28-2018-05-05/tnk-wcsc28-2018-05-05.7z && \
+  curl -L -O https://github.com/yaneurao/YaneuraOu/releases/download/v4.73_book/standard_book.zip && \
+  curl -L -O https://github.com/yaneurao/YaneuraOu/releases/download/v4.73_book/yaneura_book1_V101.zip && \
+  curl -L -O https://github.com/yaneurao/YaneuraOu/releases/download/v4.73_book/yaneura_book3.zip && \
+  unzip -d engine apery_wcsc28.zip && \
+  7z x -oengine qhwcsc28.7z && \
+  7z x -oengine orqha.7z && \
+  7z x -oengine tnk-wcsc28-2018-05-05.7z && \
+  unzip -d book standard_book.zip && \
+  unzip -d book yaneura_book1_V101.zip && \
+  unzip -d book yaneura_book3.zip && \
+  sha256sum -c sha256sums
+
+# Clone repositry
+RUN git clone https://github.com/yaneurao/YaneuraOu.git && \
+  cd YaneuraOu && \
+  git remote add mizar https://github.com/mizar/YaneuraOu.git && \
+  git remote add hakubishin- https://github.com/nodchip/hakubishin-.git && \
+  git remote add tnk- https://github.com/nodchip/tnk-.git && \
+  git remote add nnue https://github.com/ynasu87/nnue.git && \
+  git remote add ai5 https://github.com/ai5/YaneuraOu.git && \
+  git remote add kazu-nanoha https://github.com/kazu-nanoha/YaneuraOu.git && \
+  git remote add YuriCat https://github.com/YuriCat/YaneuraOu.git && \
+  git remote add tttak https://github.com/tttak/YaneuraOu.git && \
+  git remote add qhapaq-49 https://github.com/qhapaq-49/YaneuraOu.git && \
+  git remote add yuk-to https://github.com/yuk-to/YaneuraOu.git && \
+  git remote add ishidakei https://github.com/ishidakei/YaneuraOu.git && \
+  git fetch --all && \
+  cd ..
+
+# Makefiles overwrite
+COPY source/Makefile YaneuraOu/source/
+COPY jni/Android.mk jni/Application.mk YaneuraOu/jni/
