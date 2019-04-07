@@ -38,7 +38,12 @@ ifeq ($(findstring clang++,$(COMPILER)),clang++)
 	WCFLAGS += -fno-threadsafe-statics
 
 	# msys2用のclangでは、OpenMP使えない？インスコ仕方がわからん。
-
+else
+ifeq ($(findstring g++,$(COMPILER)),g++)
+	# https://stackoverflow.com/questions/43152633/invalid-register-for-seh-savexmm-in-cygwin
+	# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=65782
+	WCFLAGS += -fno-asynchronous-unwind-tables
+endif
 endif
 
 ifeq ($(OS),Windows_NT)
@@ -75,17 +80,17 @@ LDFLAGS += -Wl,-s
 
 # w64-mingw32 クロスコンパイル時の追加オプション
 ifeq ($(findstring w64-mingw32,$(COMPILER)),w64-mingw32)
-	ifeq ($(findstring g++,$(COMPILER)),g++)
-	endif
-	ifeq ($(findstring clang++,$(COMPILER)),clang++)
-		CFLAGS += -static-libstdc++ -static-libgcc
-		# Ubuntu mingw-w64 clang++ env (experimental)
-		# 現在、librt周りでビルドがコケる
-		# Clang: add support to mingw driver for compiler-rt, libc++ and lld : https://reviews.llvm.org/D11077
-		# /usr/bin/x86_64-w64-mingw32-ld: /usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/libstdc++.a(chrono.o):(.text$_ZNSt6chrono3_V212system_clock3nowEv+0xc): undefined reference to `clock_gettime'
-		# /usr/bin/x86_64-w64-mingw32-ld: /usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/libstdc++.a(chrono.o):(.text$_ZNSt6chrono3_V212steady_clock3nowEv+0xf): undefined reference to `clock_gettime'
-		#CFLAGS += -rtlib=libgcc
-	endif
+ifeq ($(findstring g++,$(COMPILER)),g++)
+endif
+ifeq ($(findstring clang++,$(COMPILER)),clang++)
+	CFLAGS += -static-libstdc++ -static-libgcc
+	# Ubuntu mingw-w64 clang++ env (experimental)
+	# 現在、librt周りでビルドがコケる
+	# Clang: add support to mingw driver for compiler-rt, libc++ and lld : https://reviews.llvm.org/D11077
+	# /usr/bin/x86_64-w64-mingw32-ld: /usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/libstdc++.a(chrono.o):(.text$_ZNSt6chrono3_V212system_clock3nowEv+0xc): undefined reference to `clock_gettime'
+	# /usr/bin/x86_64-w64-mingw32-ld: /usr/lib/gcc/x86_64-w64-mingw32/7.3-posix/libstdc++.a(chrono.o):(.text$_ZNSt6chrono3_V212steady_clock3nowEv+0xf): undefined reference to `clock_gettime'
+	#CFLAGS += -rtlib=libgcc
+endif
 endif
 
 # OpenMPを使うときにCFLAGSとして指定するオプション
@@ -95,42 +100,42 @@ endif
 ifeq ($(findstring g++,$(COMPILER)),g++)
 	OPENMP   = -fopenmp
 	OPENMP_LDFLAGS =
-	ifeq ($(YANEURAOU_EDITION),YANEURAOU_2018_TNK_ENGINE)
-		BLAS = -DUSE_BLAS
-		BLAS_LDFLAGS = -lopenblas
-		ifeq ($(MSYSTEM),MINGW64)
-			BLAS += -I$(shell cygpath -aw /mingw64/include/OpenBLAS)
-		endif
-	endif
+ifeq ($(YANEURAOU_EDITION),YANEURAOU_2018_TNK_ENGINE)
+	BLAS = -DUSE_BLAS
+	BLAS_LDFLAGS = -lopenblas
+ifeq ($(MSYSTEM),MINGW64)
+	BLAS += -I$(shell cygpath -aw /mingw64/include/OpenBLAS)
+endif
+endif
 endif
 ifeq ($(findstring clang++,$(COMPILER)),clang++)
-	ifeq ($(MSYSTEM),MINGW64)
-		# MSYS2 MINGW64 env
-		# libgompを指定した場合、ビルドは通るがOpenMPは無効化される？
-		OPENMP = -fopenmp=libgomp
-		OPENMP_LDFLAGS =
-#		# gccのインクルードファイル群を読み込ませるのは良くなさそう(intrinsic周りでコケるようになる)
-#		# [MinGWToolChain] Don't use GCC headers on Win32 : https://reviews.llvm.org/D29464
-#		OPENMP = -fopenmp=libiomp5 -I$(shell cygpath -aw /mingw64/lib/gcc/x86_64-w64-mingw32/$(shell g++ -dumpversion)/include)
-#		OPENMP_LDFLAGS = -liomp5
-	else
-		ifeq ($(findstring w64-mingw32,$(COMPILER)),w64-mingw32)
-			# Ubuntu mingw-w64 clang++ env (experimental)
-			OPENMP = -fopenmp=libgomp
-			OPENMP_LDFLAGS =
-		else
-			# Other (normal clang++/libomp env)
-			OPENMP = -fopenmp
-			OPENMP_LDFLAGS = -lomp
-		endif
-	endif
-	ifeq ($(findstring YANEURAOU_2018_TNK_ENGINE,$(YANEURAOU_EDITION)),YANEURAOU_2018_TNK_ENGINE)
-		BLAS = -DUSE_BLAS
-		BLAS_LDFLAGS = -lopenblas
-		ifeq ($(MSYSTEM),MINGW64)
-			BLAS += -I$(shell cygpath -aw /mingw64/include/OpenBLAS)
-		endif
-	endif
+ifeq ($(MSYSTEM),MINGW64)
+	# MSYS2 MINGW64 env
+	# libgompを指定した場合、ビルドは通るがOpenMPは無効化される？
+	OPENMP = -fopenmp=libgomp
+	OPENMP_LDFLAGS =
+#	# gccのインクルードファイル群を読み込ませるのは良くなさそう(intrinsic周りでコケるようになる)
+#	# [MinGWToolChain] Don't use GCC headers on Win32 : https://reviews.llvm.org/D29464
+#	OPENMP = -fopenmp=libiomp5 -I$(shell cygpath -aw /mingw64/lib/gcc/x86_64-w64-mingw32/$(shell g++ -dumpversion)/include)
+#	OPENMP_LDFLAGS = -liomp5
+else
+ifeq ($(findstring w64-mingw32,$(COMPILER)),w64-mingw32)
+	# Ubuntu mingw-w64 clang++ env (experimental)
+	OPENMP = -fopenmp=libgomp
+	OPENMP_LDFLAGS =
+else
+	# Other (normal clang++/libomp env)
+	OPENMP = -fopenmp
+	OPENMP_LDFLAGS = -lomp
+endif
+endif
+ifeq ($(findstring YANEURAOU_2018_TNK_ENGINE,$(YANEURAOU_EDITION)),YANEURAOU_2018_TNK_ENGINE)
+	BLAS = -DUSE_BLAS
+	BLAS_LDFLAGS = -lopenblas
+ifeq ($(MSYSTEM),MINGW64)
+	BLAS += -I$(shell cygpath -aw /mingw64/include/OpenBLAS)
+endif
+endif
 endif
 
 CFLAGS += -DNO_EXCEPTIONS
