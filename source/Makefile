@@ -220,15 +220,24 @@ $(OBJDIR)/%.o: %.cpp
 all: clean $(TARGET)
 
 # 学習用バイナリのときは、openmpを有効にする。
-evallearn:
+evallearn-avx512:
+	$(MAKE) CFLAGS='$(CFLAGS) $(OPENMP) $(BLAS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX512 -mbmi -mbmi2 -mavx2 -mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512cd -march=skylake-avx512' LDFLAGS='$(LDFLAGS) $(OPENMP_LDFLAGS) $(BLAS_LDFLAGS) $(LTOFLAGS)' $(TARGET)
+evallearn-avx2:
 	$(MAKE) CFLAGS='$(CFLAGS) $(OPENMP) $(BLAS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi -mbmi2 -mavx2 -march=corei7-avx' LDFLAGS='$(LDFLAGS) $(OPENMP_LDFLAGS) $(BLAS_LDFLAGS) $(LTOFLAGS)' $(TARGET)
 evallearn-sse42:
 	$(MAKE) CFLAGS='$(CFLAGS) $(OPENMP) $(BLAS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_SSE42 -msse4.2 -march=corei7' LDFLAGS='$(LDFLAGS) $(OPENMP_LDFLAGS) $(BLAS_LDFLAGS) $(LTOFLAGS)' $(TARGET)
+evallearn: evallearn-avx2
 
-tournament:
+tournament-avx512:
+	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX512 -mbmi -mbmi2 -mavx2 -mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512cd -DFOR_TOURNAMENT -march=skylake-avx512' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
+tournament-avx2:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi -mbmi2 -mavx2 -DFOR_TOURNAMENT -march=corei7-avx' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 tournament-sse42:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_SSE42 -msse4.2 -DFOR_TOURNAMENT -march=corei7' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
+tournament: tournament-avx2
+
+avx512:
+	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX512 -mbmi -mbmi2 -mavx2 -mavx512f -mavx512vl -mavx512bw -mavx512dq -mavx512cd -march=skylake-avx512' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)
 
 avx2:
 	$(MAKE) CFLAGS='$(CFLAGS) -DNDEBUG -DUSE_MAKEFILE -D$(YANEURAOU_EDITION) -DUSE_AVX2 -mbmi -mbmi2 -mavx2 -march=corei7-avx' LDFLAGS='$(LDFLAGS) $(LTOFLAGS)' $(TARGET)

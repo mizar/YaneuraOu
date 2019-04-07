@@ -16,98 +16,114 @@ ForEach-Object{@(
     BUILDDIR = '2018otafuku-kppt';
     EDITION = 'YANEURAOU_2018_OTAFUKU_ENGINE_KPPT';
     TARGET = "YaneuraOu-2018-otafuku-kppt$($_.TGCOMPILER)";
-    TGTAIL = @{
-      'avx2' = '-avx2';
-      'sse42' = '-sse42';
-      'tournament' = '-tournament-avx2';
-      'tournament-sse42' = '-tournament-sse42';
-      'evallearn' = '-evallearn-avx2';
-      'evallearn-sse42' = '-evallearn-sse42';
-      'sse41' = '-sse41';
-      'sse2' = '-sse2';
-      'nosse' = '-nosse';
-    };
+    TGTAIL = @(
+      @{ Name = 'avx512'; Value = '-avx512'; };
+      @{ Name = 'avx2'; Value = '-avx2'; };
+      @{ Name = 'sse42'; Value = '-sse42'; };
+      @{ Name = 'tournament-avx512'; Value = '-tournament-avx512'; };
+      @{ Name = 'tournament-avx2'; Value = '-tournament-avx2'; };
+      @{ Name = 'tournament-sse42'; Value = '-tournament-sse42'; };
+      @{ Name = 'evallearn-avx512'; Value = '-evallearn-avx512'; };
+      @{ Name = 'evallearn-avx2'; Value = '-evallearn-avx2'; };
+      @{ Name = 'evallearn-sse42'; Value = '-evallearn-sse42'; };
+      @{ Name = 'sse41'; Value = '-sse41'; };
+      @{ Name = 'sse2'; Value = '-sse2'; };
+      @{ Name = 'nosse'; Value = '-nosse'; };
+    );
   };
   @{
     COMPILER = $_.COMPILER;
     BUILDDIR = '2018otafuku-kpp_kkpt';
     EDITION = 'YANEURAOU_2018_OTAFUKU_ENGINE_KPP_KKPT';
     TARGET = "YaneuraOu-2018-otafuku-kpp_kkpt$($_.TGCOMPILER)";
-    TGTAIL = @{
-      'avx2' = '-avx2';
-      'sse42' = '-sse42';
-      'tournament' = '-tournament-avx2';
-      'tournament-sse42' = '-tournament-sse42';
-      'evallearn' = '-evallearn-avx2';
-      'evallearn-sse42' = '-evallearn-sse42';
-      'sse41' = '-sse41';
-      'sse2' = '-sse2';
-      'nosse' = '-nosse';
-    };
+    TGTAIL = @(
+      @{ Name = 'avx512'; Value = '-avx512'; };
+      @{ Name = 'avx2'; Value = '-avx2'; };
+      @{ Name = 'sse42'; Value = '-sse42'; };
+      @{ Name = 'tournament-avx512'; Value = '-tournament-avx512'; };
+      @{ Name = 'tournament-avx2'; Value = '-tournament-avx2'; };
+      @{ Name = 'tournament-sse42'; Value = '-tournament-sse42'; };
+      @{ Name = 'evallearn-avx512'; Value = '-evallearn-avx512'; };
+      @{ Name = 'evallearn-avx2'; Value = '-evallearn-avx2'; };
+      @{ Name = 'evallearn-sse42'; Value = '-evallearn-sse42'; };
+      @{ Name = 'sse41'; Value = '-sse41'; };
+      @{ Name = 'sse2'; Value = '-sse2'; };
+      @{ Name = 'nosse'; Value = '-nosse'; };
+    );
   };
   @{
     COMPILER = $_.COMPILER;
     BUILDDIR = '2018otafuku-material';
     EDITION = 'YANEURAOU_2018_OTAFUKU_ENGINE_MATERIAL';
     TARGET = "YaneuraOu-2018-otafuku-material$($_.TGCOMPILER)";
-    TGTAIL = @{
-      'avx2' = '-avx2';
-      'sse42' = '-sse42';
-      'tournament' = '-tournament-avx2';
-      'tournament-sse42' = '-tournament-sse42';
-      'sse41' = '-sse41';
-      'sse2' = '-sse2';
-      'nosse' = '-nosse';
-    };
+    TGTAIL = @(
+      @{ Name = 'avx512'; Value = '-avx512'; };
+      @{ Name = 'avx2'; Value = '-avx2'; };
+      @{ Name = 'sse42'; Value = '-sse42'; };
+      @{ Name = 'tournament-avx512'; Value = '-tournament-avx512'; };
+      @{ Name = 'tournament-avx2'; Value = '-tournament-avx2'; };
+      @{ Name = 'tournament-sse42'; Value = '-tournament-sse42'; };
+      @{ Name = 'sse41'; Value = '-sse41'; };
+      @{ Name = 'sse2'; Value = '-sse2'; };
+      @{ Name = 'nosse'; Value = '-nosse'; };
+    );
   };
   @{
     COMPILER = $_.COMPILER;
     BUILDDIR = '2018tnk';
     EDITION = 'YANEURAOU_2018_TNK_ENGINE';
     TARGET = "YaneuraOu-2018-tnk$($_.TGCOMPILER)";
-    TGTAIL = @{
-      'avx2' = '-avx2';
-      'sse42' = '-sse42';
-      'tournament' = '-tournament-avx2';
-      'tournament-sse42' = '-tournament-sse42';
-      'evallearn' = '-evallearn-avx2';
-      'evallearn-sse42' = '-evallearn-sse42';
-      'sse41' = '-sse41';
-      'sse2' = '-sse2';
-      'nosse' = '-nosse';
-    };
+    TGTAIL = @(
+      @{ Name = 'avx512'; Value = '-avx512'; };
+      @{ Name = 'avx2'; Value = '-avx2'; };
+      @{ Name = 'sse42'; Value = '-sse42'; };
+      @{ Name = 'tournament-avx512'; Value = '-tournament-avx512'; };
+      @{ Name = 'tournament-avx2'; Value = '-tournament-avx2'; };
+      @{ Name = 'tournament-sse42'; Value = '-tournament-sse42'; };
+      @{ Name = 'evallearn-avx512'; Value = '-evallearn-avx512'; };
+      @{ Name = 'evallearn-avx2'; Value = '-evallearn-avx2'; };
+      @{ Name = 'evallearn-sse42'; Value = '-evallearn-sse42'; };
+      @{ Name = 'sse41'; Value = '-sse41'; };
+      @{ Name = 'sse2'; Value = '-sse2'; };
+      @{ Name = 'nosse'; Value = '-nosse'; };
+    );
   };
   @{
     COMPILER = $_.COMPILER;
     BUILDDIR = '2018tnk-k-p';
     EDITION = 'YANEURAOU_2018_TNK_ENGINE_K_P';
     TARGET = "YaneuraOu-2018-tnk-k-p$($_.TGCOMPILER)";
-    TGTAIL = @{
-      'avx2' = '-avx2';
-      'sse42' = '-sse42';
-      'tournament' = '-tournament-avx2';
-      'tournament-sse42' = '-tournament-sse42';
-      'evallearn' = '-evallearn-avx2';
-      'evallearn-sse42' = '-evallearn-sse42';
-      'sse41' = '-sse41';
-      'sse2' = '-sse2';
-      'nosse' = '-nosse';
-    };
+    TGTAIL = @(
+      @{ Name = 'avx512'; Value = '-avx512'; };
+      @{ Name = 'avx2'; Value = '-avx2'; };
+      @{ Name = 'sse42'; Value = '-sse42'; };
+      @{ Name = 'tournament-avx512'; Value = '-tournament-avx512'; };
+      @{ Name = 'tournament-avx2'; Value = '-tournament-avx2'; };
+      @{ Name = 'tournament-sse42'; Value = '-tournament-sse42'; };
+      @{ Name = 'evallearn-avx512'; Value = '-evallearn-avx512'; };
+      @{ Name = 'evallearn-avx2'; Value = '-evallearn-avx2'; };
+      @{ Name = 'evallearn-sse42'; Value = '-evallearn-sse42'; };
+      @{ Name = 'sse41'; Value = '-sse41'; };
+      @{ Name = 'sse2'; Value = '-sse2'; };
+      @{ Name = 'nosse'; Value = '-nosse'; };
+    );
   };
   @{
     COMPILER = $_.COMPILER;
     BUILDDIR = 'tnk-mate';
     EDITION = 'MATE_ENGINE';
     TARGET = "YaneuraOu-tnk-mate$($_.TGCOMPILER)";
-    TGTAIL = @{
-      'avx2' = '-avx2';
-      'sse42' = '-sse42';
-      'tournament' = '-tournament-avx2';
-      'tournament-sse42' = '-tournament-sse42';
-      'sse41' = '-sse41';
-      'sse2' = '-sse2';
-      'nosse' = '-nosse';
-    };
+    TGTAIL = @(
+      @{ Name = 'avx512'; Value = '-avx512'; };
+      @{ Name = 'avx2'; Value = '-avx2'; };
+      @{ Name = 'sse42'; Value = '-sse42'; };
+      @{ Name = 'tournament-avx512'; Value = '-tournament-avx512'; };
+      @{ Name = 'tournament-avx2'; Value = '-tournament-avx2'; };
+      @{ Name = 'tournament-sse42'; Value = '-tournament-sse42'; };
+      @{ Name = 'sse41'; Value = '-sse41'; };
+      @{ Name = 'sse2'; Value = '-sse2'; };
+      @{ Name = 'nosse'; Value = '-nosse'; };
+    );
   };
 )}|
 ForEach-Object{
@@ -122,7 +138,7 @@ ForEach-Object{
   if(-not (Test-Path $BuildDir)){
     New-Item $BuildDir -ItemType Directory -Force;
   }
-  $_.TGTAIL.GetEnumerator()|
+  $_.TGTAIL|
   ForEach-Object{
     if ($_.Name -ne 'nosse') {
       Set-Item Env:MSYSTEM 'MINGW64';
