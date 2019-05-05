@@ -1,0 +1,114 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "docker pull winci-msys2",
+      "type": "shell",
+      "command": "docker pull mizarjp/winci-msys2:latest",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@docker update check on Windows Docker container",
+      "type": "shell",
+      "command": "docker run --rm mizarjp/winci-msys2:latest C:\\msys64\\usr\\bin\\bash.exe -lc 'pacboy --needed --noconfirm -Syuup toolchain:m clang:m openblas:m base-devel: msys2-devel:'",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@local install build-deps",
+      "type": "shell",
+      "command": "msys2_shell.cmd -here -defterm -no-start -lc 'pacboy --needed --noconfirm -Syuu toolchain:m clang:m openblas:m base-devel:'",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@local full-build",
+      "type": "shell",
+      "command": "powershell -exec bypass script\\msys2_build.ps1",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "mingw64@local enter powershell",
+      "type": "shell",
+      "command": "msys2_shell.cmd -here -defterm -no-start -mingw64 -l",
+      "problemMatcher": []
+    },
+    {
+      "label": "mingw32@local enter powershell",
+      "type": "shell",
+      "command": "msys2_shell.cmd -here -defterm -no-start -mingw32 -l",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@docker full-build",
+      "type": "shell",
+      "command": "cmd /c docker run --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-msys2:latest powershell C:\\YaneuraOu\\script\\msys2_build.ps1",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "andk@docker full-build",
+      "type": "shell",
+      "command": "cmd /c docker run --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-andk:latest powershell C:\\YaneuraOu\\script\\android_build.ps1",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@docker enter powershell",
+      "type": "shell",
+      "group": "test",
+      "command": "cmd /c docker run -it --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-msys2 powershell",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@docker enter mingw32",
+      "type": "shell",
+      "group": "test",
+      "command": "cmd /c docker run -it --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-msys2 msys2_shell.cmd -no-start -defterm -mingw32",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@docker enter mingw64",
+      "type": "shell",
+      "group": "test",
+      "command": "cmd /c docker run -it --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-msys2 msys2_shell.cmd -no-start -defterm -mingw64",
+      "problemMatcher": []
+    },
+    {
+      "label": "msys2@docker enter msys2",
+      "type": "shell",
+      "group": "test",
+      "command": "cmd /c docker run -it --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-msys2 msys2_shell.cmd -no-start -defterm -msys2",
+      "problemMatcher": []
+    },
+    {
+      "label": "andk@docker enter powershell",
+      "type": "shell",
+      "group": "test",
+      "command": "cmd /c docker run -it --rm --isolation=process -v %cd%:C:\\YaneuraOu mizarjp/winci-andk powershell",
+      "problemMatcher": []
+    },
+    {
+      "label": "linuxci-ubuntu@docker full-build",
+      "type": "shell",
+      "command": "cmd /c docker run --rm --mount type=bind,source=\"$(pwd)\",target=/data mizarjp/linuxci-ubuntu bash /data/script/linux_build.sh",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "linuxci-ubuntu@docker (target: avx2) build",
+      "type": "shell",
+      "command": "cmd /c docker run --rm --mount type=bind,source=\"$(pwd)\",target=/data mizarjp/linuxci-ubuntu bash /data/script/linux_build.sh -t '*avx2'",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "linuxci-ubuntu@docker enter bash",
+      "type": "shell",
+      "group": "test",
+      "command": "docker run -it --rm --mount type=bind,source=\"$(pwd)\",target=/data mizarjp/linuxci-ubuntu bash",
+      "problemMatcher": []
+    }
+]
+}
