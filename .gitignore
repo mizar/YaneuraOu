@@ -49,6 +49,8 @@ bld/
 [Bb]in/
 [Oo]bj/
 exe/
+libs/
+source/YaneuraOu-by-*
 
 # Visual Studio 2015 cache/options directory
 .vs/
