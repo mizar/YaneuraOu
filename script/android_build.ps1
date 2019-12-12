@@ -6,7 +6,7 @@ Set-Location (Join-Path $PSScriptRoot ..);
   };
   @{
     Target = "YANEURAOU_ENGINE_KPP_KKPT";
-    Dir = ".\build\android\kpp-kkpt";
+    Dir = ".\build\android\kpp_kkpt";
   };
   @{
     Target = "YANEURAOU_ENGINE_NNUE_HALFKP256";
