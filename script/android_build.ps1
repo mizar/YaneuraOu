@@ -6,7 +6,7 @@ Set-Location (Join-Path $PSScriptRoot ..);
   };
   @{
     Target = "YANEURAOU_ENGINE_KPP_KKPT";
-    Dir = ".\build\android\kpp-kkpt";
+    Dir = ".\build\android\kpp_kkpt";
   };
   @{
     Target = "YANEURAOU_ENGINE_NNUE_HALFKP256";
@@ -30,7 +30,8 @@ ForEach-Object{
 
 $Target = $_.Target;
 $Dir = $_.Dir;
-$Jobs = $env:NUMBER_OF_PROCESSORS;
+# 論理プロセッサ数が多すぎると実行バイナリが生成されないためソースファイル数より少なくする。F*ck.
+$Jobs = [Math]::Min($env:NUMBER_OF_PROCESSORS, 30);
 
 "`n# Build $Target to $Dir"|Out-Host;
 
@@ -44,7 +45,7 @@ ndk-build.cmd clean ENGINE_TARGET=$Target;
 
 "`n* Build Binary"|Out-Host;
 $log = $null;
-ndk-build.cmd ENGINE_TARGET=$Target NNUE_EVAL_ARCH=$($_.Nnue) -j $Jobs|Tee-Object -Variable log;
+ndk-build.cmd ENGINE_TARGET=$Target NNUE_EVAL_ARCH=$($_.Nnue) V=1 -j $Jobs|Tee-Object -Variable log;
 $log|Out-File -Encoding utf8 -Force (Join-Path $Dir "build.log");
 
 "`n* Copy Binary"|Out-Host;
