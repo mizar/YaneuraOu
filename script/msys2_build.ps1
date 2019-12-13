@@ -1,124 +1,77 @@
 Param(
   [String[]]$Compiler,
   [String[]]$Edition,
-  [String[]]$Target
+  [String[]]$Target,
+  [String[]]$Cpu
 )
 $loc = Get-Location;
 Set-Location (Join-Path $PSScriptRoot ..\source);
 # msys2_shell.cmd -msys2 -defterm -no-start -l -c 'pacboy -Syuu --needed --noconfirm --noprogressbar toolchain:m clang:m openblas:m base-devel: msys2-devel:';
+$TGCPUS = @('ZEN2';'AVX512';'AVX2';'SSE42';'SSE2';'NO_SSE';);
+$TGCOMPILERS = @('clang++';'g++';);
 @(
   @{
-    COMPILER = 'clang++';
-    TGCOMPILER = '-msys2-clang++';
+    BUILDDIR = 'nnue_halfkp_256';
+    EDITION = 'YANEURAOU_ENGINE_NNUE_HALPKP256';
+    BUILDNAME = 'YaneuraOu-nnue_halfkp_256';
+    TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
-    COMPILER = 'g++';
-    TGCOMPILER = '-msys2-g++';
-  };
-)|
-Where-Object{
-  $_Compiler = $_;
-  (-not $Compiler) -or ($Compiler|Where-Object{$_Compiler.COMPILER -like $_});
-}|
-ForEach-Object{@(
-  @{
-    COMPILER = $_.COMPILER;
-    BUILDDIR = 'kppt';
-    EDITION = 'YANEURAOU_ENGINE_KPPT';
-    TARGET = "YaneuraOu-kppt$($_.TGCOMPILER)";
-    TGTAIL = @(
-      'icelake';'cascadelake';'avx512';'avx2';'sse42';'sse2';'nosse';
-      'tournament-icelake';'tournament-cascadelake';'tournament-avx512';'tournament-avx2';'tournament-sse42';
-      'evallearn-icelake';'evallearn-cascadelake';'evallearn-avx512';'evallearn-avx2';'evallearn-sse42';
-    );
-  };
-  @{
-    COMPILER = $_.COMPILER;
-    BUILDDIR = 'kpp-kkpt';
-    EDITION = 'YANEURAOU_ENGINE_KPP_KKPT';
-    TARGET = "YaneuraOu-kpp_kkpt$($_.TGCOMPILER)";
-    TGTAIL = @(
-      'icelake';'cascadelake';'avx512';'avx2';'sse42';'sse2';'nosse';
-      'tournament-icelake';'tournament-cascadelake';'tournament-avx512';'tournament-avx2';'tournament-sse42';
-      'evallearn-icelake';'evallearn-cascadelake';'evallearn-avx512';'evallearn-avx2';'evallearn-sse42';
-    );
-  };
-  @{
-    COMPILER = $_.COMPILER;
-    BUILDDIR = 'material';
-    EDITION = 'YANEURAOU_ENGINE_MATERIAL';
-    TARGET = "YaneuraOu-material$($_.TGCOMPILER)";
-    TGTAIL = @(
-      'icelake';'cascadelake';'avx512';'avx2';'sse42';'sse2';'nosse';
-      'tournament-icelake';'tournament-cascadelake';'tournament-avx512';'tournament-avx2';'tournament-sse42';
-    );
-  };
-  @{
-    COMPILER = $_.COMPILER;
-    BUILDDIR = 'nnue-halfkp_256';
-    EDITION = 'YANEURAOU_ENGINE_NNUE_HALFKP256';
-    TARGET = "YaneuraOu-nnue-halfkp_256$($_.TGCOMPILER)";
-    TGTAIL = @(
-      'icelake';'cascadelake';'avx512';'avx2';'sse42';'sse2';'nosse';
-      'tournament-icelake';'tournament-cascadelake';'tournament-avx512';'tournament-avx2';'tournament-sse42';
-      'evallearn-icelake';'evallearn-cascadelake';'evallearn-avx512';'evallearn-avx2';'evallearn-sse42';
-    );
-  };
-  @{
-    COMPILER = $_.COMPILER;
     BUILDDIR = 'nnue_k_p_256';
     EDITION = 'YANEURAOU_ENGINE_NNUE_KP256';
-    TARGET = "YaneuraOu-nnue-k_p_256$($_.TGCOMPILER)";
-    TGTAIL = @(
-      'icelake';'cascadelake';'avx512';'avx2';'sse42';'sse2';'nosse';
-      'tournament-icelake';'tournament-cascadelake';'tournament-avx512';'tournament-avx2';'tournament-sse42';
-      'evallearn-icelake';'evallearn-cascadelake';'evallearn-avx512';'evallearn-avx2';'evallearn-sse42';
-    );
+    BUILDNAME = 'YaneuraOu-nnue_k_p_256';
+    TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
-    COMPILER = $_.COMPILER;
+    BUILDDIR = 'kppt';
+    EDITION = 'YANEURAOU_ENGINE_KPPT';
+    BUILDNAME = 'YaneuraOu-kppt';
+    TARGET = @('evallearn';'normal';'tournament';);
+  };
+  @{
+    BUILDDIR = 'kpp_kkpt';
+    EDITION = 'YANEURAOU_ENGINE_KPP_KKPT';
+    BUILDNAME = 'YaneuraOu-kpp_kkpt';
+    TARGET = @('evallearn';'normal';'tournament';);
+  };
+  @{
+    BUILDDIR = 'material';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL';
+    BUILDNAME = 'YaneuraOu-material';
+    TARGET = @('normal';'tournament';);
+  };
+  @{
     BUILDDIR = 'mate';
     EDITION = 'MATE_ENGINE';
-    TARGET = "YaneuraOu-mate$($_.TGCOMPILER)";
-    TGTAIL = @(
-      'icelake';'cascadelake';'avx512';'avx2';'sse42';'sse2';'nosse';
-      'tournament-icelake';'tournament-cascadelake';'tournament-avx512';'tournament-avx2';'tournament-sse42';
-    );
+    BUILDNAME = 'YaneuraOu-mate';
+    TARGET = @('normal';'tournament';);
   };
-)}|
+)|
 Where-Object{
   $_Edition = $_.EDITION;
   (-not $Edition) -or ($Edition|Where-Object{$_Edition -like $_});
 }|
 ForEach-Object{
-  $_OS = 'Windows_NT';
-  $_MAKE = 'mingw32-make';
-  $_MAKEFILE = 'Makefile';
+  $_Os = 'Windows_NT';
+  $_Make = 'mingw32-make';
+  $_Makefile = 'Makefile';
   $_Jobs = $env:NUMBER_OF_PROCESSORS;
-  $_Compiler = $_.COMPILER;
   $_BuildDir = Join-Path '../build/windows/' $_.BUILDDIR;
   $_Edition = $_.EDITION;
-  $_Target = $_.Target;
+  $_BuildName = $_.BUILDNAME;
   if(-not (Test-Path $_BuildDir)){
     New-Item $_BuildDir -ItemType Directory -Force;
   }
-  $_.TGTAIL|
-  Where-Object{
-    $_TgTail = $_;
-    (-not $Target) -or ($Target|Where-Object{$_TgTail -like $_});
-  }|
-  ForEach-Object{
-    if ($_ -ne 'nosse') {
-      Set-Item Env:MSYSTEM 'MINGW64';
-    } else {
-      Set-Item Env:MSYSTEM 'MINGW32';
-    }
-    msys2_shell.cmd -here -defterm -no-start -l -c "$_MAKE -f $_MAKEFILE clean YANEURAOU_EDITION=$_Edition";
+  $_.TARGET|Where-Object{ $_Target = $_; (-not $Target) -or ($Target|Where-Object{$_Target -like $_}); }|ForEach-Object{ $_Target = $_;
+  $TGCOMPILERS|Where-Object{ $_Compiler = $_; (-not $Compiler) -or ($Compiler|Where-Object{$_Compiler -like $_}); }|ForEach-Object{ $_Compiler = $_;
+  $TGCPUS|Where-Object{ $_Cpu = $_; (-not $Cpu) -or ($Cpu|Where-Object{$_Cpu -like $_}); }|ForEach-Object{ $_Cpu = $_;
+    Set-Item Env:MSYSTEM $(if ($_Cpu -ne 'NO_SSE') { 'MINGW64' } else { 'MINGW32' });
+    msys2_shell.cmd -here -defterm -no-start $(if ($_Cpu -ne 'NO_SSE') { '-mingw64' } else { '-mingw32' }) -lc "$_Make -f $_Makefile clean YANEURAOU_EDITION^=$_Edition";
     $log = $null;
-    msys2_shell.cmd -here -defterm -no-start -l -c "nice $_MAKE -f $_MAKEFILE -j$_Jobs $_ YANEURAOU_EDITION=$_Edition COMPILER=$_Compiler OS=$_OS 2>&1"|Tee-Object -Variable log
-    $log|Out-File -Encoding utf8 -Force (Join-Path $_BuildDir "$_Target-$_.log");
-    Copy-Item YaneuraOu-by-gcc.exe (Join-Path $_BuildDir "$_Target-$_.exe") -Force;
-  };
-  msys2_shell.cmd -here -defterm -no-start -l -c "$_MAKE -f $_MAKEFILE clean YANEURAOU_EDITION=$_Edition";
+    msys2_shell.cmd -here -defterm -no-start $(if ($_Cpu -ne 'NO_SSE') { '-mingw64' } else { '-mingw32' }) -lc "nice $_Make -f $_Makefile -j$_Jobs $_Target YANEURAOU_EDITION^=$_Edition COMPILER^=$_Compiler OS^=$_Os TARGET_CPU^=$_Cpu 2^>^&1"|Tee-Object -Variable log;
+    $log|Out-File -Encoding utf8 -Force (Join-Path $_BuildDir "$_BuildName-$_Target-$_Compiler-$($_Cpu.ToLower()).log");
+    Copy-Item YaneuraOu-by-gcc.exe (Join-Path $_BuildDir "$_BuildName-$_Target-$_Compiler-$($_Cpu.ToLower()).exe") -Force;
+  }}};
+  msys2_shell.cmd -here -defterm -no-start $(if ($_Cpu -ne 'NO_SSE') { '-mingw64' } else { '-mingw32' }) -lc "$_Make -f $_Makefile clean YANEURAOU_EDITION^=$_Edition";
 };
 Set-Location $loc;
