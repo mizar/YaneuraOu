@@ -1,18 +1,31 @@
-name: NDK CI
+# for Android environment
+name: NDK CI (for Android)
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - '**'
   pull_request:
-    branches: [ master ]
+    branches:
+      - '**'
 
 jobs:
   build:
+    # ubuntu-latest = ubuntu-18.04
+    # https://docs.github.com/ja/free-pro-team@latest/actions/reference/specifications-for-github-hosted-runners
     runs-on: ubuntu-latest
+
     steps:
     - uses: actions/checkout@v2
+
     - uses: nttld/setup-ndk@v1
       with:
         ndk-version: r21d
+
     - name: ndk-build
-      run: cd script && ./android_build.sh
+      run: ./script/android_build.sh
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build-android
+        path: build/**/*
