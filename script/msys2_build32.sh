@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # MSYS2 (MinGW 32-bit) 上で Windows バイナリのビルド
 # ビルド用パッケージの導入
-# $ pacboy --needed --noconfirm -Sy toolchain:m clang:m
+# $ pacboy --needed --noconfirm -Syuu toolchain:m clang:m openblas:m base-devel: msys2-devel:
 # MSYS2パッケージの更新、更新出来る項目が無くなるまで繰り返し実行、場合によってはMinGWの再起動が必要
-# $ pacman -Syuu
+# $ pacman -Syuu --noconfirm
 
 # Example 1: 全パターンのビルド
 # msys2_build32.sh
@@ -92,7 +92,7 @@ for COMPILER in ${COMPILERSARR[@]}; do
               echo "* target: ${TARGET}"
               TGSTR=YaneuraOu-${FILESTR[$EDITION]}-msys2-${CSTR}-${TARGET}
               ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-              nice ${MAKE} -f ${MAKEFILE} -j${JOBS} ${TARGET} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} > >(tee ${BUILDDIR}/${TGSTR}.log) || exit $?
+              nice ${MAKE} -f ${MAKEFILE} -j${JOBS} ${TARGET} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} TARGET_CPU=NO_SSE > >(tee ${BUILDDIR}/${TGSTR}.log) || exit $?
               cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TGSTR}.exe
               ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
               set -f
