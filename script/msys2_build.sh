@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 # MSYS2 (MinGW 64-bit) 上で Windows バイナリのビルド
 # ビルド用パッケージの導入
-# $ pacboy --needed --noconfirm -Sy toolchain:m clang:m openblas:m base-devel: msys2-devel:
+# $ pacboy --needed --noconfirm -Syuu toolchain:m clang:m openblas:m base-devel: msys2-devel:
 # MSYS2パッケージの更新、更新出来る項目が無くなるまで繰り返し実行、場合によってはMinGWの再起動が必要
-# $ pacman -Syuu
+# $ pacman -Syuu --noconfirm
 
 # Example 1: 全パターンのビルド
 # msys2_build.sh
@@ -33,12 +33,15 @@ do
       ;;
     t) TARGETS="$OPTARG"
       ;;
+    p) CPUS="$OPTARG"
+      ;;
   esac
 done
 
 set -f
 IFS=, eval 'COMPILERSARR=($COMPILERS)'
 IFS=, eval 'EDITIONSARR=($EDITIONS)'
+IFS=, eval 'CPUSARR=($CPUS)'
 IFS=, eval 'TARGETSARR=($TARGETS)'
 
 cd `dirname $0`
@@ -53,31 +56,25 @@ EDITIONS=(
   MATE_ENGINE
 )
 
-TARGETS=(
-  icelake
-  cascadelake
+CPUS=(
+  zen2
   avx512
   avx2
   sse42
   sse2
-  tournament-icelake
-  tournament-cascadelake
-  tournament-avx512
-  tournament-avx2
-  tournament-sse42
-  evallearn-icelake
-  evallearn-cascadelake
-  evallearn-avx512
-  evallearn-avx2
-  evallearn-sse42
 )
+
+TARGETS=(
+  normal
+  tournament
+  evallearn)
 
 declare -A FILESTR;
 FILESTR=(
   ["YANEURAOU_ENGINE_KPPT"]="kppt"
   ["YANEURAOU_ENGINE_KPP_KKPT"]="kpp_kkpt"
   ["YANEURAOU_ENGINE_MATERIAL"]="material"
-  ["YANEURAOU_ENGINE_NNUE_HALFKP256"]="nnue-halfkp_256"
+  ["YANEURAOU_ENGINE_NNUE"]="nnue-halfkp_256"
   ["YANEURAOU_ENGINE_NNUE_KP256"]="nnue-k_p_256"
   ["MATE_ENGINE"]="mate"
 );
@@ -99,18 +96,28 @@ for COMPILER in ${COMPILERSARR[@]}; do
           for TARGETPTN in ${TARGETSARR[@]}; do
             set +f
             if [[ $TARGET == $TARGETPTN ]]; then
-              echo "* target: ${TARGET}"
-              TGSTR=YaneuraOu-${FILESTR[$EDITION]}-msys2-${CSTR}-${TARGET}
-              ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
-              nice ${MAKE} -f ${MAKEFILE} -j${JOBS} ${TARGET} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} 2>&1 | tee ${BUILDDIR}/${TGSTR}.log
-              cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TGSTR}.exe
-              ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
               set -f
+              for CPU in ${CPUS[@]}; do
+                for CPUPTN in ${CPUSARR[@]}; do
+                  set +f
+                  if [[ $CPU == $CPUPTN ]]; then
+                    echo "* target: ${TARGET}"
+                    TGSTR=YaneuraOu-${FILESTR[$EDITION]}-msys2-${CSTR}-${TARGET}
+                    ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
+                    nice ${MAKE} -f ${MAKEFILE} -j${JOBS} ${TARGET} YANEURAOU_EDITION=${EDITION} COMPILER=${COMPILER} TARGET_CPU=${CPU} 2>&1 | tee ${BUILDDIR}/${TGSTR}.log
+                    cp YaneuraOu-by-gcc.exe ${BUILDDIR}/${TGSTR}.exe
+                    set -f
+                    break
+                  fi
+                  set -f
+                done
+              done
               break
             fi
             set -f
           done
         done
+        ${MAKE} -f ${MAKEFILE} clean YANEURAOU_EDITION=${EDITION}
         break
       fi
       set -f
