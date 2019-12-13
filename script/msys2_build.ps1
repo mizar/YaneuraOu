@@ -11,39 +11,39 @@ $TGCPUS = @('ZEN2';'AVX512';'AVX2';'SSE42';'SSE2';'NO_SSE';);
 $TGCOMPILERS = @('clang++';'g++';);
 @(
   @{
-    BUILDDIR = 'nnue_halfkp_256';
+    BUILDDIR = 'NNUE';
     EDITION = 'YANEURAOU_ENGINE_NNUE_HALPKP256';
-    BUILDNAME = 'YaneuraOu-nnue_halfkp_256';
+    BUILDNAME = 'YaneuraOu_NNUE';
     TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
-    BUILDDIR = 'nnue_k_p_256';
+    BUILDDIR = 'NNUE_KP256';
     EDITION = 'YANEURAOU_ENGINE_NNUE_KP256';
-    BUILDNAME = 'YaneuraOu-nnue_k_p_256';
+    BUILDNAME = 'YaneuraOu_NNUE_KP256';
     TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
-    BUILDDIR = 'kppt';
+    BUILDDIR = 'KPPT';
     EDITION = 'YANEURAOU_ENGINE_KPPT';
-    BUILDNAME = 'YaneuraOu-kppt';
+    BUILDNAME = 'YaneuraOu_KPPT';
     TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
-    BUILDDIR = 'kpp_kkpt';
+    BUILDDIR = 'KPP_KKPT';
     EDITION = 'YANEURAOU_ENGINE_KPP_KKPT';
-    BUILDNAME = 'YaneuraOu-kpp_kkpt';
+    BUILDNAME = 'YaneuraOu_KPP_KKPT';
     TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
-    BUILDDIR = 'material';
+    BUILDDIR = 'KOMA';
     EDITION = 'YANEURAOU_ENGINE_MATERIAL';
-    BUILDNAME = 'YaneuraOu-material';
+    BUILDNAME = 'YaneuraOu_KOMA';
     TARGET = @('normal';'tournament';);
   };
   @{
-    BUILDDIR = 'mate';
+    BUILDDIR = 'MATE';
     EDITION = 'MATE_ENGINE';
-    BUILDNAME = 'YaneuraOu-mate';
+    BUILDNAME = 'tanuki_MATE';
     TARGET = @('normal';'tournament';);
   };
 )|
