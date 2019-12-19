@@ -7,6 +7,12 @@
 #include "../../tt.h"
 #include "apery_book.h"
 
+#if defined (__cpp_lib_to_chars) // (C++17)
+
+#include <charconv> // std::to_chars
+
+#endif
+
 #include <sstream>
 #include <unordered_set>
 #include <iomanip>		// std::setprecision()
@@ -357,7 +363,7 @@ namespace Book
 						sfen << " " << feed_next(iss);
 
 						// 初期局面からの手数
-						sfen <<  " " << feed_next(iss);
+						sfen << " " << feed_next(iss);
 
 						break;
 					}
@@ -457,14 +463,19 @@ namespace Book
 					else if (from_thinking)
 					{
 						// posの局面で思考させてみる。(あとでまとめて)
-						if (thinking_sfens.count(sfen) == 0)
-							thinking_sfens.insert(sfen);
+						thinking_sfens.insert(sfen);
 					}
 				}
 
-				// sfenから生成するモードの場合、1000棋譜処理するごとにドットを出力。
+				// 進捗の出力
 				if ((k % 1000) == 0)
+				{
+					// 100000棋譜処理するごとに処理数を出力。
+					if ((k % 100000) == 0)
+						cout << "\n" << k;
+					// sfenから生成するモードの場合、1000棋譜処理するごとにドットを出力。
 					cout << '.';
+				}
 			}
 			cout << "done." << endl;
 
@@ -933,7 +944,7 @@ namespace Book
 		cout << endl << "write " + filename;
 
 		// バージョン識別用文字列
-		fs << "#YANEURAOU-DB2016 1.00" << endl;
+		fs << "#YANEURAOU-DB2016 1.00\n";
 
 		vector<pair<string, PosMoveListPtr> > vectored_book;
 		
@@ -962,45 +973,71 @@ namespace Book
 		u64 counter = 0;
 		auto output_progress = [&]()
 		{
-			if ((counter % 1000) == 0)
+			if ((counter % 10000) == 0)
 			{
-				if ((counter % 80000) == 0) // 80文字ごとに改行
-					cout << endl;
+				if ((counter % 1000000) == 0) // 1000000 ごとに処理数を出力
+					cout << endl << counter;
 				cout << ".";
 			}
 			counter++;
 		};
 
+		{
+			Position pos;
+
+			// std::vectorにしてあるのでit.firstを書き換えてもitは無効にならないはず。
+			for (auto& it : vectored_book)
 			{
-				Position pos;
+			output_progress();
 
-				// std::vectorにしてあるのでit.firstを書き換えてもitは無効にならないはず。
-				for (auto& it : vectored_book)
-				{
-				output_progress();
+				StateInfo si;
+				pos.set(it.first,&si,Threads.main());
+				auto sfen = pos.sfen();
+				it.first = sfen;
 
-					StateInfo si;
-					pos.set(it.first,&si,Threads.main());
-					auto sfen = pos.sfen();
-					it.first = sfen;
-
-					auto sfen_left = StringExtension::trim_number(sfen); // 末尾にplyがあるはずじゃろ
+				auto sfen_left = StringExtension::trim_number(sfen); // 末尾にplyがあるはずじゃろ
 				int ply = StringExtension::to_int(sfen.substr(sfen_left.length()), 0);
 
-					auto it2 = book_ply.find(sfen_left);
-					if (it2 == book_ply.end())
-						book_ply[sfen_left] = ply; // エントリーが見つからなかったので何も考えずに追加
-					else
-						it2->second = std::min(it2->second, ply); // 手数の短いほうを代入しておく。
-				}
+				auto it2 = book_ply.find(sfen_left);
+				if (it2 == book_ply.end())
+					book_ply[sfen_left] = ply; // エントリーが見つからなかったので何も考えずに追加
+				else
+					it2->second = std::min(it2->second, ply); // 手数の短いほうを代入しておく。
 			}
+		}
 
-			// ここvectored_bookが、sfen文字列でsortされていて欲しいのでsortする。
-			// アルファベットの範囲ではlocaleの影響は受けない…はず…。
-			std::sort(vectored_book.begin(), vectored_book.end(),
-				[](const pair<string, PosMoveListPtr>&lhs, const pair<string, PosMoveListPtr>&rhs) {
-				return lhs.first < rhs.first;
-			});
+		// ここvectored_bookが、sfen文字列でsortされていて欲しいのでsortする。
+		// アルファベットの範囲ではlocaleの影響は受けない…はず…。
+		std::sort(vectored_book.begin(), vectored_book.end(),
+			[](const pair<string, PosMoveListPtr>&lhs, const pair<string, PosMoveListPtr>&rhs) {
+			return lhs.first < rhs.first;
+		});
+
+		// 1要素あたりの最大サイズ
+		const size_t entrymaxsize = 65536; // 64kiB
+		// 領域確保係数
+		const size_t renderbufmulti = 256;
+		// 最大バッファ領域サイズ
+		const size_t renderbufmaxsize = entrymaxsize * renderbufmulti; // 16MiB
+		// バッファ領域サイズ
+		size_t renderbufsize = entrymaxsize * std::min(renderbufmulti, vectored_book.size() + 1);
+		// バッファ払い出し閾値
+		ptrdiff_t renderbufth = (ptrdiff_t)renderbufsize - (ptrdiff_t)entrymaxsize;
+		// バッファ確保
+		char *renderbuf = new char[renderbufsize];
+		// バッファ終端
+		char *q = renderbuf + renderbufsize;
+		// 現在位置
+		char *p;
+		// stringからバッファへのコピー
+		auto str_copy = [](char *s, const string &str)
+		{
+			size_t str_size = str.size();
+			std::char_traits<char>::copy(s, str.c_str(), str_size);
+			return s + str_size;
+		};
+
+		*(p = renderbuf) = '\0';
 
 		for (auto& it : vectored_book)
 		{
@@ -1016,7 +1053,13 @@ namespace Book
 
 			// -- このentryを書き出す
 
-			fs << "sfen " << it.first /* is sfen string */ << endl; // sfen
+			*p++ = 's';
+			*p++ = 'f';
+			*p++ = 'e';
+			*p++ = 'n';
+			*p++ = ' ';
+			p = str_copy(p, it.first);
+			*p++ = '\n';
 
 			auto& move_list = *it.second;
 
@@ -1024,18 +1067,58 @@ namespace Book
 			std::stable_sort(move_list.begin(), move_list.end());
 
 			for (auto& bp : move_list)
-				fs << bp.bestMove << ' ' << bp.nextMove << ' ' << bp.value << " " << bp.depth << " " << bp.num << endl;
+			{
 			// 指し手、相手の応手、そのときの評価値、探索深さ、採択回数
+				p = str_copy(p, to_usi_string(bp.bestMove));
+				*p++ = ' ';
+				p = str_copy(p, to_usi_string(bp.nextMove));
+				*p++ = ' ';
+#if defined (__cpp_lib_to_chars) // (C++17)
+
+				p = std::to_chars(p, q, bp.value).ptr;
+				*p++ = ' ';
+				p = std::to_chars(p, q, bp.depth).ptr;
+				*p++ = ' ';
+				p = std::to_chars(p, q, bp.num).ptr;
+				*p++ = '\n';
+
+#else // (C++11)
+
+				p = str_copy(p, std::to_string(bp.value));
+				*p++ = ' ';
+				p = str_copy(p, std::to_string(bp.depth));
+				*p++ = ' ';
+				p = str_copy(p, std::to_string(bp.num));
+				*p++ = '\n';
+
+#endif
+			}
+
+			*p = '\0';
+
+			// renderbufth (16320kiB) を超えて出力が溜まったらファイルに書き出す
+			if (p - renderbuf > renderbufth)
+			{
+				fs.write(renderbuf, p - renderbuf);
+				*(p = renderbuf) = '\0';
+			}
+
 		}
 
+		if (p != renderbuf)
+			fs.write(renderbuf, p - renderbuf);
+
 		fs.close();
+
+		// バッファ開放
+		delete[] renderbuf;
 
 		cout << endl << "done!" << endl;
 
 		return 0;
 	}
 
-	void MemoryBook::insert(const std::string sfen, const BookPos& bp , bool overwrite)
+	void MemoryBook::insert(const std::string sfen, const BookPos& bp, bool overwrite)
 	{
 		auto it = book_body.find(sfen);
 		if (it == book_body.end())
