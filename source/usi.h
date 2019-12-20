@@ -23,7 +23,7 @@ namespace USI
 	};
 
 	// USIのoption名と、それに対応する設定内容を保持しているclass。実体はstd::map
-	typedef std::map<std::string, Option , CaseInsensitiveLess> OptionsMap;
+	typedef std::map<std::string, Option, CaseInsensitiveLess> OptionsMap;
 
 	// USIプロトコルで指定されるoptionの内容を保持するclass
 	class Option {
@@ -112,6 +112,12 @@ namespace USI
 
 	// 指し手をUSI文字列に変換する。
 	std::string move(Move m /*, bool chess960*/);
+
+	// 指し手をUSI文字列に変換してバッファに書き込む。
+	char *move_chars(char *, Move m /*, bool chess960*/);
+
+	// 指し手をUSI文字列に変換して追加する。
+	std::vector<char> &move_vecchars(std::vector<char> &, Move m /*, bool chess960*/);
 
 	// pv(読み筋)をUSIプロトコルに基いて出力する。
 	// depth : 反復深化のiteration深さ。
