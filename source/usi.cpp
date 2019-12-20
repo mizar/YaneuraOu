@@ -52,7 +52,7 @@ namespace Learner
   typedef std::pair<Value, std::vector<Move> > ValueAndPV;
 
   ValueAndPV qsearch(Position& pos);
-  ValueAndPV search(Position& pos, int depth_, size_t multiPV = 1 , u64 nodesLimit = 0 );
+  ValueAndPV search(Position& pos, int depth_, size_t multiPV = 1, u64 nodesLimit = 0 );
 
 }
 #endif
@@ -322,7 +322,7 @@ void is_ready_cmd(Position& pos, StateListPtr& states)
 }
 
 // "position"コマンド処理部
-void position_cmd(Position& pos, istringstream& is , StateListPtr& states)
+void position_cmd(Position& pos, istringstream& is, StateListPtr& states)
 {
 	Move m;
 	string token, sfen;
@@ -347,7 +347,7 @@ void position_cmd(Position& pos, istringstream& is , StateListPtr& states)
 
 	// 新しく渡す局面なので古いものは捨てて新しいものを作る。
 	states = StateListPtr(new StateList(1));
-	pos.set(sfen , &states->back() , Threads.main());
+	pos.set(sfen, &states->back(), Threads.main());
 
 	// 指し手のリストをパースする(あるなら)
 	while (is >> token && (m = USI::to_move(pos, token)) != MOVE_NONE)
@@ -415,7 +415,7 @@ void getoption_cmd(istringstream& is)
 
 // go()は、思考エンジンがUSIコマンドの"go"を受け取ったときに呼び出される。
 // この関数は、入力文字列から思考時間とその他のパラメーターをセットし、探索を開始する。
-void go_cmd(const Position& pos, istringstream& is , StateListPtr& states) {
+void go_cmd(const Position& pos, istringstream& is, StateListPtr& states) {
 
 	Search::LimitsType limits;
 	string token;
@@ -513,7 +513,7 @@ void go_cmd(const Position& pos, istringstream& is , StateListPtr& states) {
 	if (limits.byoyomi[BLACK] == 0 && limits.inc[BLACK] == 0 && limits.time[BLACK] == 0 && limits.rtime == 0)
 		limits.byoyomi[BLACK] = limits.byoyomi[WHITE] = 1000;
 
-	Threads.start_thinking(pos, states , limits , ponderMode);
+	Threads.start_thinking(pos, states, limits, ponderMode);
 }
 
 // --------------------
@@ -545,7 +545,7 @@ void search_cmd(Position& pos, istringstream& is)
 	}
 
 	cout << "search depth = " << depth << " , multi_pv = " << multi_pv << " : ";
-	auto pv = Learner::search(pos , depth , multi_pv);
+	auto pv = Learner::search(pos, depth, multi_pv);
 	cout << "Value = " << pv.first << " , PV = ";
 	for (auto m : pv.second)
 		cout << m << " ";
@@ -656,10 +656,10 @@ void USI::loop(int argc, char* argv[])
 		}
 
 		// 与えられた局面について思考するコマンド
-		else if (token == "go") go_cmd(pos, is , states);
+		else if (token == "go") go_cmd(pos, is, states);
 
 		// (思考などに使うための)開始局面(root)を設定する
-		else if (token == "position") position_cmd(pos, is , states);
+		else if (token == "position") position_cmd(pos, is, states);
 
 		// 起動時いきなりこれが飛んでくるので速攻応答しないとタイムアウトになる。
 		else if (token == "usi")
@@ -686,7 +686,7 @@ void USI::loop(int argc, char* argv[])
 		else if (token == "matsuri") pos.set("l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w GR5pnsg 1",&states->back(),Threads.main());
 
 		// "position sfen"の略。
-		else if (token == "sfen") position_cmd(pos, is , states);
+		else if (token == "sfen") position_cmd(pos, is, states);
 
 		// ログファイルの書き出しのon
 		else if (token == "log") start_logger(true);
@@ -844,6 +844,7 @@ std::string USI::square(Square s) {
 // 指し手をUSI文字列に変換する。
 std::string USI::move(Move m)
 {
+#if 0
 	std::stringstream ss;
 	if (!is_ok(m))
 	{
@@ -866,6 +867,159 @@ std::string USI::move(Move m)
 			ss << '+';
 	}
 	return ss.str();
+#else
+	if (!is_ok(m))
+	{
+		if (m == MOVE_RESIGN)
+			return string("resign");
+		else if (m == MOVE_WIN)
+			return string("win");
+		else if (m == MOVE_NULL)
+			return string("null");
+		else if (m == MOVE_NONE)
+			return string("none");
+		else
+			return string();
+	}
+	else if (is_drop(m))
+	{
+		Square sq_to = move_to(m);
+		string s {
+			USI_PIECE[(m >> 6) & 30], // == USI_PIECE[(move_droppedsiece(m) & 15) * 2];
+			'*',
+			static_cast<char>('1' + file_of(sq_to)),
+			static_cast<char>('a' + rank_of(sq_to))
+		};
+		return s;
+	}
+	else if (is_promote(m))
+	{
+		Square sq_from = move_from(m), sq_to = move_to(m);
+		string s {
+			static_cast<char>('1' + file_of(sq_from)),
+			static_cast<char>('a' + rank_of(sq_from)),
+			static_cast<char>('1' + file_of(sq_to)),
+			static_cast<char>('a' + rank_of(sq_to)),
+			'+'
+		};
+		return s;
+	}
+	else
+	{
+		Square sq_from = move_from(m), sq_to = move_to(m);
+		string s {
+			static_cast<char>('1' + file_of(sq_from)),
+			static_cast<char>('a' + rank_of(sq_from)),
+			static_cast<char>('1' + file_of(sq_to)),
+			static_cast<char>('a' + rank_of(sq_to))
+		};
+		return s;
+	}
+#endif
+}
+
+// 指し手をUSI文字列に変換してバッファに書き込む。
+char *USI::move_chars(char *s, const Move m)
+{
+	if (!is_ok(m))
+	{
+		if (m == MOVE_RESIGN)
+		{
+			std::char_traits<char>::copy(s, "resign", 6);
+			s += 6;
+		}
+		else if (m == MOVE_WIN)
+		{
+			std::char_traits<char>::copy(s, "win", 3);
+			s += 3;
+		}
+		else if (m == MOVE_NULL)
+		{
+			std::char_traits<char>::copy(s, "null", 4);
+			s += 4;
+		}
+		else if (m == MOVE_NONE)
+		{
+			std::char_traits<char>::copy(s, "none", 4);
+			s += 4;
+		}
+	}
+	else if (is_drop(m))
+	{
+		Square sq_to = move_to(m);
+		*s++ = USI_PIECE[(m >> 6) & 30]; // == USI_PIECE[(move_droppedsiece(m) & 15) * 2];
+		*s++ = '*';
+		*s++ = static_cast<char>('1' + file_of(sq_to));
+		*s++ = static_cast<char>('a' + rank_of(sq_to));
+	}
+	else
+	{
+		Square sq_from = move_from(m), sq_to = move_to(m);
+		*s++ = static_cast<char>('1' + file_of(sq_from));
+		*s++ = static_cast<char>('a' + rank_of(sq_from));
+		*s++ = static_cast<char>('1' + file_of(sq_to));
+		*s++ = static_cast<char>('a' + rank_of(sq_to));
+		if (is_promote(m))
+			*s++ = '+';
+	}
+	*s = '\0';
+	return s;
+}
+
+// 指し手をUSI文字列に変換して追加する。
+std::vector<char> &USI::move_vecchars(std::vector<char> &s, const Move m)
+{
+	if (!is_ok(m))
+	{
+		if (m == MOVE_RESIGN)
+		{
+			s.push_back('r');
+			s.push_back('e');
+			s.push_back('s');
+			s.push_back('i');
+			s.push_back('g');
+			s.push_back('n');
+		}
+		else if (m == MOVE_WIN)
+		{
+			s.push_back('w');
+			s.push_back('i');
+			s.push_back('n');
+		}
+		else if (m == MOVE_NULL)
+		{
+			s.push_back('n');
+			s.push_back('u');
+			s.push_back('l');
+			s.push_back('l');
+		}
+		else if (m == MOVE_NONE)
+		{
+			s.push_back('n');
+			s.push_back('o');
+			s.push_back('n');
+			s.push_back('e');
+		}
+	}
+	else if (is_drop(m))
+	{
+		Square sq_to = move_to(m);
+		s.push_back(USI_PIECE[(m >> 6) & 30]); // == USI_PIECE[(move_droppedsiece(m) & 15) * 2];
+		s.push_back('*');
+		s.push_back(static_cast<char>('1' + file_of(sq_to)));
+		s.push_back(static_cast<char>('a' + rank_of(sq_to)));
+	}
+	else
+	{
+		Square sq_from = move_from(m), sq_to = move_to(m);
+		s.push_back(static_cast<char>('1' + file_of(sq_from)));
+		s.push_back(static_cast<char>('a' + rank_of(sq_from)));
+		s.push_back(static_cast<char>('1' + file_of(sq_to)));
+		s.push_back(static_cast<char>('a' + rank_of(sq_to)));
+		if (is_promote(m))
+			s.push_back('+');
+	}
+	return s;
 }
 
 // 局面posとUSIプロトコルによる指し手を与えて

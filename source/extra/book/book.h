@@ -31,7 +31,7 @@ namespace Book
 		// std::sort()で出現回数に対して降順ソートされて欲しいのでこう定義する。
 		// また出現回数が同じ時は、評価値順に降順ソートされて欲しいので…。
 		bool operator < (const BookPos& rhs) const {
-			return (num != rhs.num) ? (num > rhs.num ) : (value > rhs.value);
+			return (num != rhs.num) ? (num > rhs.num) : (value > rhs.value);
 		}
 	};
 
