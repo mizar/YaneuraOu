@@ -9,6 +9,12 @@
 #include <sstream>
 #include <unordered_set>
 
+#if defined (__cpp_lib_string_view) // (C++17)
+
+#include <string_view>
+
+#endif
+
 using namespace std;
 using namespace Book;
 
@@ -28,8 +34,8 @@ namespace {
 	// 定跡を掘り進むときに枝刈りする評価値が駒落ちの度合いで異なるので同じ枠組みでうまく扱うのは結構難しい気も。
 
 	std::vector<std::string> start_sfens = {
-	/*public static readonly string HIRATE = */       "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1" ,
-	/*public static readonly string HANDICAP_KYO = */ "lnsgkgsn1/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1" ,
+	/*public static readonly string HIRATE = */       "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1",
+	/*public static readonly string HANDICAP_KYO = */ "lnsgkgsn1/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1",
 	/*public static readonly string HANDICAP_RIGHT_KYO = */ "1nsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1",
 	/*public static readonly string HANDICAP_KAKU = */ "lnsgkgsnl/1r7/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1",
 	/*public static readonly string HANDICAP_HISYA = */ "lnsgkgsnl/7b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL w - 1",
@@ -106,7 +112,7 @@ namespace {
 		int feed_position_string(Position& pos, const string& line, StateInfo* states, Thread* th);
 
 		//  定跡ファイルの特定局面から定跡を掘る
-		void extend_tree_sub(Position& pos, MemoryBook& read_book, fstream& fs, const string& sfen , bool bookhit);
+		void extend_tree_sub(Position& pos, MemoryBook& read_book, fstream& fs, vector<char>& sfen, bool bookhit);
 
 		// 進捗の表示
 		void output_progress();
@@ -121,7 +127,7 @@ namespace {
 
 		// Position::do_move(),undo_move()のwrapper
 		void do_move(Position& pos, Move m, StateInfo& si) { lastMoves.push_back(m);  pos.do_move(m, si); }
-		void undo_move(Position& pos,Move m) { lastMoves.pop_back(); pos.undo_move(m); }
+		void undo_move(Position& pos, Move m) { lastMoves.pop_back(); pos.undo_move(m); }
 
 		// 処理したnode数/書き出したnode数
 		u64 total_node = 0;
@@ -148,13 +154,13 @@ namespace {
 
 	void BookTreeBuilder::output_progress()
 	{
-		if ((total_node % 1000) == 0)
+		if ((total_node % 10000) == 0)
 		{
 			cout << endl << total_node;
 			if (total_write_node)
 				cout << "|" << total_write_node;
 		}
-		if ((total_node % 10) == 0)
+		if ((total_node % 100) == 0)
 			cout << ".";
 		++total_node;
 	}
@@ -223,16 +229,16 @@ namespace {
 					// 定跡DBはmakebook thinkコマンドで作成されていて、この正規化はすでになされている。
 
 					// 現局面の手番を見て符号を決めないといけない。
-				return VMD_Pair(
+					return VMD_Pair(
 						(Value)(stm == BLACK ? -black_contempt : +black_contempt) /*先手のcomtempt */, draw_move, DEPTH_ZERO,
 						(Value)(stm == WHITE ? -white_contempt : +white_contempt) /*後手のcomtempt */, draw_move, DEPTH_ZERO
 					);
 				}
 
-			case REPETITION_INFERIOR: return VMD_Pair(-VALUE_SUPERIOR, MOVE_NONE, DEPTH_ZERO);
-			case REPETITION_SUPERIOR: return VMD_Pair(VALUE_SUPERIOR, MOVE_NONE, DEPTH_ZERO);
-			case REPETITION_WIN     : return VMD_Pair(mate_in(MAX_PLY), MOVE_NONE, DEPTH_ZERO);
-			case REPETITION_LOSE    : return VMD_Pair(mated_in(MAX_PLY), MOVE_NONE, DEPTH_ZERO);
+				case REPETITION_INFERIOR: return VMD_Pair(-VALUE_SUPERIOR, MOVE_NONE, DEPTH_ZERO);
+				case REPETITION_SUPERIOR: return VMD_Pair(VALUE_SUPERIOR, MOVE_NONE, DEPTH_ZERO);
+				case REPETITION_WIN     : return VMD_Pair(mate_in(MAX_PLY), MOVE_NONE, DEPTH_ZERO);
+				case REPETITION_LOSE    : return VMD_Pair(mated_in(MAX_PLY), MOVE_NONE, DEPTH_ZERO);
 
 					// これ入れておかないとclangで警告が出る。
 				case REPETITION_NONE:
@@ -244,7 +250,10 @@ namespace {
 
 		// -- すでに探索済みであるなら、そのときの値を返す。
 
-		auto sfen = pos.sfen();
+		auto sfen_tup = pos.sfen_tup();
+		auto sfen = get<0>(sfen_tup);
+		auto sfen_left = get<1>(sfen_tup);
+		int gamePly = get<2>(sfen_tup);
 
 		// 手数違いの局面もread_bookの定跡を調べるので、千日手スコアはvmd_write_cacheにcacheしてはならない。
 		// ※　次の局面で千日手になるパターンは仕方がない。
@@ -266,130 +275,127 @@ namespace {
 		// 同一局面の場合、gamePlyが最小のものを採用する。(それ以外は千日手絡みのスコアが混じっている可能性があるので)
 		// ※　it_write->second.gamePly > gamePly のとき、cacheにhitしなかったものとして再度調べる。
 
-		auto sfen_left = StringExtension::trim_number(sfen);
-		int gamePly = StringExtension::to_int(StringExtension::mid(sfen, sfen_left.length()), 0);
-		
 		auto it_write = vmd_write_cache.find(sfen_left);
 		if (it_write != vmd_write_cache.end() && it_write->second.gamePly <= gamePly)
 			return it_write->second.vmd_pair;
 
 		// -- 定跡にhitするのか？(手数無視で)
 
-			auto it_read = read_book.find(pos);
-			if (it_read == nullptr || it_read->size() == 0)
-				// このnodeについて、これ以上、何も処理できないでござる。
+		auto it_read = read_book.find(pos);
+		if (it_read == nullptr || it_read->size() == 0)
+			// このnodeについて、これ以上、何も処理できないでござる。
+		{
+		// 保存する価値がないと思うでvmd_write_cacheには保存しない
+		return VMD_Pair(VALUE_NONE, MOVE_NONE, DEPTH_ZERO);
+		}
+
+		// -- このnodeを展開する。
+
+		// 新しいほうの定跡ファイルに登録すべきこのnodeの候補手
+		auto list = PosMoveListPtr(new PosMoveList());
+
+		StateInfo si;
+
+		// このnodeの最善手。rootColorがBLACK,WHITE用、それぞれ。
+		VMD best[COLOR_NB];
+
+		// ↑のbest.valueを上回る指し手であればその指し手でbest.move,best.depthを更新する。
+		auto add_list = [&](Book::BookPos& bp, Color c /* このnodeのColor */, bool update_list)
+		{
+			ASSERT_LV3(bp.value != VALUE_NONE);
+
+			// 定跡に登録する。
+			bp.num = 1; // 出現頻度を1に固定しておかないとsortのときに評価値で降順に並ばなくて困る。
+
+			if (update_list)
+				list->push_back(bp);
+
+			// このnodeのbestValueを更新したら、それをreturnのときに返す必要があるので保存しておく。
+			VMD vmd((Value)bp.value, bp.bestMove, (Depth)bp.depth);
+
+			// 値を上回ったのでこのnodeのbestを更新。
+			if (best[c].value < vmd.value)
+				best[c] = vmd;
+		};
+
+		// すべての合法手で1手進める。
+		// 1) 子ノードがない　→　思考したスコアがあるならそれで代用　なければ　その子ノードについては考えない
+		// 2) 子ノードがある　→　そのスコアを定跡として登録
+
+		for (const auto& m : MoveList<LEGAL_ALL>(pos))
+		{
+			// この指し手をたどる
+			this->do_move(pos, m, si);
+			auto vmd_pair = build_tree_nega_max(pos, read_book, write_book);
+			this->undo_move(pos, m);
+
+			for (auto color : COLOR)
 			{
-			// 保存する価値がないと思うでvmd_write_cacheには保存しない
-			return VMD_Pair(VALUE_NONE, MOVE_NONE, DEPTH_ZERO);
-			}
+				// root_colorが先手用のbestの更新と後手用のbestの更新とが、個別に必要である。(DRAW_VALUEの処理のため)
+				auto& vmd = color == BLACK ? vmd_pair.black : vmd_pair.white;
 
-			// -- このnodeを展開する。
+				// colorがこの局面の手番(≒root_color)であるときだけこのnodeの候補手リストを更新する。
+				// そうでないときもbestの更新は行う。
+				auto update_list = color == pos.side_to_move();
 
-			// 新しいほうの定跡ファイルに登録すべきこのnodeの候補手
-			auto list = PosMoveListPtr(new PosMoveList());
+				// 子nodeの探索結果を取り出す。
+				// depthは、この先にbestMoveを辿っていくときleaf nodeまで何手あるかという値なのでここで定跡が途切れるならDEPTH_ZERO。
+				auto value = vmd.value;
+				auto nextMove = vmd.move;
+				auto depth = vmd.depth + 1;
 
-			StateInfo si;
-
-			// このnodeの最善手。rootColorがBLACK,WHITE用、それぞれ。
-			VMD best[COLOR_NB];
-
-			// ↑のbest.valueを上回る指し手であればその指し手でbest.move,best.depthを更新する。
-			auto add_list = [&](Book::BookPos& bp, Color c /* このnodeのColor */, bool update_list)
-			{
-				ASSERT_LV3(bp.value != VALUE_NONE);
-
-				// 定跡に登録する。
-				bp.num = 1; // 出現頻度を1に固定しておかないとsortのときに評価値で降順に並ばなくて困る。
-
-				if (update_list)
-					list->push_back(bp);
-
-				// このnodeのbestValueを更新したら、それをreturnのときに返す必要があるので保存しておく。
-				VMD vmd((Value)bp.value, bp.bestMove, (Depth)bp.depth);
-
-				// 値を上回ったのでこのnodeのbestを更新。
-				if (best[c].value < vmd.value)
-					best[c] = vmd;
-			};
-
-			// すべての合法手で1手進める。
-			// 1) 子ノードがない　→　思考したスコアがあるならそれで代用　なければ　その子ノードについては考えない
-			// 2) 子ノードがある　→　そのスコアを定跡として登録
-
-			for (const auto& m : MoveList<LEGAL_ALL>(pos))
-			{
-				// この指し手をたどる
-				this->do_move(pos, m, si);
-				auto vmd_pair = build_tree_nega_max(pos, read_book, write_book);
-				this->undo_move(pos, m);
-
-				for (auto color : COLOR)
+				if (value == VALUE_NONE)
 				{
-					// root_colorが先手用のbestの更新と後手用のbestの更新とが、個別に必要である。(DRAW_VALUEの処理のため)
-					auto& vmd = color == BLACK ? vmd_pair.black : vmd_pair.white;
+					// 子がなかった
 
-					// colorがこの局面の手番(≒root_color)であるときだけこのnodeの候補手リストを更新する。
-					// そうでないときもbestの更新は行う。
-					auto update_list = color == pos.side_to_move();
-
-					// 子nodeの探索結果を取り出す。
-					// depthは、この先にbestMoveを辿っていくときleaf nodeまで何手あるかという値なのでここで定跡が途切れるならDEPTH_ZERO。
-					auto value = vmd.value;
-					auto nextMove = vmd.move;
-					auto depth = vmd.depth + 1;
-
-					if (value == VALUE_NONE)
+					// 定跡にこの指し手があったのであれば、それをコピーしてくる。なければこの指し手については何も処理しない。
+					auto it = std::find_if(it_read->begin(), it_read->end(), [m](const auto& x) { return x.bestMove == m; });
+					if (it != it_read->end())
 					{
-						// 子がなかった
-
-						// 定跡にこの指し手があったのであれば、それをコピーしてくる。なければこの指し手については何も処理しない。
-						auto it = std::find_if(it_read->begin(), it_read->end(), [m](const auto& x) { return x.bestMove == m; });
-						if (it != it_read->end())
-						{
-							it->depth = DEPTH_ZERO; // depthはここがleafなので0扱い
-							add_list(*it, color, update_list);
-						}
-					}
-					else
-					{
-						// 子があったのでその値で定跡を登録したい。この場合、このnodeの思考の指し手にhitしてようと関係ない。
-
-						// nega maxなので符号を反転させる
-						value = -value;
-
-						// 詰みのスコアはrootから詰みまでの距離に応じてスコアを修正しないといけない。
-						if (value >= VALUE_MATE)
-							--value;
-						else if (value <= -VALUE_MATE)
-							++value;
-
-						//ASSERT_LV3(nextMove != MOVE_NONE);
-
-						Book::BookPos bp(m, nextMove, value, depth, 1);
-						add_list(bp, color, update_list);
+						it->depth = DEPTH_ZERO; // depthはここがleafなので0扱い
+						add_list(*it, color, update_list);
 					}
 				}
-			}
+				else
+				{
+					// 子があったのでその値で定跡を登録したい。この場合、このnodeの思考の指し手にhitしてようと関係ない。
 
-			// このnodeについて調べ終わったので格納
-			std::stable_sort(list->begin(), list->end());
+					// nega maxなので符号を反転させる
+					value = -value;
+
+					// 詰みのスコアはrootから詰みまでの距離に応じてスコアを修正しないといけない。
+					if (value >= VALUE_MATE)
+						--value;
+					else if (value <= -VALUE_MATE)
+						++value;
+
+					//ASSERT_LV3(nextMove != MOVE_NONE);
+
+					Book::BookPos bp(m, nextMove, value, depth, 1);
+					add_list(bp, color, update_list);
+				}
+			}
+		}
+
+		// このnodeについて調べ終わったので格納
+		std::stable_sort(list->begin(), list->end());
 		write_book.book_body[sfen] = list;
 
-			// 10 / 1000 node 処理したので進捗を出力
-			output_progress();
+		// 100 / 10000 node 処理したので進捗を出力
+		output_progress();
 
 #if 0
-			// デバッグのためにこのnodeに関して、書き出す予定の定跡情報を表示させてみる。
+		// デバッグのためにこのnodeに関して、書き出す予定の定跡情報を表示させてみる。
 
-			cout << pos.sfen() << endl;
-			for (const auto& it : *list)
-			{
-				cout << it << endl;
-			}
+		cout << pos.sfen() << endl;
+		for (const auto& it : *list)
+		{
+			cout << it << endl;
+		}
 #endif
 
 		// このnodeの情報をwrite_cacheに保存
-		vmd_write_cache[sfen_left] = VmdPairGamePly(best,gamePly);
+		vmd_write_cache[sfen_left] = VmdPairGamePly(best, gamePly);
 
 		return best;
 	}
@@ -453,13 +459,13 @@ namespace {
 			sync_cout << endl << "root sfen = " << sfen << sync_endl;
 
 			StateInfo si;
-			pos.set(sfen , &si, Threads.main());
+			pos.set(sfen, &si, Threads.main());
 			this->lastMoves.clear();
 			vmd_write_cache.clear();
 
-		// 定跡ファイルには手数無視でヒットしてくれないと、先後協力してplyが2手だけ増えた
-		// 局面の定跡がいつまでも掘り進められなくなる。
-		build_tree_nega_max(pos, read_book, write_book);
+			// 定跡ファイルには手数無視でヒットしてくれないと、先後協力してplyが2手だけ増えた
+			// 局面の定跡がいつまでも掘り進められなくなる。
+			build_tree_nega_max(pos, read_book, write_book);
 		}
 
 		cout << endl;
@@ -474,7 +480,7 @@ namespace {
 	//  定跡ファイルの特定局面から定跡を掘る
 	// ----------------------------
 
-	void BookTreeBuilder::extend_tree_sub(Position & pos, MemoryBook & read_book, fstream & fs, const string & sfen , bool book_hit)
+	void BookTreeBuilder::extend_tree_sub(Position & pos, MemoryBook & read_book, fstream & fs, vector<char> & sfen, bool book_hit)
 	{
 		// 千日手に到達した局面は思考対象としてはならない。
 		auto draw_type = pos.is_repetition(MAX_PLY);
@@ -518,8 +524,18 @@ namespace {
 			// この局面に到達するまでの"startpos moves ..."をとりま出力。
 			if (extend)
 			{
-				fs << sfen << endl;
-				//fs << pos.sfen() << endl;
+
+#if defined (__cpp_lib_string_view) // (C++17)
+
+				fs << string_view(sfen.data(), sfen.size()) << "\n";
+
+#else
+
+				fs << string(sfen.data(), sfen.size()) << "\n";
+
+#endif
+
+				//fs << pos.sfen() << "\n";
 
 				total_write_node++;
 			}
@@ -553,9 +569,13 @@ namespace {
 				// 定跡の指し手ではないが、次のnodeで定跡にhitするなら辿って欲しい。
 				this->lastEval = 0;
 			}
-			this->do_move(pos,m, si);
-			extend_tree_sub(pos, read_book, fs, sfen + " " + to_usi_string(m) , book_hit);
-			this->undo_move(pos,m);
+			auto sfen_size = sfen.size(); // 文字列長を保存
+			this->do_move(pos, m, si);
+			sfen.push_back(' ');
+			USI::move_vecchars(sfen, m); // move文字列 を追加
+			extend_tree_sub(pos, read_book, fs, sfen, book_hit);
+			this->undo_move(pos, m);
+			sfen.resize(sfen_size); // 文字列長を元に戻す
 		}
 
 		output_progress();
@@ -599,7 +619,7 @@ namespace {
 				cout << "Error ! : " << line << " unknown token = " << token << endl;
 				return 1;
 			}
-			pos.do_move(move , states[pos.game_ply()]);
+			pos.do_move(move, states[pos.game_ply()]);
 		}
 		return 0; // 読み込み終了
 	}
@@ -666,7 +686,10 @@ namespace {
 		// 初期局面から(depth 10000ではないものを)辿ってgame treeを構築する。
 
 		fstream fs;
-		fs.open(write_sfen_name , ios::out);
+		const int rdbufsize = 131072;
+		char rdbuf[rdbufsize];
+		fs.rdbuf()->pubsetbuf(rdbuf, rdbufsize);
+		fs.open(write_sfen_name, ios::out);
 
 		total_node = 0;
 		total_write_node = 0;
@@ -696,8 +719,9 @@ namespace {
 			if (std::find(sp.begin(), sp.end(), "moves") == sp.end())
 				line = line + " moves";
 
+			auto linechars = vector<char>(line.begin(), line.end());
 			this->lastEval = 0;
-			extend_tree_sub(pos, read_book, fs, line , true);
+			extend_tree_sub(pos, read_book, fs, linechars, true);
 		}
 		fs.close();
 		cout << endl;
@@ -735,7 +759,7 @@ namespace {
 		cout << "write_sfen_name  = " << think_sfen_name << endl;
 
 		string token;
-		int depth = 8, start_moves = 1, end_moves = 32 , iteration = 256;
+		int depth = 8, start_moves = 1, end_moves = 32, iteration = 256;
 		int black_eval_limit = -50, white_eval_limit = -150;
 		uint64_t nodes = 0; // 指定がなければ0にしとかないと..
 		bool enable_extend_range = false;
