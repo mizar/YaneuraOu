@@ -7,6 +7,12 @@
 #include <sstream>
 #include <cstring> // std::memset()
 
+#if defined (__cpp_lib_to_chars) // (C++17)
+
+#include <charconv> // std::to_chars
+
+#endif
+
 #if defined(EVAL_KPPT) || defined(EVAL_KPP_KKPT) || defined(EVAL_NNUE)
 #include "eval/evaluate_common.h"
 #endif
@@ -410,11 +416,23 @@ void Position::set(std::string sfen , StateInfo* si , Thread* th)
 	thisThread = th;
 }
 
-// 局面のsfen文字列を取得する。
-// Position::set()の逆変換。
-const std::string Position::sfen() const
+// 局面のsfen文字列を取得する。 (手数を除く)
+char *Position::sfen_chars(char *sb, char *se) const
 {
-	std::ostringstream ss;
+	char *s = sb;
+
+#if defined (__cpp_lib_to_chars) // (C++17)
+
+#else
+
+	auto str_copy = [](char *s, const string &str)
+	{
+		size_t str_size = str.size();
+		char_traits<char>::copy(s, str.c_str(), str_size);
+		return s + str_size;
+	};
+
+#endif
 
 	// --- 盤面
 	int emptyCnt;
@@ -427,35 +445,54 @@ const std::string Position::sfen() const
 			for (emptyCnt = 0; f >= FILE_1 && piece_on(f | r) == NO_PIECE; --f)
 				++emptyCnt;
 
+
+#if defined (__cpp_lib_to_chars) // (C++17)
+
 			// 駒のなかった升の数を出力
 			if (emptyCnt)
-				ss << emptyCnt;
+				s = to_chars(s, se, emptyCnt).ptr;
+
+#else
+
+			// 駒のなかった升の数を出力
+			if (emptyCnt)
+				s = str_copy(s, to_string(emptyCnt));
+
+#endif
 
 			// 駒があったなら、それに対応する駒文字列を出力
 			if (f >= FILE_1)
-				ss << (piece_on(f | r));
+			{
+				auto pc = piece_on(f | r);
+				*s++ = USI_PIECE[(pc & 31) * 2];
+				char c = USI_PIECE[(pc & 31) * 2 + 1];
+				if (c != ' ')
+					*s++ = c;
+			}
 		}
 
 		// 最下段以外では次の行があるのでセパレーターである'/'を出力する。
 		if (r < RANK_9)
-			ss << '/';
+			*s++ = '/';
 	}
 
 	// --- 手番
-	ss << (sideToMove == WHITE ? " w " : " b ");
+	*s++ = ' ';
+	*s++ = (sideToMove == WHITE ? 'w' : 'b');
+	*s++ = ' ';
 
 	// --- 手駒(UCIプロトコルにはないがUSIプロトコルにはある)
 	int n;
 	bool found = false;
 	for (Color c = BLACK; c <= WHITE; ++c)
-		for (int pn = 0 ; pn < 7; ++ pn)
+		for (int pn = 0 ; pn < 7; ++pn)
 		{
 			// 手駒の出力順はUSIプロトコルでは規定されていないが、
 			// USI原案によると、飛、角、金、銀、桂、香、歩の順である。
 			// sfen文字列を一意にしておかないと定跡データーをsfen文字列で書き出したときに
 			// 他のソフトで文字列が一致しなくて困るので、この順に倣うことにする。
 
-			const Piece USI_Hand[7] = { ROOK,BISHOP,GOLD,SILVER,KNIGHT,LANCE,PAWN };
+			const Piece USI_Hand[7] = { ROOK, BISHOP, GOLD, SILVER, KNIGHT, LANCE, PAWN };
 			auto p = USI_Hand[pn];
 
 			// その種類の手駒の枚数
@@ -466,21 +503,109 @@ const std::string Position::sfen() const
 				// 手駒が1枚でも見つかった
 				found = true;
 
+#if defined (__cpp_lib_to_chars) // (C++17)
+
 				// その種類の駒の枚数。1ならば出力を省略
 				if (n != 1)
-					ss << n;
+					s = to_chars(s, se, n).ptr;
 
-				ss << PieceToCharBW[make_piece(c, p)];
+#else
+
+				// その種類の駒の枚数。1ならば出力を省略
+				if (n != 1)
+					s = str_copy(s, to_string(n));
+
+#endif
+
+				*s++ = PieceToCharBW[make_piece(c, p)];
 			}
 		}
 
 	// 手駒がない場合はハイフンを出力
-	ss << (found ? " " : "- ");
+	if (!found)
+		*s++ = '-';
+
+	*s = '\0';
+
+	return s;
+
+}
+
+// 局面のsfen文字列を取得する。
+// Position::set()の逆変換。
+const std::string Position::sfen() const
+{
+
+	// sfen文字列の長さは手数を含めなければ130文字が最大なので、160文字分確保すれば十分
+	char sbuf[160];
+	char *sb = begin(sbuf);
+	char *se = end(sbuf);
+	char *s = sfen_chars(sb, se);
+
+	*s++ = ' ';
+
+#if defined (__cpp_lib_to_chars) // (C++17)
 
 	// --- 初期局面からの手数
-	ss << gamePly;
+	s = to_chars(s, se, gamePly).ptr;
 
-	return ss.str();
+#else
+
+	auto str_copy = [](char *s, const string &str)
+	{
+		size_t str_size = str.size();
+		char_traits<char>::copy(s, str.c_str(), str_size);
+		return s + str_size;
+	};
+
+	// --- 初期局面からの手数
+	s = str_copy(s, to_string(gamePly));
+
+#endif
+
+	*s = '\0';
+
+	return string(sbuf, s - sb);
+
+}
+
+// 局面のsfen文字列・手数を除くsfen文字列・手数を取得する
+std::tuple<const std::string, const std::string, int> Position::sfen_tup() const
+{
+	// sfen文字列の長さは手数を含めなければ130文字が最大なので、160文字分確保すれば十分
+	char sbuf[160];
+	char *sb = begin(sbuf);
+	char *se = end(sbuf);
+	char *s = sfen_chars(sb, se);
+
+	const string sfen_left = string(sb, s - sb);
+
+	*s++ = ' ';
+
+#if defined (__cpp_lib_to_chars) // (C++17)
+
+	// --- 初期局面からの手数
+	s = to_chars(s, se, gamePly).ptr;
+
+#else
+
+	auto str_copy = [](char *s, const string &str)
+	{
+		size_t str_size = str.size();
+		char_traits<char>::copy(s, str.c_str(), str_size);
+		return s + str_size;
+	};
+
+	// --- 初期局面からの手数
+	s = str_copy(s, to_string(gamePly));
+
+#endif
+
+	*s = '\0';
+
+	const string sfen = string(sb, s - sb);
+
+	return make_tuple(sfen, sfen_left, gamePly);
 }
 
 void Position::set_state(StateInfo* si) const {

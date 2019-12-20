@@ -54,8 +54,8 @@ namespace Book
 
 	struct MultiThinkBook : public MultiThink
 	{
-		MultiThinkBook(MemoryBook & book_ , int search_depth_, u64 nodes_ = 0)
-			: search_depth(search_depth_), book(book_), appended(false) , search_nodes(nodes_) {}
+		MultiThinkBook(MemoryBook & book_, int search_depth_, u64 nodes_ = 0)
+			: search_depth(search_depth_), book(book_), appended(false), search_nodes(nodes_) {}
 
 		virtual void thread_worker(size_t thread_id);
 
@@ -96,7 +96,7 @@ namespace Book
 			// depth手読みの評価値とPV(最善応手列)を取得。
 			// 内部的にはLearner::search()を呼び出す。
 			// Learner::search()は、現在のOptions["MultiPV"]の値に従い、MultiPVで思考することが保証されている。
-			Learner::search(pos, search_depth , multi_pv , search_nodes);
+			Learner::search(pos, search_depth, multi_pv, search_nodes);
 
 			// MultiPVで局面を足す、的な
 			size_t m = std::min(multi_pv, th->rootMoves.size());
@@ -488,7 +488,7 @@ namespace Book
 				size_t multi_pv = (size_t)Options["MultiPV"];
 
 				// 思考する局面をsfensに突っ込んで、この局面数をg_loop_maxに代入しておき、この回数だけ思考する。
-				MultiThinkBook multi_think(book , depth, nodes);
+				MultiThinkBook multi_think(book, depth, nodes);
 
 				auto& sfens_ = multi_think.sfens;
 				for (auto& s : thinking_sfens)
@@ -939,6 +939,9 @@ namespace Book
 		// 呼び出しているため、この関数のなかでのis_ready()は呼び出さないことにする。
 
 		fstream fs;
+		const int rdbufsize = 131072;
+		char rdbuf[rdbufsize];
+		fs.rdbuf()->pubsetbuf(rdbuf, rdbufsize);
 		fs.open(filename, ios::out);
 
 		cout << endl << "write " + filename;
@@ -982,6 +985,14 @@ namespace Book
 			counter++;
 		};
 
+		// stringからバッファへのコピー
+		auto str_copy = [](char *s, const string &str)
+		{
+			size_t str_size = str.size();
+			std::char_traits<char>::copy(s, str.c_str(), str_size);
+			return s + str_size;
+		};
+
 		{
 			Position pos;
 
@@ -992,11 +1003,11 @@ namespace Book
 
 				StateInfo si;
 				pos.set(it.first,&si,Threads.main());
-				auto sfen = pos.sfen();
-				it.first = sfen;
 
-				auto sfen_left = StringExtension::trim_number(sfen); // 末尾にplyがあるはずじゃろ
-				int ply = StringExtension::to_int(sfen.substr(sfen_left.length()), 0);
+				auto sfen_tup = pos.sfen_tup();
+				it.first = get<0>(sfen_tup);
+				auto sfen_left = get<1>(sfen_tup);
+				int ply = get<2>(sfen_tup);
 
 				auto it2 = book_ply.find(sfen_left);
 				if (it2 == book_ply.end())
@@ -1028,16 +1039,7 @@ namespace Book
 		// バッファ終端
 		char *q = renderbuf + renderbufsize;
 		// 現在位置
-		char *p;
-		// stringからバッファへのコピー
-		auto str_copy = [](char *s, const string &str)
-		{
-			size_t str_size = str.size();
-			std::char_traits<char>::copy(s, str.c_str(), str_size);
-			return s + str_size;
-		};
-
-		*(p = renderbuf) = '\0';
+		char *p = renderbuf;
 
 		for (auto& it : vectored_book)
 		{
@@ -1069,10 +1071,18 @@ namespace Book
 			for (auto& bp : move_list)
 			{
 			// 指し手、相手の応手、そのときの評価値、探索深さ、採択回数
-				p = str_copy(p, to_usi_string(bp.bestMove));
+#if 0
+				p = str_copy(p, USI::move(bp.bestMove));
 				*p++ = ' ';
-				p = str_copy(p, to_usi_string(bp.nextMove));
+				p = str_copy(p, USI::move(bp.nextMove));
 				*p++ = ' ';
+#else
+				p = USI::move_chars(p, bp.bestMove);
+				*p++ = ' ';
+				p = USI::move_chars(p, bp.nextMove);
+				*p++ = ' ';
+#endif
+
 #if defined (__cpp_lib_to_chars) // (C++17)
 
 				p = std::to_chars(p, q, bp.value).ptr;
@@ -1092,6 +1102,7 @@ namespace Book
 				*p++ = '\n';
 
 #endif
+
 			}
 
 			*p = '\0';
@@ -1176,7 +1187,7 @@ namespace Book
 			for (const auto& entry : entries) {
 				BookPos book_pos(pos.move16_to_move(convert_move_from_apery(entry.fromToPro)), MOVE_NONE, entry.score, 256, entry.count);
 				book_pos.prob = (sum_count != 0) ? (entry.count / static_cast<float>(sum_count) ) : (1.0f / entries.size());
-				insert_book_pos(pml_entry , book_pos);
+				insert_book_pos(pml_entry, book_pos);
 			}
 
 			return 	pml_entry;
@@ -1365,7 +1376,7 @@ namespace Book
 
 					// 定跡のMoveは16bitであり、rootMovesは32bitのMoveであるからこのタイミングで補正する。
 					BookPos bp(pos.move16_to_move(best), next, value, depth, num);
-					insert_book_pos(pml_entry , bp);
+					insert_book_pos(pml_entry, bp);
 					num_sum += num;
 				}
 				// ファイルが終わるときにも最後の局面に対するcalc_probが必要。
@@ -1505,8 +1516,8 @@ namespace Book
 		//  user_book3.db    ユーザー定跡3
 		//  book.bin         Apery型の定跡DB
 
-		std::vector<std::string> book_list = { "no_book" , "standard_book.db"
-			, "yaneura_book1.db" , "yaneura_book2.db" , "yaneura_book3.db", "yaneura_book4.db"
+		std::vector<std::string> book_list = { "no_book", "standard_book.db"
+			, "yaneura_book1.db", "yaneura_book2.db", "yaneura_book3.db", "yaneura_book4.db"
 			, "user_book1.db", "user_book2.db", "user_book3.db", "book.bin" };
 
 		o["BookFile"] << Option(book_list, book_list[1]);
@@ -1540,7 +1551,7 @@ namespace Book
 	}
 
 	// 与えられたmで進めて定跡のpv文字列を生成する。
-	string BookMoveSelector::pv_builder(Position& pos, Move m , int depth)
+	string BookMoveSelector::pv_builder(Position& pos, Move m, int depth)
 	{
 		// 千日手検出
 		auto rep = pos.is_repetition(MAX_PLY);
@@ -1558,11 +1569,11 @@ namespace Book
 			pos.do_move(m, si);
 
 			Move bestMove, ponderMove;
-			if (!probe_impl(pos, true, bestMove, ponderMove , true /* 強制的にhitさせる */))
+			if (!probe_impl(pos, true, bestMove, ponderMove, true /* 強制的にhitさせる */))
 				goto UNDO;
 
 			if (depth > 0)
-				result = pv_builder(pos, bestMove , depth - 1); // さらにbestMoveで指し手を進める。
+				result = pv_builder(pos, bestMove, depth - 1); // さらにbestMoveで指し手を進める。
 			result = " " + to_usi_string(bestMove) + ((result == "" /* is leaf node? */) ? (" " + to_usi_string(ponderMove)) : result);
 
 		UNDO:;
@@ -1572,7 +1583,7 @@ namespace Book
 	}
 
 	// probe()の下請け
-	bool BookMoveSelector::probe_impl(Position& rootPos, bool silent , Move& bestMove , Move& ponderMove , bool forceHit)
+	bool BookMoveSelector::probe_impl(Position& rootPos, bool silent, Move& bestMove, Move& ponderMove, bool forceHit)
 	{
 		if (!forceHit)
 		{
