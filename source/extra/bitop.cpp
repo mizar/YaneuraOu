@@ -1,4 +1,4 @@
-#include "../types.h"
+﻿#include "../types.h"
 
 #include "bitop.h"
 #include <iostream>
