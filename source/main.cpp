@@ -1,4 +1,4 @@
-//#include <iostream>
+ï»¿//#include <iostream>
 //#include "bitboard.h"
 //#include "position.h"
 #include "search.h"
@@ -12,7 +12,7 @@
 
 int main(int argc, char* argv[])
 {
-	// --- ‘S‘Ì“I‚È‰Šú‰»
+	// --- å…¨ä½“çš„ãªåˆæœŸåŒ–
 	USI::init(Options);
 	Bitboards::init();
 	Position::init();
@@ -21,10 +21,10 @@ int main(int argc, char* argv[])
 	//Search::clear();
 	Eval::init();
 
-	// USIƒRƒ}ƒ“ƒh‚Ì‰“š•”
+	// USIã‚³ãƒãƒ³ãƒ‰ã®å¿œç­”éƒ¨
 	USI::loop(argc, argv);
 
-	// ¶¬‚µ‚ÄA‘Ò‹@‚³‚¹‚Ä‚¢‚½ƒXƒŒƒbƒh‚Ì’â~
+	// ç”Ÿæˆã—ã¦ã€å¾…æ©Ÿã•ã›ã¦ã„ãŸã‚¹ãƒ¬ãƒƒãƒ‰ã®åœæ­¢
 	Threads.set(0);
 
 	return 0;
