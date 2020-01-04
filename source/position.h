@@ -179,6 +179,9 @@ public:
 	// 局面のsfen文字列を取得する(手数を除く)
 	char *sfen_chars(char *, char *) const;
 
+	// 局面のsfen文字列を取得する(手数を除く)
+	const std::string sfen_left() const;
+
 	// 局面のsfen文字列を取得する
 	// ※ USIプロトコルにおいては不要な機能ではあるが、デバッグのために局面を標準出力に出力して
 	// 　その局面から開始させたりしたいときに、sfenで現在の局面を出力出来ないと困るので用意してある。

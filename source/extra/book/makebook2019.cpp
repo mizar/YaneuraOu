@@ -154,13 +154,13 @@ namespace {
 
 	void BookTreeBuilder::output_progress()
 	{
-		if ((total_node % 10000) == 0)
+		if ((total_node % 100000) == 0)
 		{
 			cout << endl << total_node;
 			if (total_write_node)
 				cout << "|" << total_write_node;
 		}
-		if ((total_node % 100) == 0)
+		if ((total_node % 1000) == 0)
 			cout << ".";
 		++total_node;
 	}

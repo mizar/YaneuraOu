@@ -531,6 +531,20 @@ char *Position::sfen_chars(char *sb, char *se) const
 
 }
 
+// 局面のsfen文字列を取得する。 (手数を除く)
+const std::string Position::sfen_left() const
+{
+
+	// sfen文字列の長さは手数を含めなければ130文字が最大なので、160文字分確保すれば十分
+	char sbuf[160];
+	char *sb = begin(sbuf);
+	char *se = end(sbuf);
+	char *s = sfen_chars(sb, se);
+
+	return string(sbuf, s - sb);
+
+}
+
 // 局面のsfen文字列を取得する。
 // Position::set()の逆変換。
 const std::string Position::sfen() const

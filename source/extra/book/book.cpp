@@ -1117,10 +1117,10 @@ namespace Book
 					// 上書きモードなのか？
 					if (overwrite)
 					{
-					// すでに存在していたのでエントリーを置換。ただし採択回数はインクリメント
-					auto num = b.num;
-					b = bp;
-					b.num += num;
+						// すでに存在していたのでエントリーを置換。ただし採択回数はインクリメント
+						auto num = b.num;
+						b = bp;
+						b.num += num;
 					}
 					goto FOUND_THE_SAME_MOVE;
 				}
@@ -1167,7 +1167,9 @@ namespace Book
 			if (!on_the_fly && book_body.size() == 0)
 				return PosMoveListPtr();
 
-			auto sfen = pos.sfen();
+			// IgnoreBookPlyがtrueのときは、末尾の手数は取り除いておく。
+			// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
+			auto sfen = Options["IgnoreBookPly"] ? pos.sfen_left() : pos.sfen();
 
 			BookType::iterator it;
 
@@ -1180,10 +1182,6 @@ namespace Book
 			{
 				// ディスクから読み込むなら、いずれにせよ、新規エントリーを作成してそれを返す必要がある。
 				PosMoveListPtr pml_entry(new PosMoveList());
-
-				// 末尾の手数は取り除いておく。
-				// read_book()で取り除くと、そのあと書き出すときに手数が消失するのでまずい。(気がする)
-				sfen = trim(sfen);
 
 				// ファイル自体はオープンされてして、ファイルハンドルはfsだと仮定して良い。
 
@@ -1338,7 +1336,7 @@ namespace Book
 			} else {
 
 				// on the flyではない場合
-				it = book_body.find(trim(sfen));
+				it = book_body.find(sfen);
 				if (it != book_body.end())
 				{
 					// 定跡のMoveは16bitであり、rootMovesは32bitのMoveであるからこのタイミングで補正する。
