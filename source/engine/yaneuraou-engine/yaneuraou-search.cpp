@@ -3249,6 +3249,9 @@ namespace Learner
 
 			// 入玉ルールも入れておかないと引き分けになって決着つきにくい。
 			limits.enteringKingRule = EnteringKingRule::EKR_27_POINT;
+
+			// すべての合法手を生成するのか
+			limits.generate_all_legal_moves = Options["GenerateAllLegalMoves"];
 		}
 
 		// DrawValueの設定
@@ -3281,8 +3284,13 @@ namespace Learner
 			auto& rootMoves = th->rootMoves;
 
 			rootMoves.clear();
-			for (auto m : MoveList<LEGAL>(pos))
-				rootMoves.push_back(Search::RootMove(m));
+
+			if (Options["GenerateAllLegalMoves"])
+				for (auto m : MoveList<LEGAL_ALL>(pos))
+					rootMoves.push_back(Search::RootMove(m));
+			else
+				for (auto m : MoveList<LEGAL>(pos))
+					rootMoves.push_back(Search::RootMove(m));
 
 			ASSERT_LV3(!rootMoves.empty());
 

@@ -1,4 +1,4 @@
-﻿#include "book.h"
+#include "book.h"
 #include "../../position.h"
 #include "../../misc.h"
 #include "../../search.h"
@@ -317,7 +317,9 @@ namespace Book
 			cout << "parse..";
 
 			// 思考すべき局面のsfen
-			unordered_set<string> thinking_sfens;
+			unordered_map<string, size_t> thinking_sfens;
+
+			bool is_all_legal = Options["GenerateAllLegalMoves"]; 
 
 			// 各行の局面をparseして読み込む(このときに重複除去も行なう)
 			for (size_t k = 0; k < sfens.size(); ++k)
@@ -392,7 +394,7 @@ namespace Book
 
 				// is_validは、この局面を処理対象とするかどうかのフラグ
 				// 処理対象としない局面でもとりあえずsfにpush_back()はしていく。(indexの番号が狂うため)
-				typedef pair<string, bool /*is_valid*/> SfenAndBool;
+				typedef tuple<string /* sfen */, bool /*is_valid*/, size_t /*legal_size*/> SfenAndBool;
 				vector<SfenAndBool> sf;		// 初手から(moves+0)手までのsfen文字列格納用
 
 				// これより長い棋譜、食わせない＆思考対象としないやろ
@@ -403,10 +405,12 @@ namespace Book
 				// 1) color == COLOR_NB (希望する手番なし)のとき
 				// 2) この局面の手番が、希望する手番の局面のとき
 				// に限る。
-				auto append_to_sf = [&sf,&pos,&color]()
+				auto append_to_sf = [&sf,&pos,&color,&is_all_legal]()
 				{
-					sf.push_back(SfenAndBool(pos.sfen(),
-						/* is_valid = */ color == COLOR_NB || color == pos.side_to_move()));
+					sf.push_back(SfenAndBool(
+						/* sfen = */ pos.sfen(),
+						/* is_valid = */ color == COLOR_NB || color == pos.side_to_move(),
+						/* legal_size = */ is_all_legal ? MoveList<LEGAL_ALL>(pos).size() : MoveList<LEGAL>(pos).size() ));
 				};
 
 				// sfenから直接生成するときはponderのためにmoves + 1の局面まで調べる必要がある。
@@ -450,10 +454,10 @@ namespace Book
 						continue;
 
 					// 現局面の手番が望むべきものではないので解析をskipする。
-					if (!sf[i].second /* sf[i].is_valid */)
+					if (!get<1>(sf[i]) /* sf[i].is_valid */)
 						continue;
 
-					const auto& sfen = sf[i].first;
+					const auto& sfen = get<0>(sf[i]);
 					if (from_sfen)
 					{
 						// この場合、m[i + 1]が必要になるので、m.size()-1までしかループできない。
@@ -462,8 +466,10 @@ namespace Book
 					}
 					else if (from_thinking)
 					{
+						// 合法手の数
+						const auto legal_size = get<2>(sf[i]);
 						// posの局面で思考させてみる。(あとでまとめて)
-						thinking_sfens.insert(sfen);
+						thinking_sfens.emplace(sfen, legal_size);
 					}
 				}
 
@@ -493,22 +499,25 @@ namespace Book
 				auto& sfens_ = multi_think.sfens;
 				for (auto& s : thinking_sfens)
 				{
+					auto& sfen = s.first;
+					auto legal_size = s.second;
+
 					// この局面のいま格納されているデータを比較して、この局面を再考すべきか判断する。
-					auto it = book.book_body.find(s);
+					auto it = book.book_body.find(sfen);
 
 					// →　手数違いの同一局面がある場合、こちらのほうが手数が大きいなら思考しても無駄なのだが…。
 					// その局面の情報は、write_book()で書き出されないのでまあいいか…。
 
 					// MemoryBookにエントリーが存在しないなら無条件で、この局面について思考して良い。
 					if (it == book.book_body.end())
-						sfens_.push_back(s);
+						sfens_.push_back(sfen);
 					else
 					{
 						auto& bp = *(it->second);
 						if (bp[0].depth < depth // 今回の探索depthのほうが深い
-							|| (bp[0].depth == depth && bp.size() < multi_pv) // 探索深さは同じだが今回のMultiPVのほうが大きい
+							|| (bp[0].depth == depth && bp.size() < min(multi_pv, legal_size)) // 探索深さは同じだが今回のMultiPVのほうが大きい
 							)
-							sfens_.push_back(s);
+							sfens_.push_back(sfen);
 					}
 				}
 
