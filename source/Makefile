@@ -52,6 +52,7 @@ COMPILER = clang++
 
 # 標準的なコンパイルオプション
 CFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fpermissive
+LLCFLAGS = -O3
 WCFLAGS  =
 LDFLAGS  =
 LIBS     =
@@ -285,6 +286,13 @@ endif
 # AMDなど特定のCPU
 ifeq ($(TARGET_CPU),ZEN2)
 	CFLAGS += -DUSE_AVX2 -mbmi -mbmi2 -mavx2 -march=znver2
+	LLCFLAGS += -march=x86-64 -mcpu=znver2
+
+	# LLCFLAGS で指定できる -march (Target) の一覧
+	# llc -version
+
+	# LLCFLAGS で指定できる x86-64 の -mcpu (CPU) , -mattr (Features) の一覧
+	# llc -march=x86-64 -mattr=help
 
 # それ以外は、AVX512,AVX2,SSE4.2,SSE4.1,SSE2のように利用できるCPU拡張命令で振り分ける。
 else ifeq ($(TARGET_CPU),AVX512)
@@ -292,23 +300,32 @@ else ifeq ($(TARGET_CPU),AVX512)
 	# cascadelake : -DUSE_AVX512 -DUSE_AVX512VLBWDQ -DUSE_AVX512VNNI -march=cascadelake
 	# icelake     : -DUSE_AVX512 -DUSE_AVX512VLBWDQ -DUSE_AVX512VNNI -DUSE_AVX512VBMI -DUSE_AVX512IFMA -USE_GFNI -march=icelake-client
 	CFLAGS += -DUSE_AVX512 -DUSE_AVX512VLBWDQ -march=skylake-avx512
+	LLCFLAGS += -march=x86-64 -mcpu=skylake-avx512
 
 else ifeq ($(TARGET_CPU),AVX2)
 	CFLAGS += -DUSE_AVX2 -mbmi -mbmi2 -mavx2 -march=corei7-avx
+	LLCFLAGS += -march=x86-64 -mcpu=corei7-avx
 
 else ifeq ($(TARGET_CPU),SSE42)
 	CFLAGS += -DUSE_SSE42 -msse4.2 -march=corei7
+	LLCFLAGS += -march=x86-64 -mcpu=corei7
 
 else ifeq ($(TARGET_CPU),SSE41)
 	CFLAGS += -DUSE_SSE41 -msse4.1 -march=core2
+	LLCFLAGS += -march=x86-64 -mcpu=core2 -mattr=+sse4.1
 
 else ifeq ($(TARGET_CPU),SSE2)
 	CFLAGS += -DUSE_SSE2 -msse2 -march=core2
+	LLCFLAGS += -march=x86-64 -mcpu=core2 -mattr=+sse2
 
 else ifeq ($(TARGET_CPU),NO_SSE)
 	# 32bit用。-m32は、MSYS2 MinGW-64だと無視されるので、
 	# MinGW-64の32bit環境用でコンパイルする必要がある。
 	CFLAGS += -DNO_SSE -m32 -march=pentium3
+	LLCFLAGS += -march=x86 -mcpu=pentium3
+
+	# LLCFLAGS で指定できる x86 の -mcpu (CPU) , -mattr (Features) の一覧
+	# llc -march=x86 -mattr=help
 
 else ifeq ($(TARGET_CPU),OTHER)
 	CFLAGS += -DNO_SSE
@@ -318,15 +335,31 @@ endif
 
 CFLAGS += -DUSE_MAKEFILE -D$(YANEURAOU_EDITION)
 
+LLVMBCS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.bc))
 OBJECTS  = $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
 DEPENDS  = $(OBJECTS:.o=.d)
 
-$(TARGET): $(OBJECTS) $(LIBS)
+ifeq ($(findstring clang++,$(COMPILER)),clang++)
+	TARGETOBJS = $(OBJDIR)/optimized.obj $(LIBS)
+else
+	TARGETOBJS = $(OBJECTS) $(LIBS)
+endif
+
+$(TARGET): $(TARGETOBJS)
 	$(COMPILER) -o $@ $^ $(LDFLAGS) $(CFLAGS)
 
 $(OBJDIR)/%.o: %.cpp
 	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
 	$(COMPILER) $(CFLAGS) $(INCLUDE) -o $@ -c $<
+
+$(OBJDIR)/%.bc: %.cpp
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	$(COMPILER) $(CFLAGS) $(INCLUDE) -emit-llvm -o $@ -c $<
+
+$(OBJDIR)/optimized.obj: $(LLVMBCS)
+	llvm-link $^ -o - | \
+	opt -internalize -internalize-public-api-list=main -globaldce -O3 -o - | \
+	llc -filetype=obj $(LLCFLAGS) -o $@
 
 all: clean $(TARGET)
 
@@ -369,6 +402,6 @@ pgo:
 	$(MAKE) profuse
 
 clean:
-	rm -f $(OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda}
+	rm -f $(LLVMBCS) $(OBJECTS) $(DEPENDS) $(TARGET) ${OBJECTS:.o=.gcda} $(LLVMBCS) $(OBJDIR)/*.obj
 
 -include $(DEPENDS)
