@@ -109,7 +109,7 @@ ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
 endif
 
 LOCAL_MODULE    := $(ENGINE_NAME)-$(TARGET_ARCH_ABI)
-LOCAL_CXXFLAGS  := -std=c++14 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fpermissive -D__STDINT_MACROS -D__STDC_LIMIT_MACROS $(ARCH_DEF)
+LOCAL_CXXFLAGS  := -std=c++17 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fpermissive -D__STDINT_MACROS -D__STDC_LIMIT_MACROS $(ARCH_DEF)
 LOCAL_CXXFLAGS += -fPIE -Wno-unused-parameter
 LOCAL_LDFLAGS += -fPIE -pie -flto
 LOCAL_LDLIBS =
