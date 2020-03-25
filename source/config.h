@@ -300,7 +300,9 @@
 
 // パラメーターの自動調整絡み
 #define USE_GAMEOVER_HANDLER
-//#define LONG_EFFECT_LIBRARY
+
+// NNUE-HalfKPE9
+#define LONG_EFFECT_LIBRARY
 
 // GlobalOptionsは有効にしておく。
 #define USE_GLOBAL_OPTIONS
