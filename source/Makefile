@@ -249,6 +249,8 @@ ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_
 		eval/nnue/features/p.cpp                                               \
 		eval/nnue/features/half_kp.cpp                                         \
 		eval/nnue/features/half_relative_kp.cpp                                \
+		eval/nnue/features/half_kpe9.cpp                                       \
+		eval/nnue/features/pe9.cpp                                             \
 		engine/yaneuraou-engine/yaneuraou-search.cpp
 endif
 

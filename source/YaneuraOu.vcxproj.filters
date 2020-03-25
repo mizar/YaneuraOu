@@ -264,6 +264,18 @@
     <ClInclude Include="eval\evalhash.h">
       <Filter>リソース ファイル\eval</Filter>
     </ClInclude>
+    <ClInclude Include="eval\nnue\features\half_kpe9.h">
+      <Filter>リソース ファイル\eval\nnue\features</Filter>
+    </ClInclude>
+    <ClInclude Include="eval\nnue\architectures\halfkpe9_256x2-32-32.h">
+      <Filter>リソース ファイル\eval\nnue\architectures</Filter>
+    </ClInclude>
+    <ClInclude Include="eval\nnue\trainer\features\factorizer_half_kpe9.h">
+      <Filter>リソース ファイル\eval\nnue\trainer\features</Filter>
+    </ClInclude>
+    <ClInclude Include="eval\nnue\features\pe9.h">
+      <Filter>リソース ファイル\eval\nnue\features</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="movegen.cpp">
@@ -403,6 +415,12 @@
     </ClCompile>
     <ClCompile Include="engine\yaneuraou-engine\yaneuraou-search.cpp">
       <Filter>リソース ファイル\engine\yaneuraou-engine</Filter>
+    </ClCompile>
+    <ClCompile Include="eval\nnue\features\half_kpe9.cpp">
+      <Filter>リソース ファイル\eval\nnue\features</Filter>
+    </ClCompile>
+    <ClCompile Include="eval\nnue\features\pe9.cpp">
+      <Filter>リソース ファイル\eval\nnue\features</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
