@@ -582,6 +582,10 @@ public:
   // 各升の利きの数
 	LongEffect::ByteBoard board_effect[COLOR_NB];
 
+	// NNUE-HalfKPE9
+	// 前局面のboard_effect（評価値の差分計算用）
+	LongEffect::ByteBoard board_effect_prev[COLOR_NB];
+
 	// 長い利き(これは先後共用)
 	LongEffect::WordBoard long_effect;
 #endif
