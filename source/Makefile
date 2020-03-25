@@ -257,6 +257,13 @@ ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_
 			CPPFLAGS += -DEVAL_NNUE_KP256
 		endif
 	endif
+	ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKPE9)
+		CPPFLAGS += -DEVAL_NNUE_HALFKPE9
+	else
+		ifeq ($(NNUE_EVAL_ARCH),HALFKPE9)
+			CPPFLAGS += -DEVAL_NNUE_HALFKPE9
+		endif
+	endif
 	SOURCES += \
 		eval/nnue/evaluate_nnue.cpp                                            \
 		eval/nnue/evaluate_nnue_learner.cpp                                    \
@@ -265,6 +272,8 @@ ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_
 		eval/nnue/features/p.cpp                                               \
 		eval/nnue/features/half_kp.cpp                                         \
 		eval/nnue/features/half_relative_kp.cpp                                \
+		eval/nnue/features/half_kpe9.cpp                                       \
+		eval/nnue/features/pe9.cpp                                             \
 		engine/yaneuraou-engine/yaneuraou-search.cpp
 endif
 
