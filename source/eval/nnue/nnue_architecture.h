@@ -15,7 +15,10 @@
 #else // #if defined(EVAL_NNUE_HALFKP256)
 
 // NNUE評価関数のデフォルトは、halfKP256
-#include "architectures/halfkp_256x2-32-32.h"
+//#include "architectures/halfkp_256x2-32-32.h"
+
+// NNUE-HalfKPE9
+#include "architectures/halfkpe9_256x2-32-32.h"
 #endif
 
 namespace Eval {
