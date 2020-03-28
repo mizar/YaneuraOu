@@ -301,9 +301,6 @@ constexpr int MAX_PLY_NUM = 246;
 // パラメーターの自動調整絡み
 #define USE_GAMEOVER_HANDLER
 
-// NNUE-HalfKPE9
-#define LONG_EFFECT_LIBRARY
-
 // GlobalOptionsは有効にしておく。
 #define USE_GLOBAL_OPTIONS
 
@@ -337,6 +334,16 @@ constexpr int MAX_PLY_NUM = 246;
 // KP256を用いる場合これをdefineする。
 // ※　これをdefineしていなければNNUE標準のhalfKP256になる。
 // #define EVAL_NNUE_KP256
+
+// KPE9を用いる場合これをdefineする。
+// ※　これをdefineしていなければNNUE標準のhalfKP256になる。
+// #define EVAL_NNUE_HALFKPE9
+
+#if defined(EVAL_NNUE_HALFKPE9)
+// NNUE-HalfKPE9
+#define LONG_EFFECT_LIBRARY
+#endif
+
 #endif
 
 #endif // defined(YANEURAOU_ENGINE_KPPT) || ...
@@ -597,6 +604,8 @@ constexpr bool Is64Bit = false;
 #define EVAL_TYPE_NAME "KPP_KKPT"
 #elif defined(EVAL_NNUE_KP256)
 #define EVAL_TYPE_NAME "NNUE KP256"
+#elif defined(EVAL_NNUE_HALFKPE9)
+#define EVAL_TYPE_NAME "NNUE HalfKPE9"
 #elif defined(EVAL_NNUE) // 標準NNUE halfKP256
 #define EVAL_TYPE_NAME "NNUE"
 #else
