@@ -241,6 +241,13 @@ ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_
 			CFLAGS += -DEVAL_NNUE_KP256
 		endif
 	endif
+	ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKPE9)
+		CFLAGS += -DEVAL_NNUE_HALFKPE9
+	else
+		ifeq ($(NNUE_EVAL_ARCH),HALFKPE9)
+			CFLAGS += -DEVAL_NNUE_HALFKPE9
+		endif
+	endif
 	SOURCES += \
 		eval/nnue/evaluate_nnue.cpp                                            \
 		eval/nnue/evaluate_nnue_learner.cpp                                    \

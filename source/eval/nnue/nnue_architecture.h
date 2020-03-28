@@ -12,13 +12,14 @@
 // KP256型を使いたいときは、これを事前にdefineする。
 #if defined(EVAL_NNUE_KP256)
 #include "architectures/k-p_256x2-32-32.h"
+// KPE9型を使いたいときは、これを事前にdefineする。
+#elif defined(EVAL_NNUE_HALFKPE9)
+// NNUE-HalfKPE9
+#include "architectures/halfkpe9_256x2-32-32.h"
 #else // #if defined(EVAL_NNUE_HALFKP256)
 
 // NNUE評価関数のデフォルトは、halfKP256
-//#include "architectures/halfkp_256x2-32-32.h"
-
-// NNUE-HalfKPE9
-#include "architectures/halfkpe9_256x2-32-32.h"
+#include "architectures/halfkp_256x2-32-32.h"
 #endif
 
 namespace Eval {
