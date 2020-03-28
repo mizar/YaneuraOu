@@ -13,6 +13,11 @@ Set-Location (Join-Path $PSScriptRoot ..);
     Dir = ".\build\android\NNUE";
   };
   @{
+    Target = "YANEURAOU_ENGINE_NNUE_HALFKPE9";
+    Nnue = "HALFKPE9";
+    Dir = ".\build\android\NNUE_HALFKPE9";
+  };
+  @{
     Target = "YANEURAOU_ENGINE_NNUE_KP256";
     Nnue = "KP256";
     Dir = ".\build\android\NNUE_KP256";
