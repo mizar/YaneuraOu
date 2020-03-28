@@ -27,6 +27,12 @@ ndk-build ENGINE_TARGET=YANEURAOU_ENGINE_NNUE > >(tee build/android/NNUE/NNUE.lo
 cp -r libs/* build/android/NNUE
 ndk-build clean ENGINE_TARGET=YANEURAOU_ENGINE_NNUE
 
+mkdir -p build/android/NNUE_KPE9
+ndk-build clean ENGINE_TARGET=YANEURAOU_ENGINE_NNUE_HALFKPE9
+ndk-build ENGINE_TARGET=YANEURAOU_ENGINE_NNUE_HALFKPE9 2>&1 | tee build/android/NNUE_KPE9/NNUE_KPE9.log
+cp -r libs/* build/android/NNUE_KPE9
+ndk-build clean ENGINE_TARGET=YANEURAOU_ENGINE_NNUE_HALFKPE9
+
 mkdir -p build/android/NNUE_KP256
 ndk-build clean ENGINE_TARGET=YANEURAOU_ENGINE_NNUE_KP256
 ndk-build ENGINE_TARGET=YANEURAOU_ENGINE_NNUE_KP256 > >(tee build/android/NNUE_KP256/NNUE_KP256.log) || exit $?

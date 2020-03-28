@@ -17,6 +17,12 @@ $TGCOMPILERS = @('clang++';'g++';);
     TARGET = @('evallearn';'normal';'tournament';);
   };
   @{
+    BUILDDIR = 'NNUE_KPE9';
+    EDITION = 'YANEURAOU_ENGINE_NNUE_HALFKPE9';
+    BUILDNAME = 'YaneuraOu_NNUE_KPE9';
+    TARGET = @('evallearn';'normal';'tournament';);
+  };
+  @{
     BUILDDIR = 'NNUE_KP256';
     EDITION = 'YANEURAOU_ENGINE_NNUE_KP256';
     BUILDNAME = 'YaneuraOu_NNUE_KP256';
