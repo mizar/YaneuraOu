@@ -19,17 +19,14 @@ int main(int argc, char* argv[])
 	USI::init(Options);
 	Bitboards::init();
 	Position::init();
-	Search::init();
 	Threads.set(Options["Threads"]);
 	//Search::clear();
 	Eval::init();
 
 	// USIコマンドの応答部
-
 	USI::loop(argc, argv);
 
 	// 生成して、待機させていたスレッドの停止
-
 	Threads.set(0);
 
 	return 0;

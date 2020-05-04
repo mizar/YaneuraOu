@@ -73,7 +73,9 @@ public:
 	// pvIdx    : このスレッドでMultiPVを用いているとして、rootMovesの(0から数えて)何番目のPVの指し手を
 	//      探索中であるか。MultiPVでないときはこの変数の値は0。
 	// pvLast   : tbRank絡み。将棋では関係ないので用いない。
-	size_t pvIdx /*,pvLast*/ /* ,shuffleExts */;
+	size_t pvIdx /*,pvLast*/;
+
+	uint64_t ttHitAverage;
 
 	// selDepth  : rootから最大、何手目まで探索したか(選択深さの最大)
 	// nmpMinPly : null moveの前回の適用ply
@@ -103,11 +105,13 @@ public:
 	// 近代的なMovePickerではオーダリングのために、スレッドごとにhistoryとcounter movesのtableを持たないといけない。
 	CounterMoveHistory counterMoves;
 	ButterflyHistory mainHistory;
+	LowPlyHistory lowPlyHistory;
 	CapturePieceToHistory captureHistory;
 
 	// コア数が多いか、長い持ち時間においては、ContinuationHistoryもスレッドごとに確保したほうが良いらしい。
 	// cf. https://github.com/official-stockfish/Stockfish/commit/5c58d1f5cb4871595c07e6c2f6931780b5ac05b5
-	ContinuationHistory continuationHistory;
+	// continuationHistory[inCheck][Capture]
+	ContinuationHistory continuationHistory[2][2];
 
 	// Stockfish10ではスレッドごとにcontemptを保持するように変わった。
 	//Score contempt;
@@ -146,7 +150,9 @@ struct MainThread: public Thread
 
 	// 前回の探索時のスコア。
 	// 次回の探索のときに何らか使えるかも。
-	Value previousScore;
+	Value bestPreviousScore;
+
+	Value iterValue[4];
 
 	// check_time()で用いるカウンター。
 	// デクリメントしていきこれが0になるごとに思考をストップするのか判定する。
@@ -199,7 +205,7 @@ struct ThreadPool: public std::vector<Thread*>
 	uint64_t nodes_searched() { return accumulate(&Thread::nodes); }
 
 	// stop   : 探索中にこれがtrueになったら探索を即座に終了すること。
-	std::atomic_bool stop;
+	std::atomic_bool stop, increaseDepth;
 	
 private:
 
