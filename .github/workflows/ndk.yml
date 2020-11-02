@@ -2,9 +2,17 @@ name: NDK CI
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - 'dev/**'
+      - 'develop/**'
+      - 'pr_*'
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - 'dev/**'
+      - 'develop/**'
+      - 'pr_*'
 
 jobs:
   build:
