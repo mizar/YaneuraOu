@@ -60,7 +60,7 @@ jobs:
     - name: make
       run: |
         $env:PATH+=';C:\msys64';
-        .\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }}
+        .\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }} -Target ${{ matrix.target }}
 
     - uses: actions/upload-artifact@v2
       with:
