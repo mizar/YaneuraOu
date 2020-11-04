@@ -1,4 +1,4 @@
-name: release
+name: Automatic Prerelease
 
 on:
   push:
@@ -117,24 +117,30 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: release-url
+          path: artifact/url
       - name: Download artifact to get build-windows
         uses: actions/download-artifact@v2
         with:
           name: build-windows
+          path: artifact/windows
       - name: Download artifact to get build-android
         uses: actions/download-artifact@v2
         with:
           name: build-android
+          path: artifact/android
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: artifact
       - name: make zip/7z
         run: |
-          7z a -tzip -mx=9 build/windows.zip build/windows/*
-          7z a -tzip -mx=9 build/android.zip build/android/*
-          7z a -t7z -mx=9 build/windows.7z build/windows/*
-          7z a -t7z -mx=9 build/android.7z build/android/*
+          7z a -tzip -mx=9 windows.zip artifact/windows/*
+          7z a -tzip -mx=9 android.zip artifact/android/*
+          7z a -t7z -mx=9 windows.7z artifact/windows/*
+          7z a -t7z -mx=9 android.7z artifact/android/*
       - name: Get url to upload to release from artifact
         id: get_url
         run: |
-          url=$(cat artifact/url.txt)
+          url=$(cat artifact/url/url.txt)
           echo "##[set-output name=upload_url;]$url"
       - name: Upload release asset build-windows.zip
         uses: actions/upload-release-asset@v1.0.1
