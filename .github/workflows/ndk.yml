@@ -3,21 +3,10 @@ name: NDK CI (for Android)
 on:
   push:
     branches:
-      # main branch
-      - main
-      - master
-      # development branch
-      - 'dev/**'
-      - 'develop/**'
-      # pull request branch
-      - 'pr_*'
-      - 'pr-*'
+      - '*'
   pull_request:
     branches:
-      - main
-      - master
-      - 'dev/**'
-      - 'develop/**'
+      - '*'
 
 jobs:
   build:
