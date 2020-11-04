@@ -1,0 +1,171 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+
+  msys2:
+    # ubuntu-latest = windows-2019
+    # https://docs.github.com/ja/free-pro-team@latest/actions/reference/specifications-for-github-hosted-runners
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        edition:
+          - YANEURAOU_ENGINE_NNUE
+          - YANEURAOU_ENGINE_NNUE_HALFKPE9
+          - YANEURAOU_ENGINE_NNUE_KP256
+          - YANEURAOU_ENGINE_KPPT
+          - YANEURAOU_ENGINE_KPP_KKPT
+          - YANEURAOU_ENGINE_MATERIAL
+          - MATE_ENGINE
+          - USER_ENGINE
+        compiler: [ clang++, g++ ]
+        target: [ "normal,tournament", "evallearn" ]
+        exclude:
+          # 以下のエディションには機械学習の実装が存在しない
+          # There is no machine learning implementation for the following editions
+          - edition: YANEURAOU_ENGINE_MATERIAL
+            target: evallearn
+          - edition: MATE_ENGINE
+            target: evallearn
+          - edition: USER_ENGINE
+            target: evallearn
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install pkg
+      run: |
+        C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
+        C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
+        C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m openblas:m openmp:m toolchain:m base-devel: msys2-devel:'
+
+    - name: make
+      run: |
+        $env:PATH+=';C:\msys64';
+        .\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }} -Target ${{ matrix.target }}
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build-windows
+        path: build/**/*
+
+  android:
+    # ubuntu-latest = ubuntu-18.04
+    # https://docs.github.com/ja/free-pro-team@latest/actions/reference/specifications-for-github-hosted-runners
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r21d
+
+    - name: ndk-build
+      run: ./script/android_build.sh
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build-android
+        path: build/**/*
+
+  setup-release:
+    name: Setup release
+    needs:
+      - msys2
+      - android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: true
+          prerelease: true
+      - name: Get url to upload to release from output
+        env:
+          url: ${{ steps.create_release.outputs.upload_url }}
+        run: |
+          mkdir artifact
+          echo $url > artifact/url.txt
+      - name: Upload artifact to share url with other jobs
+        uses: actions/upload-artifact@v2
+        with:
+          name: release-url
+          path: artifact/url.txt
+
+  release-pkg:
+    name: Release package
+    needs: setup-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifact to get url to upload to release
+        uses: actions/download-artifact@v2
+        with:
+          name: release-url
+      - name: Download artifact to get build-windows
+        uses: actions/download-artifact@v2
+        with:
+          name: build-windows
+      - name: Download artifact to get build-android
+        uses: actions/download-artifact@v2
+        with:
+          name: build-android
+      - name: make zip/7z
+        run: |
+          7z a -tzip -mx=9 build/windows.zip build/windows/*
+          7z a -tzip -mx=9 build/android.zip build/android/*
+          7z a -t7z -mx=9 build/windows.7z build/windows/*
+          7z a -t7z -mx=9 build/android.7z build/android/*
+      - name: Get url to upload to release from artifact
+        id: get_url
+        run: |
+          url=$(cat artifact/url.txt)
+          echo "##[set-output name=upload_url;]$url"
+      - name: Upload release asset build-windows.zip
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_url.outputs.upload_url }}
+          asset_path: build/windows.zip
+          asset_name: build-windows.zip
+          asset_content_type: application/zip
+      - name: Upload release asset build-android.zip
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_url.outputs.upload_url }}
+          asset_path: build/android.zip
+          asset_name: build-android.zip
+          asset_content_type: application/zip
+      - name: Upload release asset build-windows.7z
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_url.outputs.upload_url }}
+          asset_path: build/windows.7z
+          asset_name: build-windows.7z
+          asset_content_type: application/octet-stream
+      - name: Upload release asset build-android.7z
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_url.outputs.upload_url }}
+          asset_path: build/android.7z
+          asset_name: build-android.7z
+          asset_content_type: application/octet-stream
+
