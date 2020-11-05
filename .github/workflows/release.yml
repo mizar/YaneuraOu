@@ -135,24 +135,13 @@ jobs:
           7z a -tzip build-android.zip android -xr!USER
           7z a -t7z build-android.7z android -xr!USER
         working-directory: release
-      - name: archive_size
+      - name: Archive Size
+        id: archive_size
         run: |
-          echo $(stat -c%s "release/build-windows.zip")
-          echo $(stat -c%s "release/build-windows.7z")
-          echo $(stat -c%s "release/build-android.zip")
-          echo $(stat -c%s "release/build-android.7z")
-          echo $(stat -c%s "release/build-windows.zip" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          echo $(stat -c%s "release/build-windows.7z" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          echo $(stat -c%s "release/build-android.zip" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          echo $(stat -c%s "release/build-android.7z" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          WINDOWS_ZIP=$(stat -c%s "release/build-windows.zip" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          WINDOWZ_7Z=$(stat -c%s "release/build-windows.7z" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          ANDROID_ZIP=$(stat -c%s "release/build-android.zip" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          ANDROID_7Z=$(stat -c%s "release/build-android.7z" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
-          echo ::set-output name=windows_zip::$WINDOWS_ZIP
-          echo ::set-output name=windows_7z::$WINDOWS_7Z
-          echo ::set-output name=android_zip::$ANDROID_ZIP
-          echo ::set-output name=android_7z::$ANDROID_7Z
+          echo ::set-output name=windows_zip::$(stat -c%s "release/build-windows.zip" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
+          echo ::set-output name=windows_7z::$(stat -c%s "release/build-windows.7z" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
+          echo ::set-output name=android_zip::$(stat -c%s "release/build-android.zip" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
+          echo ::set-output name=android_7z::$(stat -c%s "release/build-android.7z" | awk '{ split( "B KB MB GB TB PB" , v ); s=1; while( $1>1024 ){ $1/=1024; s++ } printf "%.2f %s", $1, v[s] }')
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
