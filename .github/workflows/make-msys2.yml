@@ -37,6 +37,8 @@ jobs:
             target: evallearn
           - edition: USER_ENGINE
             target: evallearn
+          # HALFKPE9 未導入ブランチ
+          - edition: YANEURAOU_ENGINE_NNUE_HALFKPE9
 
     steps:
     - uses: actions/checkout@v2

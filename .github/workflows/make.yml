@@ -45,6 +45,8 @@ jobs:
           # Linux 32bit archcpu 向けのビルドは通常はしない
           # don't usually build for Linux 32bit archcpu
           - archcpu: NO_SSE
+          # HALFKPE9 未導入ブランチ
+          - edition: YANEURAOU_ENGINE_NNUE_HALFKPE9
 
     steps:
     - uses: actions/checkout@v2

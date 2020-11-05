@@ -45,6 +45,8 @@ jobs:
             target: evallearn
           - edition: USER_ENGINE
             target: evallearn
+          # HALFKPE9 未導入ブランチ
+          - edition: YANEURAOU_ENGINE_NNUE_HALFKPE9
 
     steps:
     - uses: actions/checkout@v2
@@ -175,8 +177,7 @@ jobs:
             2. KPP_KKPT型
             3. NNUE型
               a. 標準NNUE(HalfKP)型
-              b. HalfKPE9型
-              c. K-P型
+              b. K-P型
             4. KOMA型
             5. tanuki-詰将棋エンジン
 

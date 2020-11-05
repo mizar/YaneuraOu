@@ -26,6 +26,9 @@ jobs:
           - YANEURAOU_ENGINE_MATERIAL
           - MATE_ENGINE
           - USER_ENGINE
+        exclude:
+          # HALFKPE9 未導入ブランチ
+          - edition: YANEURAOU_ENGINE_NNUE_HALFKPE9
 
     steps:
     - uses: actions/checkout@v2

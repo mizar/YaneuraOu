@@ -55,6 +55,8 @@ jobs:
           # 64bit compiler x 32bit archcpu
           - compiler: x86_64-w64-mingw32-g++-posix
             archcpu: NO_SSE
+          # HALFKPE9 未導入ブランチ
+          - edition: YANEURAOU_ENGINE_NNUE_HALFKPE9
 
     steps:
     - uses: actions/checkout@v2
