@@ -1,5 +1,19 @@
-Set-Location (Join-Path $PSScriptRoot ..);
+Push-Location (Join-Path $PSScriptRoot ..);
 @(
+  @{
+    Target = "YANEURAOU_ENGINE_NNUE";
+    Dir = ".\build\android\NNUE";
+  };
+  @{
+    Target = "YANEURAOU_ENGINE_NNUE_HALFKPE9";
+    Nnue = "HALFKPE9";
+    Dir = ".\build\android\NNUE_HALFKPE9";
+  };
+  @{
+    Target = "YANEURAOU_ENGINE_NNUE_KP256";
+    Nnue = "KP256";
+    Dir = ".\build\android\NNUE_KP256";
+  };
   @{
     Target = "YANEURAOU_ENGINE_KPPT";
     Dir = ".\build\android\KPPT";
@@ -9,15 +23,6 @@ Set-Location (Join-Path $PSScriptRoot ..);
     Dir = ".\build\android\KPP_KKPT";
   };
   @{
-    Target = "YANEURAOU_ENGINE_NNUE";
-    Dir = ".\build\android\NNUE";
-  };
-  @{
-    Target = "YANEURAOU_ENGINE_NNUE_KP256";
-    Nnue = "KP256";
-    Dir = ".\build\android\NNUE_KP256";
-  };
-  @{
     Target = "YANEURAOU_ENGINE_MATERIAL";
     Dir = ".\build\android\KOMA";
   };
@@ -25,12 +30,18 @@ Set-Location (Join-Path $PSScriptRoot ..);
     Target = "MATE_ENGINE";
     Dir = ".\build\android\MATE";
   };
+  @{
+    Target = "USER_ENGINE";
+    Dir = ".\build\android\USER";
+  };
 )|
 ForEach-Object{
 
 $Target = $_.Target;
 $Dir = $_.Dir;
-$Jobs = $env:NUMBER_OF_PROCESSORS;
+# 並列ジョブ数が多すぎると実行バイナリが生成されない模様
+# とりあえずソースファイル数より少ない数と論理プロセッサ数の小さい方にする。F*ck.
+$Jobs = [Math]::Min($env:NUMBER_OF_PROCESSORS, 30);
 
 "`n# Build $Target to $Dir"|Out-Host;
 
@@ -44,7 +55,7 @@ ndk-build.cmd clean ENGINE_TARGET=$Target;
 
 "`n* Build Binary"|Out-Host;
 $log = $null;
-ndk-build.cmd ENGINE_TARGET=$Target NNUE_EVAL_ARCH=$($_.Nnue) -j $Jobs|Tee-Object -Variable log;
+ndk-build.cmd ENGINE_TARGET=$Target NNUE_EVAL_ARCH=$($_.Nnue) V=1 -j $Jobs|Tee-Object -Variable log;
 $log|Out-File -Encoding utf8 -Force (Join-Path $Dir "build.log");
 
 "`n* Copy Binary"|Out-Host;
@@ -57,3 +68,5 @@ ForEach-Object{
 ndk-build.cmd clean ENGINE_TARGET=$Target;
 
 }
+
+Pop-Location;
