@@ -86,19 +86,42 @@ jobs:
           - edition: USER_ENGINE
 
     steps:
-    - uses: actions/checkout@v2
-
-    - uses: nttld/setup-ndk@v1
+    # `add-path` command is deprecated and will be disabled soon.
+    # https://github.blog/changelog/2020-10-01-github-actions-deprecating-set-env-and-add-path-commands/
+    # but nttld/setup-ndk@v1.0.1 continues to use this.
+    # This problem can be solved by updating @actions/core to 1.2.6.
+    - name: Checkout setup-ndk repository
+      uses: actions/checkout@v2
+      with:
+        repository: nttld/setup-ndk
+        path: setup-ndk
+    # The packages.json in nttld/setup-ndk has already been updated,
+    # https://github.com/nttld/setup-ndk/commit/831db5b02a0f0cab80614619efe461a3dcc140e6
+    # but `dist/*` has not been rebuilt yet. Build it.
+    # https://github.com/nttld/setup-ndk/tree/main/dist
+    - name: Locally rebuilt setup-ndk
+      run: |
+        npm -prefix ./setup-ndk install
+        npm -prefix ./setup-ndk run all
+    # Install using locally rebuilt setup-ndk
+    - name: Setup Android NDK r21d
+      uses: ./setup-ndk
+    #- uses: nttld/setup-ndk@v1
       with:
         ndk-version: r21d
 
+    - name: Checkout own repository
+      uses: actions/checkout@v2
+      with:
+        path: main
+
     - name: ndk-build
-      run: ./script/android_build.sh -e ${{ matrix.edition }}
+      run: ./main/script/android_build.sh -e ${{ matrix.edition }}
 
     - uses: actions/upload-artifact@v2
       with:
         name: build-android
-        path: build/**/*
+        path: ./main/build/**/*
 
   release-pkg:
     name: Release package
