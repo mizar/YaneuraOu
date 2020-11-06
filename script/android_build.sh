@@ -51,10 +51,10 @@ for EDITION in ${EDITIONS[@]}; do
       echo "* edition: ${EDITION}"
       BUILDDIR=build/android/${DIRSTR[$EDITION]}
       mkdir -p ${BUILDDIR}
-      ndk-build clean ENGINE_TARGET=${EDITION}
-      ndk-build ENGINE_TARGET=${EDITION} V=1 -j${JOBS} > >(tee ${BUILDDIR}/build.log) || exit $?
+      ndk-build clean YANEURAOU_EDITION=${EDITION}
+      ndk-build YANEURAOU_EDITION=${EDITION} V=1 -j${JOBS} > >(tee ${BUILDDIR}/build.log) || exit $?
       bash -c "cp libs/**/* ${BUILDDIR}"
-      ndk-build clean ENGINE_TARGET=${EDITION}
+      ndk-build clean YANEURAOU_EDITION=${EDITION}
       break
     fi
     set -f
