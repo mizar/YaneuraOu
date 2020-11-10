@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         target: [ normal, tournament, evallearn ]
-        archcpu: [ 'ZEN2,ZEN1,AVX2,SSE42', 'SSE41,SSSE3,SSE2,NO_SSE', 'ZEN3,AVX512VNNI,AVX512,AVXVNNI,OTHER' ]
+        archcpu: [ 'ZEN2,ZEN1,AVX512VNNI,AVX512,AVX2,SSE42', 'SSE41,SSSE3,SSE2,NO_SSE', 'ZEN3,AVXVNNI,OTHER' ]
         edition:
           - 'YANEURAOU_ENGINE_NNUE,YANEURAOU_ENGINE_NNUE_HALFKPE9,YANEURAOU_ENGINE_NNUE_KP256'
           - 'YANEURAOU_ENGINE_KPPT,YANEURAOU_ENGINE_KPP_KKPT'
@@ -30,12 +30,11 @@ jobs:
           - edition: USER_ENGINE
           # Release target exclude: compiler g++
           - compiler: g++
-          # Release target exclude: archcpu ZEN3,AVX512VNNI,AVX512,AVXVNNI,OTHER
-          # AVX512VNNI, AVX512, AVXVNNI: NNUE is not yet a code that uses VNNI
+          # Release target exclude: archcpu ZEN3,AVXVNNI,OTHER
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
           # `-march=znver3`: LLVM12 support
-          - archcpu: 'ZEN3,AVX512VNNI,AVX512,AVXVNNI,OTHER'
+          - archcpu: 'ZEN3,AVXVNNI,OTHER'
           # Release target exclude: archcpu 'SSE41,SSSE3,SSE2,NO_SSE' and target 'tournament,evallearn'
           - target: tournament
             archcpu: 'SSE41,SSSE3,SSE2,NO_SSE'

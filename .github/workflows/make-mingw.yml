@@ -51,7 +51,6 @@ jobs:
             archcpu: 'AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1'
           # Ubuntu-18.04 MinGW は archcpu ZEN3,ZEN2,AVX512VNNI,AVXVNNI のサポートを行わない
           # ubuntu-18.04 MinGW will not support the archcpu ZEN3,ZEN2,AVX512VNNI,AVXVNNI
-          # AVX512VNNI, AVX512, AVXVNNI: NNUE is not yet a code that uses VNNI
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
           # `-march=znver3`: LLVM12 support
