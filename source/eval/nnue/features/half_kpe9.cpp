@@ -7,11 +7,7 @@
 #include "half_kpe9.h"
 #include "index_list.h"
 
-namespace Eval {
-
-namespace NNUE {
-
-namespace Features {
+namespace Eval::NNUE::Features {
 
 inline Square GetSquareFromBonaPiece(BonaPiece p) {
   if (p < fe_hand_end) {
@@ -105,7 +101,7 @@ void HalfKPE9<AssociatedKing>::AppendChangedIndices(
 
   for (int i = 0; i < dp.dirty_num; ++i) {
     if (dp.pieceNo[i] >= PIECE_NUMBER_KING) continue;
-    
+
     const auto old_p = static_cast<BonaPiece>(dp.changed_piece[i].old_piece.from[perspective]);
     Square old_sq_p = GetSquareFromBonaPiece(old_p);
     removed->push_back(MakeIndex(sq_target_k, old_p
@@ -145,10 +141,6 @@ void HalfKPE9<AssociatedKing>::AppendChangedIndices(
 template class HalfKPE9<Side::kFriend>;
 template class HalfKPE9<Side::kEnemy>;
 
-}  // namespace Features
-
-}  // namespace NNUE
-
-}  // namespace Eval
+}  // namespace Eval::NNUE::Features
 
 #endif  // defined(EVAL_NNUE)

@@ -28,9 +28,7 @@
 #include "trainer/trainer_clipped_relu.h"
 #include "trainer/trainer_sum.h"
 
-namespace Eval {
-
-namespace NNUE {
+namespace Eval::NNUE {
 
 namespace {
 
@@ -200,7 +198,9 @@ void CheckHealth() {
   SendMessages({{"check_health"}});
 }
 
-}  // namespace NNUE
+}  // namespace Eval::NNUE
+
+namespace Eval {
 
 // 評価関数パラメーターをファイルに保存する
 void save_eval(std::string dir_name) {

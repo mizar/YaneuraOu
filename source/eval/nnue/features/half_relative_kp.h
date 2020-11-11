@@ -10,11 +10,7 @@
 #include "../../../evaluate.h"
 #include "features_common.h"
 
-namespace Eval {
-
-namespace NNUE {
-
-namespace Features {
+namespace Eval::NNUE::Features {
 
 // 特徴量HalfRelativeKP：自玉または敵玉を基準とした、玉以外の各駒の相対位置
 template <Side AssociatedKing>
@@ -59,11 +55,7 @@ class HalfRelativeKP {
                         BonaPiece** pieces, Square* sq_target_k);
 };
 
-}  // namespace Features
-
-}  // namespace NNUE
-
-}  // namespace Eval
+}  // namespace Eval::NNUE::Features
 
 #endif  // defined(EVAL_NNUE)
 

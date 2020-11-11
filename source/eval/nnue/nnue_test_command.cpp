@@ -10,9 +10,7 @@
 
 #include <set>
 
-namespace Eval {
-
-namespace NNUE {
+namespace Eval::NNUE {
 
 namespace {
 
@@ -191,8 +189,6 @@ void TestCommand(Position& pos, std::istream& stream) {
   }
 }
 
-}  // namespace NNUE
-
-}  // namespace Eval
+}  // namespace Eval::NNUE
 
 #endif  // defined(ENABLE_TEST_CMD) && defined(EVAL_NNUE)
