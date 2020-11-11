@@ -1,7 +1,8 @@
-﻿// NNUE評価関数の入力特徴量の変換を行うクラス
+﻿// A class that converts the input features of the NNUE evaluation function
+// NNUE評価関数の入力特徴量の変換を行うクラス
 
-#ifndef _NNUE_FEATURE_TRANSFORMER_H_
-#define _NNUE_FEATURE_TRANSFORMER_H_
+#ifndef _NNUE_FEATURE_TRANSFORMER_H_INCLUDED
+#define _NNUE_FEATURE_TRANSFORMER_H_INCLUDED
 
 #include "../../config.h"
 
@@ -13,33 +14,38 @@
 
 #include <cstring> // std::memset()
 
-namespace Eval {
+namespace Eval::NNUE {
 
-namespace NNUE {
-
+// Input feature converter
 // 入力特徴量変換器
 class FeatureTransformer {
  private:
+  // Number of output dimensions for one side
   // 片側分の出力の次元数
   static constexpr IndexType kHalfDimensions = kTransformedFeatureDimensions;
 
  public:
+  // Output type
   // 出力の型
   using OutputType = TransformedFeatureType;
 
+  // Number of input/output dimensions
   // 入出力の次元数
   static constexpr IndexType kInputDimensions = RawFeatures::kDimensions;
   static constexpr IndexType kOutputDimensions = kHalfDimensions * 2;
 
+  // Size of forward propagation buffer
   // 順伝播用バッファのサイズ
   static constexpr std::size_t kBufferSize =
       kOutputDimensions * sizeof(OutputType);
 
+  // Hash value embedded in the evaluation file
   // 評価関数ファイルに埋め込むハッシュ値
   static constexpr std::uint32_t GetHashValue() {
     return RawFeatures::kHashValue ^ kOutputDimensions;
   }
 
+  // A string that represents the structure
   // 構造を表す文字列
   static std::string GetStructureString() {
     return RawFeatures::GetName() + "[" +
@@ -47,6 +53,7 @@ class FeatureTransformer {
         std::to_string(kHalfDimensions) + "x2]";
   }
 
+  // Read network parameters
   // パラメータを読み込む
   bool ReadParameters(std::istream& stream) {
     stream.read(reinterpret_cast<char*>(biases_),
@@ -56,6 +63,7 @@ class FeatureTransformer {
     return !stream.fail();
   }
 
+  // Write network parameters
   // パラメータを書き込む
   bool WriteParameters(std::ostream& stream) const {
     stream.write(reinterpret_cast<const char*>(biases_),
@@ -65,6 +73,7 @@ class FeatureTransformer {
     return !stream.fail();
   }
 
+  // Proceed with the difference calculation if possible
   // 可能なら差分計算を進める
   bool UpdateAccumulatorIfPossible(const Position& pos) const {
     const auto now = pos.state();
@@ -79,6 +88,7 @@ class FeatureTransformer {
     return false;
   }
 
+  // Convert input features
   // 入力特徴量を変換する
   void Transform(const Position& pos, OutputType* output, bool refresh) const {
     if (refresh || !UpdateAccumulatorIfPossible(pos)) {
@@ -169,6 +179,7 @@ class FeatureTransformer {
   }
 
  private:
+  // Calculate cumulative value without using difference calculation
   // 差分計算を用いずに累積値を計算する
   void RefreshAccumulator(const Position& pos) const {
     auto& accumulator = pos.state()->accumulator;
@@ -223,6 +234,7 @@ class FeatureTransformer {
     accumulator.computed_score = false;
   }
 
+  // Calculate cumulative value using difference calculation
   // 差分計算を用いて累積値を計算する
   void UpdateAccumulator(const Position& pos) const {
     const auto prev_accumulator = pos.state()->previous->accumulator;
@@ -254,7 +266,9 @@ class FeatureTransformer {
             std::memset(accumulator.accumulation[perspective][i], 0,
                         kHalfDimensions * sizeof(BiasType));
           }
-        } else {  // 1から0に変化した特徴量に関する差分計算
+        } else {
+          // Difference calculation for the feature amount changed from 1 to 0
+          // 1から0に変化した特徴量に関する差分計算
           std::memcpy(accumulator.accumulation[perspective][i],
                       prev_accumulator.accumulation[perspective][i],
                       kHalfDimensions * sizeof(BiasType));
@@ -283,7 +297,9 @@ class FeatureTransformer {
 #endif
           }
         }
-        {  // 0から1に変化した特徴量に関する差分計算
+        {
+          // Difference calculation for features that changed from 0 to 1
+          // 0から1に変化した特徴量に関する差分計算
           for (const auto index : added_indices[perspective]) {
             const IndexType offset = kHalfDimensions * index;
 #if defined(USE_AVX2)
@@ -316,23 +332,24 @@ class FeatureTransformer {
     accumulator.computed_score = false;
   }
 
+  // parameter type
   // パラメータの型
   using BiasType = std::int16_t;
   using WeightType = std::int16_t;
 
+  // Make the learning class a friend
   // 学習用クラスをfriendにする
   friend class Trainer<FeatureTransformer>;
 
+  // parameter
   // パラメータ
   alignas(kCacheLineSize) BiasType biases_[kHalfDimensions];
   alignas(kCacheLineSize)
       WeightType weights_[kHalfDimensions * kInputDimensions];
-};
+};  // class FeatureTransformer
 
-}  // namespace NNUE
+}  // namespace Eval::NNUE
 
-}  // namespace Eval
+#endif // defined(EVAL_NNUE)
 
-#endif  // defined(EVAL_NNUE)
-
-#endif
+#endif // #ifndef NNUE_FEATURE_TRANSFORMER_H_INCLUDED
