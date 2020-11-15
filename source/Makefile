@@ -31,7 +31,7 @@ YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
 # ターゲットCPU (target cpu)
 
 # 利用できるCPU拡張命令を指定する。
-# 
+#
 # AMDのRyzen(Zen/Zen2)はZEN1/ZEN2を選択するとBMI2命令が使わずに速くなる。(10%程度高速化)
 # Ryzen Zen3シリーズはZEN3を選択。こちらはAVX2用とたぶん変わらない。
 #
@@ -72,7 +72,7 @@ COMPILER = clang++
 
 
 # developing branch // 現状、非公開 (currently private)
-# dev : 開発中のbranchならdevと指定する (developing branch) : 
+# dev : 開発中のbranchならdevと指定する (developing branch) :
 # abe : abe
 #ENGINE_BRANCH = dev
 
@@ -85,7 +85,7 @@ LIBS     =
 INCLUDE  = # -I../include
 
 # makeするときにCPPFLAGSを追加で指定したいときはこれを用いる。
-EXTRA_CPPFLAGS = 
+EXTRA_CPPFLAGS =
 
 # === implementations ===
 
@@ -346,6 +346,12 @@ else ifeq ($(TARGET_CPU),AVX512VNNI)
 	CPPFLAGS += -DUSE_AVX512 -DUSE_VNNI -march=cascadelake
 	# NNUEのコード、USE_VNNIが指定されているとVNNI対応のコードになる。
 	# cascadelakeとicelakeとの違いがあるのかは知らないので、cascadelakeのみでいいや。
+
+else ifeq ($(TARGET_CPU),AVXVNNI)
+	CPPFLAGS += -DUSE_AVX2 -DUSE_BMI2 -DUSE_VNNI -march=alderlake
+	# NNUEのコード、USE_VNNIが指定されているとVNNI対応のコードになる。
+	# Intel Alder Lake、Sapphire Rapids 以降追加の命令群。LLVM12, GCC11 以降。
+	# AVXVNNI (AVX2VNNI という表記も有り?) は AVX512VNNIの256bit幅以下限定版。
 
 else ifeq ($(TARGET_CPU),AVX512)
 
