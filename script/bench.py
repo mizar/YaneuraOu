@@ -10,14 +10,16 @@ import argparse
 import platform
 import logging
 
-# Windows:
+# python package install (Windows):
+# https://www.microsoft.com/store/productId/9P7QFQMJRFP7
 # python3 -m pip install cpuid pandas pexpect pyyaml statsmodels numpy==1.19.3
 
-# Ubuntu:
+# python package install (Ubuntu):
 # sudo apt-get update
 # sudo apt-get install python3 python3-pip
 # python3 -m pip install cpuid pandas pexpect pyyaml statsmodels numpy
 
+# python package list:
 # python3 -m pip list
 # python3 -m pip list --outdated
 
@@ -29,8 +31,8 @@ parser.add_argument('--loop', type=int, default=1)
 parser.add_argument('--log', dest='log', default='bench.log')
 parser.add_argument('engine1')
 parser.add_argument('eval1')
-parser.add_argument('engine2')
-parser.add_argument('eval2')
+parser.add_argument('engine2', default=None, nargs='?')
+parser.add_argument('eval2', default=None, nargs='?')
 
 args = parser.parse_args()
 
@@ -81,41 +83,54 @@ for i in range(args.loop):
   print('{:3d} '.format(i + 1), end='', flush=True)
   dic = {}
 
-  logger.debug('run {:d} {:s}'.format(i + 1, args.engine1))
-  res = bench1.exec()
-  logger.debug(res)
-  m = ptn1.search(res).groupdict()
-  for k, v in m.items():
-    m[k] = int(v)
-  dic.update(m)
-  print('{:10d} '.format(m['nps_e1']), end='', flush=True)
+  if args.engine1 is not None :
+    logger.debug('run {:d} {:s}'.format(i + 1, args.engine1))
+    res = bench1.exec()
+    logger.debug(res)
+    m = ptn1.search(res).groupdict()
+    if m is not None :
+      for k, v in m.items():
+        m[k] = int(v)
+      dic.update(m)
+      print('{:10d} '.format(m['nps_e1']), end='', flush=True)
 
-  logger.debug('run {:d} {:s}'.format(i + 1, args.engine2))
-  res = bench2.exec()
-  logger.debug(res)
-  m = ptn2.search(res).groupdict()
-  for k, v in m.items():
-    m[k] = int(v)
-  dic.update(m)
-  print('{:10d} '.format(m['nps_e2']), end='', flush=True)
+  if args.engine2 is not None :
+    logger.debug('run {:d} {:s}'.format(i + 1, args.engine2))
+    res = bench2.exec()
+    logger.debug(res)
+    m = ptn2.search(res).groupdict()
+    if m is not None :
+      for k, v in m.items():
+        m[k] = int(v)
+      dic.update(m)
+      print('{:10d} '.format(m['nps_e2']), end='', flush=True)
 
-  dic['nps_diff'] = dic['nps_e2'] - dic['nps_e1']
-  print('{:+8d}'.format(dic['nps_diff']), flush=True)
+  if 'nps_e2' in dic :
+    dic['nps_diff'] = dic['nps_e2'] - dic['nps_e1']
+    print('{:+8d}'.format(dic['nps_diff']), flush=True)
 
-  logger.debug('run       base       test     diff')
-  logger.debug('{:3d} {:10d} {:10d} {:+8d}'.format(
-    i + 1,
-    dic['nps_e1'],
-    dic['nps_e2'],
-    dic['nps_diff'],
-  ))
+    logger.debug('run       base       test     diff')
+    logger.debug('{:3d} {:10d} {:10d} {:+8d}'.format(
+      i + 1,
+      dic['nps_e1'],
+      dic['nps_e2'],
+      dic['nps_diff'],
+    ))
+  else:
+    print()
+    logger.debug('{:3d} {:10d}'.format(
+      i + 1,
+      dic['nps_e1']
+    ))
+
   dlist.append(dic)
 
 df = pandas.json_normalize(dlist)
 df_mean = df.mean()
 df_std = df.std()
 
-logger.info('''
+if args.engine2 is not None :
+  logger.info('''
 
 {:s}
 
@@ -135,20 +150,44 @@ CPU Name          : {:s}
 Microarchitecture : {:s}
 
 '''.format(
-  str(df),
-  str(df.describe()),
-  args.loop,
-  df_mean['nps_e1'], df_std['nps_e1'],
-  df_mean['nps_e2'], df_std['nps_e2'],
-  df_mean['nps_diff'], df_std['nps_diff'],
-  df_mean['nps_diff'] / df_mean['nps_e1'],
-  statsmodels.stats.weightstats.ttest_ind(
-    df['nps_e1'].values,
-    df['nps_e2'].values,
-    alternative='larger',
-    usevar='unequal'
-  )[1],
-  cpuid.cpu_vendor(),
-  cpuid.cpu_name(),
-  '%s%s' % cpuid.cpu_microarchitecture()
-))
+    str(df),
+    str(df.describe()),
+    args.loop,
+    df_mean['nps_e1'], df_std['nps_e1'],
+    df_mean['nps_e2'], df_std['nps_e2'],
+    df_mean['nps_diff'], df_std['nps_diff'],
+    df_mean['nps_diff'] / df_mean['nps_e1'],
+    statsmodels.stats.weightstats.ttest_ind(
+      df['nps_e1'].values,
+      df['nps_e2'].values,
+      alternative='larger',
+      usevar='unequal'
+    )[1],
+    cpuid.cpu_vendor(),
+    cpuid.cpu_name(),
+    '%s%s' % cpuid.cpu_microarchitecture()
+  ))
+else:
+  logger.info('''
+
+{:s}
+
+{:s}
+
+Result of {:d} runs
+==================
+base           = {:10.0f} +/- {:.0f}
+
+Vendor ID         : {:s}
+CPU Name          : {:s}
+Microarchitecture : {:s}
+
+'''.format(
+    str(df),
+    str(df.describe()),
+    args.loop,
+    df_mean['nps_e1'], df_std['nps_e1'],
+    cpuid.cpu_vendor(),
+    cpuid.cpu_name(),
+    '%s%s' % cpuid.cpu_microarchitecture()
+  ))
