@@ -332,7 +332,7 @@ namespace {
 		return nodes;
 	}
 
-} // namespace 
+} // namespace
 
 
 // 起動時に呼び出される。時間のかからない探索関係の初期化処理はここに書くこと。
@@ -796,7 +796,7 @@ void Thread::search()
 	{
 		// Stockfish9にはslave threadをmain threadより先行させるコードがここにあったが、
 		// Stockfish10で廃止された。
-		
+
 		// これにより短い時間(低いrootDepth)では探索効率が悪化して弱くなった。
 		// これは、rootDepthが小さいときはhelper threadがほとんど探索に寄与しないためである。
 		// しかしrootDepthが高くなってきたときには事情が異なっていて、main threadよりdepth + 3とかで
@@ -857,7 +857,7 @@ void Thread::search()
 			// より少し幅を広げたぐらいの探索窓をデフォルトとする。
 
 			// Reset aspiration window starting size
-			// aspiration windowの開始サイズをリセットする			
+			// aspiration windowの開始サイズをリセットする
 
 			// この値は 5～10ぐらいがベスト？ Stockfish7～10では、5。Stockfish 12では4
 			if (rootDepth >= 4)
@@ -1010,7 +1010,7 @@ void Thread::search()
 
 		} // multi PV
 
-		  // ここでこの反復深化の1回分は終了したのでcompletedDepthに反映させておく。
+			// ここでこの反復深化の1回分は終了したのでcompletedDepthに反映させておく。
 		if (!Threads.stop)
 			completedDepth = rootDepth;
 
@@ -1181,7 +1181,7 @@ namespace {
 #if defined(CUCKOO)
 		// この局面から数手前の局面に到達させる指し手があるなら、それによって千日手になるので
 		// このnodeで千日手スコアを即座に返すことで早期枝刈りを実施することができるらしい。
-		
+
 		Value ValueDraw = draw_value(REPETITION_DRAW, pos.side_to_move());
 		if (/* pos.rule50_count() >= 3
 			&&*/ alpha < ValueDraw
@@ -1196,7 +1196,7 @@ namespace {
 			/*
 				将棋では、1手あれば現局面よりプラスになる指し手がほぼ確実に存在するであろうから、
 				4+2n手前の局面に戻る指し手があるからと言って、draw_valueを返すのは、もったいない意味が。
-				
+
 				手番の価値(Eval::Turn)を返すのはありかな？
 
 				あと、連続王手による千日手到達に関してはdraw_value返すのはやめたほうが…。
@@ -1788,7 +1788,7 @@ namespace {
 		if (!PvNode
 			&&  depth > PARAM_PROBCUT_DEPTH/*4*/
 			&&  abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
-			
+
 			// if value from transposition table is lower than probCutBeta, don't attempt probCut
 			// there and in further interactions with transposition table cutoff depth is set to depth - 3
 			// because probCut search has depth set to depth - 4 but we also do a move before it
@@ -1841,9 +1841,9 @@ namespace {
 
 					ss->currentMove = move;
 					ss->continuationHistory = &thisThread->continuationHistory[ss->inCheck]
-																			  [captureOrPawnPromotion]
-																			  [to_sq(move)]
-																			  [pos.moved_piece_after(move)];
+																				[captureOrPawnPromotion]
+																				[to_sq(move)]
+																				[pos.moved_piece_after(move)];
 
 					pos.do_move(move, st);
 
@@ -2093,7 +2093,7 @@ namespace {
 			// ほとんどの指し手がsingularと判定されてしまう。
 			// これでは効果がないので、1割ぐらいの指し手がsingularとなるぐらいの係数に調整する。
 
-			// note : 
+			// note :
 			// singular延長で強くなるのは、あるnodeで1手だけが特別に良い場合、相手のプレイヤーもそのnodeでは
 			// その指し手を選択する可能性が高く、それゆえ、相手のPVもそこである可能性が高いから、そこを相手よりわずかにでも
 			// 読んでいて詰みを回避などできるなら、その相手に対する勝率は上がるという理屈。
@@ -2106,7 +2106,7 @@ namespace {
 				&& move == ttMove
 				&& !rootNode
 				&& !excludedMove // 再帰的なsingular延長を除外する。
-		   /* &&  ttValue != VALUE_NONE Already implicit in the next condition */
+			 /* &&  ttValue != VALUE_NONE Already implicit in the next condition */
 				&& abs(ttValue) < VALUE_KNOWN_WIN // 詰み絡みのスコアはsingular extensionはしない。(Stockfish 10～)
 				&& (tte->bound() & BOUND_LOWER)
 				&& tte->depth() >= depth - 3)
@@ -2159,7 +2159,7 @@ namespace {
 			// ※　将棋においてはこれはやりすぎの可能性も..
 
 			// 【計測資料 33.】王手延長のコード、pos.blockers_for_king(~us) & from_sq(move)も延長する/しない
-			
+
 			// Stockfish9では、	&& !moveCountPruning が条件式に入っていた。
 			// Stockfish10のコードは、敵側のpin駒を取る指し手か、駒得になる王手に限定して延長している。
 			// pin駒を剥がす指し手は、こちらの利きはあるということなので2枚利いていることが多く、駒得でなくとも有効。
@@ -2652,7 +2652,7 @@ namespace {
 		// 置換表に登録するdepthはあまりマイナスの値だとおかしいので、
 		// 王手がかかっているときは、DEPTH_QS_CHECKS(=0)、王手がかかっていないときはDEPTH_QS_NO_CHECKS(-1)とみなす。
 		ttDepth = ss->inCheck || depth >= DEPTH_QS_CHECKS ? DEPTH_QS_CHECKS
-													  : DEPTH_QS_NO_CHECKS;
+														: DEPTH_QS_NO_CHECKS;
 
 		posKey = pos.key();
 		tte = TT.probe(posKey, ss->ttHit);
@@ -2794,9 +2794,9 @@ namespace {
 		// searchから呼び出された場合、直前の指し手がMOVE_NULLであることがありうるが、
 		// 静止探索の1つ目の深さではrecaptureを生成しないならこれは問題とならない。
 		MovePicker mp(pos, ttMove, depth, &thisThread->mainHistory,
-										  &thisThread->captureHistory,
-										  contHist,
-										  to_sq((ss - 1)->currentMove));
+											&thisThread->captureHistory,
+											contHist,
+											to_sq((ss - 1)->currentMove));
 
 		// このあとnodeを展開していくので、evaluate()の差分計算ができないと速度面で損をするから、
 		// evaluate()を呼び出していないなら呼び出しておく。
@@ -2891,9 +2891,9 @@ namespace {
 			ss->currentMove = move;
 
 			ss->continuationHistory = &thisThread->continuationHistory[ss->inCheck]
-																	  [captureOrPawnPromotion]
-																	  [to_sq(move)]
-																	  [pos.moved_piece_after(move)];
+																		[captureOrPawnPromotion]
+																		[to_sq(move)]
+																		[pos.moved_piece_after(move)];
 
 			// 1手動かして、再帰的にqsearch()を呼ぶ
 			pos.do_move(move, st, givesCheck);
@@ -2934,7 +2934,7 @@ namespace {
 		// どうせ指し手がないということだから、次にこのnodeに訪問しても、指し手生成後に詰みであることは
 		// わかるわけだし、そもそもこのnodeが詰みだとわかるとこのnodeに再訪問する確率は極めて低く、
 		// 置換表に保存しても置換表を汚すだけでほとんど得をしない。(レアケースなのでほとんど損もしないが)
-		 
+
 		// ※　計測したところ、置換表に保存したほうがわずかに強かったが、有意差ではなさげだし、
 		// Stockfish10のコードが保存しないコードになっているので保存しないことにする。
 
@@ -2980,7 +2980,7 @@ namespace {
 		ASSERT_LV3(-VALUE_INFINITE < v && v < VALUE_INFINITE);
 
 		return  v >= VALUE_TB_WIN_IN_MAX_PLY ? v + ply
-			  : v <= VALUE_TB_LOSS_IN_MAX_PLY ? v - ply : v;
+				: v <= VALUE_TB_LOSS_IN_MAX_PLY ? v - ply : v;
 	}
 
 	// value_to_tt()の逆関数
@@ -3236,7 +3236,7 @@ void init_param()
 		std::fstream fs;
 
 		std::string path = Path::Combine(Directory::GetCurrentFolder(), PARAM_FILE);
-		
+
 		fs.open( path.c_str(), std::ios::in);
 		if (fs.fail())
 		{
@@ -3404,6 +3404,9 @@ namespace Learner
 
 			// 入玉ルールも入れておかないと引き分けになって決着つきにくい。
 			limits.enteringKingRule = EnteringKingRule::EKR_27_POINT;
+
+			// すべての合法手を生成するのか
+			limits.generate_all_legal_moves = Options["GenerateAllLegalMoves"];
 		}
 
 		// DrawValueの設定
@@ -3436,8 +3439,12 @@ namespace Learner
 			auto& rootMoves = th->rootMoves;
 
 			rootMoves.clear();
-			for (auto m : MoveList<LEGAL>(pos))
-				rootMoves.push_back(Search::RootMove(m));
+			if (Search::Limits.generate_all_legal_moves)
+				for (auto m : MoveList<LEGAL_ALL>(pos))
+					rootMoves.push_back(Search::RootMove(m));
+			else
+				for (auto m : MoveList<LEGAL>(pos))
+					rootMoves.push_back(Search::RootMove(m));
 
 			ASSERT_LV3(!rootMoves.empty());
 
@@ -3497,7 +3504,7 @@ namespace Learner
 	// v.firstに評価値、v.secondにPVが得られる。
 	// multi pvが有効のときは、pos.this_thread()->rootMoves[N].pvにそのPV(読み筋)の配列が得られる。
 	// multi pvの指定はこの関数の引数multiPVで行なう。(Options["MultiPV"]の値は無視される)
-	// 
+	//
 	// rootでの宣言勝ち判定はしないので(扱いが面倒なので)、ここでは行わない。
 	// 呼び出し側で処理すること。
 	//
