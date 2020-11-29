@@ -466,8 +466,16 @@
     <None Include="..\script\engine_invoker5.py">
       <Filter>script</Filter>
     </None>
+    <None Include="..\script\bench.py">
+      <Filter>script</Filter>
+    </None>
     <None Include="..\docs\README2017.md">
       <Filter>docs</Filter>
     </None>
+    <None Include="..\.editorconfig" />
+    <None Include="..\.clang-format" />
+    <None Include="..\.gitattributes" />
+    <None Include="..\.gitignore" />
+    <None Include="..\README.md" />
   </ItemGroup>
 </Project>
