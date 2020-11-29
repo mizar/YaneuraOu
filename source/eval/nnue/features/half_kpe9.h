@@ -35,8 +35,7 @@ class HalfKPE9 {
 
   // 差分計算の代わりに全計算を行うタイミング
   static constexpr TriggerEvent kRefreshTrigger =
-      (AssociatedKing == Side::kFriend) ?
-      TriggerEvent::kFriendKingMoved : TriggerEvent::kEnemyKingMoved;
+      (AssociatedKing == Side::kFriend) ? TriggerEvent::kFriendKingMoved : TriggerEvent::kEnemyKingMoved;
 
   // 特徴量のうち、値が1であるインデックスのリストを取得する
   static void AppendActiveIndices(const Position& pos, Color perspective,

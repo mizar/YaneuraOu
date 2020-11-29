@@ -38,8 +38,6 @@ enum class Side {
 
 }  // namespace Eval::NNUE::Features
 
-
 #endif  // defined(EVAL_NNUE)
 
-#endif // #ifndef NNUE_FEATURES_COMMON_H_INCLUDED
-
+#endif  // #ifndef NNUE_FEATURES_COMMON_H_INCLUDED

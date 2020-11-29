@@ -31,7 +31,7 @@ class Sum : public Sum<RemainingPreviousLayers...> {
   // 入出力の次元数
   static constexpr IndexType kInputDimensions = Head::kOutputDimensions;
   static constexpr IndexType kOutputDimensions = kInputDimensions;
-  static_assert(kInputDimensions == Tail::kInputDimensions , "");
+  static_assert(kInputDimensions == Tail::kInputDimensions, "");
 
   // この層で使用する順伝播用バッファのサイズ
   static constexpr std::size_t kSelfBufferSize =
@@ -54,7 +54,7 @@ class Sum : public Sum<RemainingPreviousLayers...> {
   // 入力層からこの層までの構造を表す文字列
   static std::string GetStructureString() {
     return "Sum[" +
-        std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
+           std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
   }
 
   // パラメータを読み込む
@@ -122,7 +122,7 @@ class Sum<PreviousLayer> {
   // 入力層からこの層までの構造を表す文字列
   static std::string GetStructureString() {
     return "Sum[" +
-        std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
+           std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
   }
 
   // パラメータを読み込む

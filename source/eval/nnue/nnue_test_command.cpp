@@ -20,11 +20,11 @@ namespace {
 void TestFeatures(Position& pos) {
   const std::uint64_t num_games = 1000;
   StateInfo si;
-  pos.set_hirate(&si,Threads.main());
-  const int MAX_PLY = 256; // 256手までテスト
+  pos.set_hirate(&si, Threads.main());
+  const int MAX_PLY = 256;  // 256手までテスト
 
-  StateInfo state[MAX_PLY]; // StateInfoを最大手数分だけ
-  int ply; // 初期局面からの手数
+  StateInfo state[MAX_PLY];  // StateInfoを最大手数分だけ
+  int ply;                   // 初期局面からの手数
 
   PRNG prng(20171128);
 
@@ -93,7 +93,7 @@ void TestFeatures(Position& pos) {
   for (std::uint64_t i = 0; i < num_games; ++i) {
     auto index_sets = make_index_sets(pos);
     for (ply = 0; ply < MAX_PLY; ++ply) {
-      MoveList<LEGAL_ALL> mg(pos); // 全合法手の生成
+      MoveList<LEGAL_ALL> mg(pos);  // 全合法手の生成
 
       // 合法な指し手がなかった == 詰み
       if (mg.size() == 0)
@@ -108,7 +108,7 @@ void TestFeatures(Position& pos) {
       ASSERT(index_sets == make_index_sets(pos));
     }
 
-    pos.set_hirate(&si,Threads.main());
+    pos.set_hirate(&si, Threads.main());
 
     // 100回に1回ごとに'.'を出力(進んでいることがわかるように)
     if ((i % 100) == 0)

@@ -53,10 +53,9 @@ struct InsertToSet<T, CompileTimeList<T, First, Remaining...>, AnotherValue> {
       CompileTimeList<T, First, Remaining...>::Contains(AnotherValue),
       CompileTimeList<T, First, Remaining...>,
       std::conditional_t<(AnotherValue < First),
-          CompileTimeList<T, AnotherValue, First, Remaining...>,
-          typename AppendToList<T, typename InsertToSet<
-              T, CompileTimeList<T, Remaining...>, AnotherValue>::Result,
-              First>::Result>>;
+                         CompileTimeList<T, AnotherValue, First, Remaining...>,
+                         typename AppendToList<T, typename InsertToSet<T, CompileTimeList<T, Remaining...>, AnotherValue>::Result,
+                                               First>::Result>>;
 };
 template <typename T, T Value>
 struct InsertToSet<T, CompileTimeList<T>, Value> {
@@ -125,9 +124,8 @@ class FeatureSetBase {
 // 特徴量セットを表すクラステンプレート
 // 実行時の計算量を線形にするために、内部の処理はテンプレート引数の逆順に行う
 template <typename FirstFeatureType, typename... RemainingFeatureTypes>
-class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> :
-    public FeatureSetBase<
-        FeatureSet<FirstFeatureType, RemainingFeatureTypes...>> {
+class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> : public FeatureSetBase<
+                                                                   FeatureSet<FirstFeatureType, RemainingFeatureTypes...>> {
  private:
   using Head = FirstFeatureType;
   using Tail = FeatureSet<RemainingFeatureTypes...>;
@@ -144,7 +142,7 @@ class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> :
       Head::kMaxActiveDimensions + Tail::kMaxActiveDimensions;
   // 差分計算の代わりに全計算を行うタイミングのリスト
   using SortedTriggerSet = typename InsertToSet<TriggerEvent,
-      typename Tail::SortedTriggerSet, Head::kRefreshTrigger>::Result;
+                                                typename Tail::SortedTriggerSet, Head::kRefreshTrigger>::Result;
   static constexpr auto kRefreshTriggers = SortedTriggerSet::kValues;
 
   // 特徴量名を取得する
@@ -250,4 +248,4 @@ class FeatureSet<FeatureType> : public FeatureSetBase<FeatureSet<FeatureType>> {
 
 #endif  // defined(EVAL_NNUE)
 
-#endif // #ifndef NNUE_FEATURE_SET_H_INCLUDED
+#endif  // #ifndef NNUE_FEATURE_SET_H_INCLUDED

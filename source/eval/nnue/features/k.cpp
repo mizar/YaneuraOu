@@ -19,9 +19,7 @@ void K::AppendActiveIndices(
   // コンパイラの警告を回避するため、配列サイズが小さい場合は何もしない
   if (RawFeatures::kMaxActiveDimensions < kMaxActiveDimensions) return;
 
-  const BonaPiece* pieces = (perspective == BLACK) ?
-      pos.eval_list()->piece_list_fb() :
-      pos.eval_list()->piece_list_fw();
+  const BonaPiece* pieces = (perspective == BLACK) ? pos.eval_list()->piece_list_fb() : pos.eval_list()->piece_list_fw();
   ASSERT_LV5(pieces[PIECE_NUMBER_BKING] != BONA_PIECE_ZERO);
   ASSERT_LV5(pieces[PIECE_NUMBER_WKING] != BONA_PIECE_ZERO);
   for (PieceNumber i = PIECE_NUMBER_KING; i < PIECE_NUMBER_NB; ++i) {

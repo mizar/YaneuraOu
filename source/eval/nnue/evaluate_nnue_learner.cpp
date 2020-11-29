@@ -144,7 +144,8 @@ void AddExample(Position& pos, Color rootColor,
     std::vector<TrainingFeature> training_features;
     for (const auto base_index : active_indices[color]) {
       static_assert(Features::Factorizer<RawFeatures>::GetDimensions() <
-                    (1 << TrainingFeature::kIndexBits), "");
+                        (1 << TrainingFeature::kIndexBits),
+                    "");
       Features::Factorizer<RawFeatures>::AppendTrainingFeatures(
           base_index, &training_features);
     }
@@ -220,10 +221,9 @@ void save_eval(std::string dir_name) {
   std::ofstream stream(file_name, std::ios::binary);
   const bool result = NNUE::WriteParameters(stream);
 
-  if (!result)
-  {
-      std::cout << "Error!! : save_eval() failed." << std::endl;
-      Tools::exit();
+  if (!result) {
+    std::cout << "Error!! : save_eval() failed." << std::endl;
+    Tools::exit();
   }
 
   std::cout << "save_eval() finished." << std::endl;

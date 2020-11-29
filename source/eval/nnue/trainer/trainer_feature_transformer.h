@@ -143,7 +143,7 @@ class Trainer<FeatureTransformer> {
       for (IndexType i = 0; i < kOutputDimensions; ++i) {
         const IndexType index = batch_offset + i;
         gradients_[index] = gradients[index] *
-            ((output_[index] > kZero) * (output_[index] < kOne));
+                            ((output_[index] > kZero) * (output_[index] < kOne));
       }
     }
     // 重み行列は入力に出現した特徴量に対応する列のみを更新するため、
@@ -230,14 +230,13 @@ class Trainer<FeatureTransformer> {
 
  private:
   // コンストラクタ
-  Trainer(LayerType* target_layer) :
-      batch_(nullptr),
-      target_layer_(target_layer),
-      biases_(),
-      weights_(),
-      biases_diff_(),
-      momentum_(0.0),
-      learning_rate_scale_(1.0) {
+  Trainer(LayerType* target_layer) : batch_(nullptr),
+                                     target_layer_(target_layer),
+                                     biases_(),
+                                     weights_(),
+                                     biases_diff_(),
+                                     momentum_(0.0),
+                                     learning_rate_scale_(1.0) {
     min_pre_activation_ = std::numeric_limits<LearnFloatType>::max();
     max_pre_activation_ = std::numeric_limits<LearnFloatType>::lowest();
     std::fill(std::begin(min_activations_), std::end(min_activations_),

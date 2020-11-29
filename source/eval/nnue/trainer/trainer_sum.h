@@ -17,8 +17,7 @@ namespace NNUE {
 
 // 学習：複数の層の出力の和を取る層
 template <typename FirstPreviousLayer, typename... RemainingPreviousLayers>
-class Trainer<Layers::Sum<FirstPreviousLayer, RemainingPreviousLayers...>> :
-      Trainer<Layers::Sum<RemainingPreviousLayers...>> {
+class Trainer<Layers::Sum<FirstPreviousLayer, RemainingPreviousLayers...>> : Trainer<Layers::Sum<RemainingPreviousLayers...>> {
  private:
   // 学習対象の層の型
   using LayerType = Layers::Sum<FirstPreviousLayer, RemainingPreviousLayers...>;
@@ -76,12 +75,11 @@ class Trainer<Layers::Sum<FirstPreviousLayer, RemainingPreviousLayers...>> :
 
  private:
   // コンストラクタ
-  Trainer(LayerType* target_layer, FeatureTransformer* feature_transformer) :
-      Tail(target_layer, feature_transformer),
-      batch_size_(0),
-      previous_layer_trainer_(Trainer<FirstPreviousLayer>::Create(
-          &target_layer->previous_layer_, feature_transformer)),
-      target_layer_(target_layer) {
+  Trainer(LayerType* target_layer, FeatureTransformer* feature_transformer) : Tail(target_layer, feature_transformer),
+                                                                              batch_size_(0),
+                                                                              previous_layer_trainer_(Trainer<FirstPreviousLayer>::Create(
+                                                                                  &target_layer->previous_layer_, feature_transformer)),
+                                                                              target_layer_(target_layer) {
   }
 
   // 入出力の次元数
@@ -100,7 +98,6 @@ class Trainer<Layers::Sum<FirstPreviousLayer, RemainingPreviousLayers...>> :
   // 学習対象の層
   LayerType* const target_layer_;
 };
-
 
 // 学習：複数の層の出力の和を取る層（テンプレート引数が1つの場合）
 template <typename PreviousLayer>
@@ -156,11 +153,10 @@ class Trainer<Layers::Sum<PreviousLayer>> {
 
  private:
   // コンストラクタ
-  Trainer(LayerType* target_layer, FeatureTransformer* feature_transformer) :
-      batch_size_(0),
-      previous_layer_trainer_(Trainer<PreviousLayer>::Create(
-          &target_layer->previous_layer_, feature_transformer)),
-      target_layer_(target_layer) {
+  Trainer(LayerType* target_layer, FeatureTransformer* feature_transformer) : batch_size_(0),
+                                                                              previous_layer_trainer_(Trainer<PreviousLayer>::Create(
+                                                                                  &target_layer->previous_layer_, feature_transformer)),
+                                                                              target_layer_(target_layer) {
   }
 
   // 入出力の次元数

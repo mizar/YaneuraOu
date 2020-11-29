@@ -34,8 +34,7 @@ class TrainingFeature {
   static constexpr std::uint32_t kCountBits =
       std::numeric_limits<StorageType>::digits - kIndexBits;
 
-  explicit TrainingFeature(IndexType index) :
-      index_and_count_((index << kCountBits) | 1) {
+  explicit TrainingFeature(IndexType index) : index_and_count_((index << kCountBits) | 1) {
     ASSERT_LV3(index < (1 << kIndexBits));
   }
   TrainingFeature& operator+=(const TrainingFeature& other) {
@@ -72,8 +71,7 @@ struct Example {
 
 // ハイパーパラメータの設定などに使用するメッセージ
 struct Message {
-  Message(const std::string& name, const std::string& value = "") :
-      name(name), value(value), num_peekers(0), num_receivers(0) {}
+  Message(const std::string& name, const std::string& value = "") : name(name), value(value), num_peekers(0), num_receivers(0) {}
   const std::string name;
   const std::string value;
   std::uint32_t num_peekers;
@@ -113,20 +111,18 @@ IntType Round(double value) {
 // アライメント付きmake_shared
 template <typename T, typename... ArgumentTypes>
 std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes&&... arguments) {
+  // Trainerクラスのほうでゼロ初期化するのでここではゼロ初期化はされていないメモリで良い。
 
-    // Trainerクラスのほうでゼロ初期化するのでここではゼロ初期化はされていないメモリで良い。
-
-    void* mem; // 開放すべきメモリアドレス
-    void* ptr_ = LargeMemory::static_alloc(sizeof(T), mem, alignof(T));
-    const auto ptr = new(ptr_)
+  void* mem;  // 開放すべきメモリアドレス
+  void* ptr_ = LargeMemory::static_alloc(sizeof(T), mem, alignof(T));
+  const auto ptr = new (ptr_)
       T(std::forward<ArgumentTypes>(arguments)...);
-    AlignedDeleter<T> deleter;
-    deleter.mem = mem;
-    
-    //sync_cout << "trainer.alloc(" << sizeof(T) << "," << alignof(T) << ")" << sync_endl;
+  AlignedDeleter<T> deleter;
+  deleter.mem = mem;
 
-    return std::shared_ptr<T>(ptr,deleter);
+  //sync_cout << "trainer.alloc(" << sizeof(T) << "," << alignof(T) << ")" << sync_endl;
 
+  return std::shared_ptr<T>(ptr, deleter);
 }
 
 }  // namespace NNUE

@@ -21,8 +21,7 @@ template <Side AssociatedKing>
 class HalfRelativeKP {
  public:
   // 特徴量名
-  static constexpr const char* kName = (AssociatedKing == Side::kFriend) ?
-      "HalfRelativeKP(Friend)" : "HalfRelativeKP(Enemy)";
+  static constexpr const char* kName = (AssociatedKing == Side::kFriend) ? "HalfRelativeKP(Friend)" : "HalfRelativeKP(Enemy)";
   // 評価関数ファイルに埋め込むハッシュ値
   static constexpr std::uint32_t kHashValue =
       0xF9180919u ^ (AssociatedKing == Side::kFriend);
@@ -39,8 +38,7 @@ class HalfRelativeKP {
   static constexpr IndexType kMaxActiveDimensions = PIECE_NUMBER_KING;
   // 差分計算の代わりに全計算を行うタイミング
   static constexpr TriggerEvent kRefreshTrigger =
-      (AssociatedKing == Side::kFriend) ?
-      TriggerEvent::kFriendKingMoved : TriggerEvent::kEnemyKingMoved;
+      (AssociatedKing == Side::kFriend) ? TriggerEvent::kFriendKingMoved : TriggerEvent::kEnemyKingMoved;
 
   // 特徴量のうち、値が1であるインデックスのリストを取得する
   static void AppendActiveIndices(const Position& pos, Color perspective,

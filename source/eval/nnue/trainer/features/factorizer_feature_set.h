@@ -53,7 +53,7 @@ class Factorizer<FeatureSet<FirstFeatureType, RemainingFeatureTypes...>> {
         ASSERT_LV5(index < Head::GetDimensions() ||
                    (index >= base_dimensions &&
                     index < base_dimensions +
-                            Head::GetDimensions() - Head::kBaseDimensions));
+                                Head::GetDimensions() - Head::kBaseDimensions));
         if (index < Head::kBaseDimensions) {
           feature.ShiftIndex(Tail::kBaseDimensions);
         } else {
@@ -68,7 +68,7 @@ class Factorizer<FeatureSet<FirstFeatureType, RemainingFeatureTypes...>> {
 // FeatureSetのテンプレート引数が1つの場合の特殊化
 template <typename FeatureType>
 class Factorizer<FeatureSet<FeatureType>> {
-public:
+ public:
   // 元の入力特徴量の次元数
   static constexpr IndexType kBaseDimensions = FeatureType::kDimensions;
 

@@ -107,14 +107,13 @@ class SharedInputTrainer {
 
  private:
   // コンストラクタ
-  SharedInputTrainer(FeatureTransformer* feature_transformer) :
-      batch_size_(0),
-      num_referrers_(0),
-      num_calls_(0),
-      current_operation_(Operation::kNone),
-      feature_transformer_trainer_(Trainer<FeatureTransformer>::Create(
-          feature_transformer)),
-      output_(nullptr) {
+  SharedInputTrainer(FeatureTransformer* feature_transformer) : batch_size_(0),
+                                                                num_referrers_(0),
+                                                                num_calls_(0),
+                                                                current_operation_(Operation::kNone),
+                                                                feature_transformer_trainer_(Trainer<FeatureTransformer>::Create(
+                                                                    feature_transformer)),
+                                                                output_(nullptr) {
   }
 
   // 入出力の次元数
@@ -220,9 +219,8 @@ class Trainer<Layers::InputSlice<OutputDimensions, Offset>> {
 
  private:
   // コンストラクタ
-  Trainer(FeatureTransformer* feature_transformer) :
-      batch_size_(0),
-      shared_input_trainer_(SharedInputTrainer::Create(feature_transformer)) {
+  Trainer(FeatureTransformer* feature_transformer) : batch_size_(0),
+                                                     shared_input_trainer_(SharedInputTrainer::Create(feature_transformer)) {
   }
 
   // 入出力の次元数

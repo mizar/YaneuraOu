@@ -40,14 +40,14 @@ class Factorizer<HalfKP<AssociatedKing>> {
 
   // 学習用特徴量の情報
   static constexpr FeatureProperties kProperties[] = {
-    // kFeaturesHalfKP
-    {true, FeatureType::kDimensions},
-    // kFeaturesHalfK
-    {true, SQ_NB},
-    // kFeaturesP
-    {true, Factorizer<P>::GetDimensions()},
-    // kFeaturesHalfRelativeKP
-    {true, Factorizer<HalfRelativeKP<AssociatedKing>>::GetDimensions()},
+      // kFeaturesHalfKP
+      {true, FeatureType::kDimensions},
+      // kFeaturesHalfK
+      {true, SQ_NB},
+      // kFeaturesP
+      {true, Factorizer<P>::GetDimensions()},
+      // kFeaturesHalfRelativeKP
+      {true, Factorizer<HalfRelativeKP<AssociatedKing>>::GetDimensions()},
   };
   static_assert(GetArrayLength(kProperties) == kNumTrainingFeatureTypes, "");
 

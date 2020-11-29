@@ -45,8 +45,8 @@ class InputSlice {
   // 入力層からこの層までの構造を表す文字列
   static std::string GetStructureString() {
     return "InputSlice[" + std::to_string(kOutputDimensions) + "(" +
-        std::to_string(Offset) + ":" +
-        std::to_string(Offset + kOutputDimensions) + ")]";
+           std::to_string(Offset) + ":" +
+           std::to_string(Offset + kOutputDimensions) + ")]";
   }
 
   // パラメータを読み込む
@@ -74,4 +74,4 @@ class InputSlice {
 
 #endif  // defined(EVAL_NNUE)
 
-#endif // #ifndef NNUE_LAYERS_INPUT_SLICE_H_INCLUDED
+#endif  // #ifndef NNUE_LAYERS_INPUT_SLICE_H_INCLUDED

@@ -24,12 +24,8 @@ template <Side AssociatedKing>
 inline void HalfKP<AssociatedKing>::GetPieces(
     const Position& pos, Color perspective,
     BonaPiece** pieces, Square* sq_target_k) {
-  *pieces = (perspective == BLACK) ?
-      pos.eval_list()->piece_list_fb() :
-      pos.eval_list()->piece_list_fw();
-  const PieceNumber target = (AssociatedKing == Side::kFriend) ?
-      static_cast<PieceNumber>(PIECE_NUMBER_KING + perspective) :
-      static_cast<PieceNumber>(PIECE_NUMBER_KING + ~perspective);
+  *pieces = (perspective == BLACK) ? pos.eval_list()->piece_list_fb() : pos.eval_list()->piece_list_fw();
+  const PieceNumber target = (AssociatedKing == Side::kFriend) ? static_cast<PieceNumber>(PIECE_NUMBER_KING + perspective) : static_cast<PieceNumber>(PIECE_NUMBER_KING + ~perspective);
   *sq_target_k = static_cast<Square>(((*pieces)[target] - f_king) % SQ_NB);
 }
 

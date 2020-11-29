@@ -172,7 +172,7 @@ class Trainer<Layers::AffineTransform<PreviousLayer, OutputDimensions>> {
         for (IndexType j = 0; j < kInputDimensions; ++j) {
           const IndexType index = kInputDimensions * i + j;
           weights_diff_[index] += gradients[output_batch_offset + i] *
-              batch_input_[input_batch_offset + j];
+                                  batch_input_[input_batch_offset + j];
         }
       }
     }
@@ -188,18 +188,17 @@ class Trainer<Layers::AffineTransform<PreviousLayer, OutputDimensions>> {
 
  private:
   // コンストラクタ
-  Trainer(LayerType* target_layer, FeatureTransformer* feature_transformer) :
-      batch_size_(0),
-      batch_input_(nullptr),
-      previous_layer_trainer_(Trainer<PreviousLayer>::Create(
-          &target_layer->previous_layer_, feature_transformer)),
-      target_layer_(target_layer),
-      biases_(),
-      weights_(),
-      biases_diff_(),
-      weights_diff_(),
-      momentum_(0.0),
-      learning_rate_scale_(1.0) {
+  Trainer(LayerType* target_layer, FeatureTransformer* feature_transformer) : batch_size_(0),
+                                                                              batch_input_(nullptr),
+                                                                              previous_layer_trainer_(Trainer<PreviousLayer>::Create(
+                                                                                  &target_layer->previous_layer_, feature_transformer)),
+                                                                              target_layer_(target_layer),
+                                                                              biases_(),
+                                                                              weights_(),
+                                                                              biases_diff_(),
+                                                                              weights_diff_(),
+                                                                              momentum_(0.0),
+                                                                              learning_rate_scale_(1.0) {
     DequantizeParameters();
   }
 
@@ -254,9 +253,7 @@ class Trainer<Layers::AffineTransform<PreviousLayer, OutputDimensions>> {
   // パラメータの整数化で用いる係数
   static constexpr LearnFloatType kActivationScale =
       std::numeric_limits<std::int8_t>::max();
-  static constexpr LearnFloatType kBiasScale = kIsOutputLayer ?
-      (kPonanzaConstant * FV_SCALE) :
-      ((1 << kWeightScaleBits) * kActivationScale);
+  static constexpr LearnFloatType kBiasScale = kIsOutputLayer ? (kPonanzaConstant * FV_SCALE) : ((1 << kWeightScaleBits) * kActivationScale);
   static constexpr LearnFloatType kWeightScale = kBiasScale / kActivationScale;
 
   // パラメータの整数化でオーバーフローさせないために用いる重みの絶対値の上限
