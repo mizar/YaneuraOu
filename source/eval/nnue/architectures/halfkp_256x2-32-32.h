@@ -36,4 +36,4 @@ using Network = Layers::OutputLayer;
 
 }  // namespace Eval::NNUE
 
-#endif // #ifndef NNUE_HALFKP_256X2_32_32_H_INCLUDED
+#endif  // #ifndef NNUE_HALFKP_256X2_32_32_H_INCLUDED
