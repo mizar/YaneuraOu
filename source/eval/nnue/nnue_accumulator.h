@@ -16,11 +16,11 @@ namespace NNUE {
 // 入力特徴量をアフィン変換した結果を保持するクラス
 // 最終的な出力である評価値も一緒に持たせておく
 struct alignas(32) Accumulator {
-  std::int16_t
-      accumulation[2][kRefreshTriggers.size()][kTransformedFeatureDimensions];
-  Value score = VALUE_ZERO;
-  bool computed_accumulation = false;
-  bool computed_score = false;
+	std::int16_t
+		accumulation[2][kRefreshTriggers.size()][kTransformedFeatureDimensions];
+	Value score = VALUE_ZERO;
+	bool computed_accumulation = false;
+	bool computed_score = false;
 };
 
 }  // namespace NNUE

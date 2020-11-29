@@ -13,7 +13,7 @@ namespace NNUE {
 
 // 評価関数で用いる入力特徴量
 using RawFeatures = Features::FeatureSet<
-    Features::HalfKPE9<Features::Side::kFriend>>;
+	Features::HalfKPE9<Features::Side::kFriend>>;
 
 // 変換後の入力特徴量の次元数
 constexpr IndexType kTransformedFeatureDimensions = 256;

@@ -15,7 +15,7 @@ namespace Eval::NNUE {
 // Input features used in evaluation function
 // 評価関数で用いる入力特徴量
 using RawFeatures = Features::FeatureSet<
-    Features::HalfKP<Features::Side::kFriend>>;
+	Features::HalfKP<Features::Side::kFriend>>;
 
 // Number of input feature dimensions after conversion
 // 変換後の入力特徴量の次元数
@@ -36,4 +36,4 @@ using Network = Layers::OutputLayer;
 
 }  // namespace Eval::NNUE
 
-#endif // #ifndef NNUE_HALFKP_256X2_32_32_H_INCLUDED
+#endif  // #ifndef NNUE_HALFKP_256X2_32_32_H_INCLUDED
