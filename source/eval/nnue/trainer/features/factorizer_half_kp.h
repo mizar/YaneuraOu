@@ -22,73 +22,73 @@ namespace Features {
 // HalfKP用特殊化
 template <Side AssociatedKing>
 class Factorizer<HalfKP<AssociatedKing>> {
- private:
-  using FeatureType = HalfKP<AssociatedKing>;
+  private:
+    using FeatureType = HalfKP<AssociatedKing>;
 
-  // 特徴量のうち、同時に値が1となるインデックスの数の最大値
-  static constexpr IndexType kMaxActiveDimensions =
-      FeatureType::kMaxActiveDimensions;
+    // 特徴量のうち、同時に値が1となるインデックスの数の最大値
+    static constexpr IndexType kMaxActiveDimensions =
+        FeatureType::kMaxActiveDimensions;
 
-  // 学習用特徴量の種類
-  enum TrainingFeatureType {
-    kFeaturesHalfKP,
-    kFeaturesHalfK,
-    kFeaturesP,
-    kFeaturesHalfRelativeKP,
-    kNumTrainingFeatureTypes,
-  };
+    // 学習用特徴量の種類
+    enum TrainingFeatureType {
+        kFeaturesHalfKP,
+        kFeaturesHalfK,
+        kFeaturesP,
+        kFeaturesHalfRelativeKP,
+        kNumTrainingFeatureTypes,
+    };
 
-  // 学習用特徴量の情報
-  static constexpr FeatureProperties kProperties[] = {
-    // kFeaturesHalfKP
-    {true, FeatureType::kDimensions},
-    // kFeaturesHalfK
-    {true, SQ_NB},
-    // kFeaturesP
-    {true, Factorizer<P>::GetDimensions()},
-    // kFeaturesHalfRelativeKP
-    {true, Factorizer<HalfRelativeKP<AssociatedKing>>::GetDimensions()},
-  };
-  static_assert(GetArrayLength(kProperties) == kNumTrainingFeatureTypes, "");
+    // 学習用特徴量の情報
+    static constexpr FeatureProperties kProperties[] = {
+        // kFeaturesHalfKP
+        {true, FeatureType::kDimensions},
+        // kFeaturesHalfK
+        {true, SQ_NB},
+        // kFeaturesP
+        {true, Factorizer<P>::GetDimensions()},
+        // kFeaturesHalfRelativeKP
+        {true, Factorizer<HalfRelativeKP<AssociatedKing>>::GetDimensions()},
+    };
+    static_assert(GetArrayLength(kProperties) == kNumTrainingFeatureTypes, "");
 
- public:
-  // 学習用特徴量の次元数を取得する
-  static constexpr IndexType GetDimensions() {
-    return GetActiveDimensions(kProperties);
-  }
-
-  // 学習用特徴量のインデックスと学習率のスケールを取得する
-  static void AppendTrainingFeatures(
-      IndexType base_index, std::vector<TrainingFeature>* training_features) {
-    // kFeaturesHalfKP
-    IndexType index_offset = AppendBaseFeature<FeatureType>(
-        kProperties[kFeaturesHalfKP], base_index, training_features);
-
-    const auto sq_k = static_cast<Square>(base_index / fe_end);
-    const auto p = static_cast<BonaPiece>(base_index % fe_end);
-    // kFeaturesHalfK
-    {
-      const auto& properties = kProperties[kFeaturesHalfK];
-      if (properties.active) {
-        training_features->emplace_back(index_offset + sq_k);
-        index_offset += properties.dimensions;
-      }
-    }
-    // kFeaturesP
-    index_offset += InheritFeaturesIfRequired<P>(
-        index_offset, kProperties[kFeaturesP], p, training_features);
-    // kFeaturesHalfRelativeKP
-    if (p >= fe_hand_end) {
-      index_offset += InheritFeaturesIfRequired<HalfRelativeKP<AssociatedKing>>(
-          index_offset, kProperties[kFeaturesHalfRelativeKP],
-          HalfRelativeKP<AssociatedKing>::MakeIndex(sq_k, p),
-          training_features);
-    } else {
-      index_offset += SkipFeatures(kProperties[kFeaturesHalfRelativeKP]);
+  public:
+    // 学習用特徴量の次元数を取得する
+    static constexpr IndexType GetDimensions() {
+        return GetActiveDimensions(kProperties);
     }
 
-    ASSERT_LV5(index_offset == GetDimensions());
-  }
+    // 学習用特徴量のインデックスと学習率のスケールを取得する
+    static void AppendTrainingFeatures(
+        IndexType base_index, std::vector<TrainingFeature> *training_features) {
+        // kFeaturesHalfKP
+        IndexType index_offset = AppendBaseFeature<FeatureType>(
+            kProperties[kFeaturesHalfKP], base_index, training_features);
+
+        const auto sq_k = static_cast<Square>(base_index / fe_end);
+        const auto p = static_cast<BonaPiece>(base_index % fe_end);
+        // kFeaturesHalfK
+        {
+            const auto &properties = kProperties[kFeaturesHalfK];
+            if (properties.active) {
+                training_features->emplace_back(index_offset + sq_k);
+                index_offset += properties.dimensions;
+            }
+        }
+        // kFeaturesP
+        index_offset += InheritFeaturesIfRequired<P>(
+            index_offset, kProperties[kFeaturesP], p, training_features);
+        // kFeaturesHalfRelativeKP
+        if (p >= fe_hand_end) {
+            index_offset += InheritFeaturesIfRequired<HalfRelativeKP<AssociatedKing>>(
+                index_offset, kProperties[kFeaturesHalfRelativeKP],
+                HalfRelativeKP<AssociatedKing>::MakeIndex(sq_k, p),
+                training_features);
+        } else {
+            index_offset += SkipFeatures(kProperties[kFeaturesHalfRelativeKP]);
+        }
+
+        ASSERT_LV5(index_offset == GetDimensions());
+    }
 };
 
 template <Side AssociatedKing>

@@ -12,7 +12,7 @@ namespace Eval {
 namespace NNUE {
 
 // NNUE評価関数に関するUSI拡張コマンド
-void TestCommand(Position& pos, std::istream& stream);
+void TestCommand(Position &pos, std::istream &stream);
 
 }  // namespace NNUE
 
