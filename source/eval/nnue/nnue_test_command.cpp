@@ -17,14 +17,14 @@ namespace NNUE {
 namespace {
 
 // 主に差分計算に関するRawFeaturesのテスト
-void TestFeatures(Position& pos) {
+void TestFeatures(Position &pos) {
   const std::uint64_t num_games = 1000;
   StateInfo si;
-  pos.set_hirate(&si,Threads.main());
-  const int MAX_PLY = 256; // 256手までテスト
+  pos.set_hirate(&si, Threads.main());
+  const int MAX_PLY = 256;  // 256手までテスト
 
-  StateInfo state[MAX_PLY]; // StateInfoを最大手数分だけ
-  int ply; // 初期局面からの手数
+  StateInfo state[MAX_PLY];  // StateInfoを最大手数分だけ
+  int ply;                   // 初期局面からの手数
 
   PRNG prng(20171128);
 
@@ -33,7 +33,7 @@ void TestFeatures(Position& pos) {
   std::vector<std::uint64_t> num_resets(kRefreshTriggers.size());
   constexpr IndexType kUnknown = -1;
   std::vector<IndexType> trigger_map(RawFeatures::kDimensions, kUnknown);
-  auto make_index_sets = [&](const Position& pos) {
+  auto make_index_sets = [&](const Position &pos) {
     std::vector<std::vector<std::set<IndexType>>> index_sets(
         kRefreshTriggers.size(), std::vector<std::set<IndexType>>(2));
     for (IndexType i = 0; i < kRefreshTriggers.size(); ++i) {
@@ -52,7 +52,7 @@ void TestFeatures(Position& pos) {
     }
     return index_sets;
   };
-  auto update_index_sets = [&](const Position& pos, auto* index_sets) {
+  auto update_index_sets = [&](const Position &pos, auto *index_sets) {
     for (IndexType i = 0; i < kRefreshTriggers.size(); ++i) {
       Features::IndexList removed_indices[2], added_indices[2];
       bool reset[2];
@@ -93,7 +93,7 @@ void TestFeatures(Position& pos) {
   for (std::uint64_t i = 0; i < num_games; ++i) {
     auto index_sets = make_index_sets(pos);
     for (ply = 0; ply < MAX_PLY; ++ply) {
-      MoveList<LEGAL_ALL> mg(pos); // 全合法手の生成
+      MoveList<LEGAL_ALL> mg(pos);  // 全合法手の生成
 
       // 合法な指し手がなかった == 詰み
       if (mg.size() == 0)
@@ -108,7 +108,7 @@ void TestFeatures(Position& pos) {
       ASSERT(index_sets == make_index_sets(pos));
     }
 
-    pos.set_hirate(&si,Threads.main());
+    pos.set_hirate(&si, Threads.main());
 
     // 100回に1回ごとに'.'を出力(進んでいることがわかるように)
     if ((i % 100) == 0)
@@ -139,20 +139,23 @@ void TestFeatures(Position& pos) {
 }
 
 // 評価関数の構造を表す文字列を出力する
-void PrintInfo(std::istream& stream) {
+void PrintInfo(std::istream &stream) {
   std::cout << "network architecture: " << GetArchitectureString() << std::endl;
 
   while (true) {
     std::string file_name;
     stream >> file_name;
-    if (file_name.empty()) break;
+    if (file_name.empty())
+      break;
 
     std::uint32_t hash_value;
     std::string architecture;
     const bool success = [&]() {
       std::ifstream file_stream(file_name, std::ios::binary);
-      if (!file_stream) return false;
-      if (!ReadHeader(file_stream, &hash_value, &architecture)) return false;
+      if (!file_stream)
+        return false;
+      if (!ReadHeader(file_stream, &hash_value, &architecture))
+        return false;
       return true;
     }();
 
@@ -176,7 +179,7 @@ void PrintInfo(std::istream& stream) {
 }  // namespace
 
 // NNUE評価関数に関するUSI拡張コマンド
-void TestCommand(Position& pos, std::istream& stream) {
+void TestCommand(Position &pos, std::istream &stream) {
   std::string sub_command;
   stream >> sub_command;
 

@@ -20,7 +20,7 @@ class SharedInputTrainer {
  public:
   // ファクトリ関数
   static std::shared_ptr<SharedInputTrainer> Create(
-      FeatureTransformer* feature_transformer) {
+      FeatureTransformer *feature_transformer) {
     static std::shared_ptr<SharedInputTrainer> instance;
     if (!instance) {
       instance.reset(new SharedInputTrainer(feature_transformer));
@@ -30,7 +30,7 @@ class SharedInputTrainer {
   }
 
   // ハイパーパラメータなどのオプションを設定する
-  void SendMessage(Message* message) {
+  void SendMessage(Message *message) {
     if (num_calls_ == 0) {
       current_operation_ = Operation::kSendMessage;
       feature_transformer_trainer_->SendMessage(message);
@@ -44,7 +44,7 @@ class SharedInputTrainer {
 
   // パラメータを乱数で初期化する
   template <typename RNG>
-  void Initialize(RNG& rng) {
+  void Initialize(RNG &rng) {
     if (num_calls_ == 0) {
       current_operation_ = Operation::kInitialize;
       feature_transformer_trainer_->Initialize(rng);
@@ -57,7 +57,7 @@ class SharedInputTrainer {
   }
 
   // 順伝播
-  const LearnFloatType* Propagate(const std::vector<Example>& batch) {
+  const LearnFloatType *Propagate(const std::vector<Example> &batch) {
     if (gradients_.size() < kInputDimensions * batch.size()) {
       gradients_.resize(kInputDimensions * batch.size());
     }
@@ -75,7 +75,7 @@ class SharedInputTrainer {
   }
 
   // 逆伝播
-  void Backpropagate(const LearnFloatType* gradients,
+  void Backpropagate(const LearnFloatType *gradients,
                      LearnFloatType learning_rate) {
     if (num_referrers_ == 1) {
       feature_transformer_trainer_->Backpropagate(gradients, learning_rate);
@@ -107,14 +107,13 @@ class SharedInputTrainer {
 
  private:
   // コンストラクタ
-  SharedInputTrainer(FeatureTransformer* feature_transformer) :
-      batch_size_(0),
-      num_referrers_(0),
-      num_calls_(0),
-      current_operation_(Operation::kNone),
-      feature_transformer_trainer_(Trainer<FeatureTransformer>::Create(
-          feature_transformer)),
-      output_(nullptr) {
+  SharedInputTrainer(FeatureTransformer *feature_transformer) : batch_size_(0),
+                                                                num_referrers_(0),
+                                                                num_calls_(0),
+                                                                current_operation_(Operation::kNone),
+                                                                feature_transformer_trainer_(Trainer<FeatureTransformer>::Create(
+                                                                    feature_transformer)),
+                                                                output_(nullptr) {
   }
 
   // 入出力の次元数
@@ -147,7 +146,7 @@ class SharedInputTrainer {
       feature_transformer_trainer_;
 
   // 順伝播用に共有する出力のポインタ
-  const LearnFloatType* output_;
+  const LearnFloatType *output_;
 
   // 逆伝播用バッファ
   std::vector<LearnFloatType> gradients_;
@@ -163,23 +162,23 @@ class Trainer<Layers::InputSlice<OutputDimensions, Offset>> {
  public:
   // ファクトリ関数
   static std::shared_ptr<Trainer> Create(
-      LayerType* /*target_layer*/, FeatureTransformer* feature_transformer) {
+      LayerType * /*target_layer*/, FeatureTransformer *feature_transformer) {
     return std::shared_ptr<Trainer>(new Trainer(feature_transformer));
   }
 
   // ハイパーパラメータなどのオプションを設定する
-  void SendMessage(Message* message) {
+  void SendMessage(Message *message) {
     shared_input_trainer_->SendMessage(message);
   }
 
   // パラメータを乱数で初期化する
   template <typename RNG>
-  void Initialize(RNG& rng) {
+  void Initialize(RNG &rng) {
     shared_input_trainer_->Initialize(rng);
   }
 
   // 順伝播
-  const LearnFloatType* Propagate(const std::vector<Example>& batch) {
+  const LearnFloatType *Propagate(const std::vector<Example> &batch) {
     if (output_.size() < kOutputDimensions * batch.size()) {
       output_.resize(kOutputDimensions * batch.size());
       gradients_.resize(kInputDimensions * batch.size());
@@ -202,7 +201,7 @@ class Trainer<Layers::InputSlice<OutputDimensions, Offset>> {
   }
 
   // 逆伝播
-  void Backpropagate(const LearnFloatType* gradients,
+  void Backpropagate(const LearnFloatType *gradients,
                      LearnFloatType learning_rate) {
     for (IndexType b = 0; b < batch_size_; ++b) {
       const IndexType input_offset = kInputDimensions * b;
@@ -220,9 +219,8 @@ class Trainer<Layers::InputSlice<OutputDimensions, Offset>> {
 
  private:
   // コンストラクタ
-  Trainer(FeatureTransformer* feature_transformer) :
-      batch_size_(0),
-      shared_input_trainer_(SharedInputTrainer::Create(feature_transformer)) {
+  Trainer(FeatureTransformer *feature_transformer) : batch_size_(0),
+                                                     shared_input_trainer_(SharedInputTrainer::Create(feature_transformer)) {
   }
 
   // 入出力の次元数

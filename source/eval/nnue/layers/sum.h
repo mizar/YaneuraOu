@@ -31,7 +31,7 @@ class Sum : public Sum<RemainingPreviousLayers...> {
   // 入出力の次元数
   static constexpr IndexType kInputDimensions = Head::kOutputDimensions;
   static constexpr IndexType kOutputDimensions = kInputDimensions;
-  static_assert(kInputDimensions == Tail::kInputDimensions , "");
+  static_assert(kInputDimensions == Tail::kInputDimensions, "");
 
   // この層で使用する順伝播用バッファのサイズ
   static constexpr std::size_t kSelfBufferSize =
@@ -54,28 +54,30 @@ class Sum : public Sum<RemainingPreviousLayers...> {
   // 入力層からこの層までの構造を表す文字列
   static std::string GetStructureString() {
     return "Sum[" +
-        std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
+           std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
   }
 
   // パラメータを読み込む
-  bool ReadParameters(std::istream& stream) {
-    if (!Tail::ReadParameters(stream)) return false;
+  bool ReadParameters(std::istream &stream) {
+    if (!Tail::ReadParameters(stream))
+      return false;
     return previous_layer_.ReadParameters(stream);
   }
 
   // パラメータを書き込む
-  bool WriteParameters(std::ostream& stream) const {
-    if (!Tail::WriteParameters(stream)) return false;
+  bool WriteParameters(std::ostream &stream) const {
+    if (!Tail::WriteParameters(stream))
+      return false;
     return previous_layer_.WriteParameters(stream);
   }
 
   // 順伝播
-  const OutputType* Propagate(
-      const TransformedFeatureType* transformed_features, char* buffer) const {
+  const OutputType *Propagate(
+      const TransformedFeatureType *transformed_features, char *buffer) const {
     Tail::Propagate(transformed_features, buffer);
     const auto head_output = previous_layer_.Propagate(
         transformed_features, buffer + kSelfBufferSize);
-    const auto output = reinterpret_cast<OutputType*>(buffer);
+    const auto output = reinterpret_cast<OutputType *>(buffer);
     for (IndexType i = 0; i < kOutputDimensions; ++i) {
       output[i] += head_output[i];
     }
@@ -122,22 +124,22 @@ class Sum<PreviousLayer> {
   // 入力層からこの層までの構造を表す文字列
   static std::string GetStructureString() {
     return "Sum[" +
-        std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
+           std::to_string(kOutputDimensions) + "](" + GetSummandsString() + ")";
   }
 
   // パラメータを読み込む
-  bool ReadParameters(std::istream& stream) {
+  bool ReadParameters(std::istream &stream) {
     return previous_layer_.ReadParameters(stream);
   }
 
   // パラメータを書き込む
-  bool WriteParameters(std::ostream& stream) const {
+  bool WriteParameters(std::ostream &stream) const {
     return previous_layer_.WriteParameters(stream);
   }
 
   // 順伝播
-  const OutputType* Propagate(
-      const TransformedFeatureType* transformed_features, char* buffer) const {
+  const OutputType *Propagate(
+      const TransformedFeatureType *transformed_features, char *buffer) const {
     return previous_layer_.Propagate(transformed_features, buffer);
   }
 

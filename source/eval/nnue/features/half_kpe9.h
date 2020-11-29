@@ -22,7 +22,7 @@ template <Side AssociatedKing>
 class HalfKPE9 {
  public:
   // 特徴量名
-  static constexpr const char* kName =
+  static constexpr const char *kName =
       (AssociatedKing == Side::kFriend) ? "HalfKPE9(Friend)" : "HalfKPE9(Enemy)";
   // 評価関数ファイルに埋め込むハッシュ値
   static constexpr std::uint32_t kHashValue =
@@ -35,24 +35,23 @@ class HalfKPE9 {
 
   // 差分計算の代わりに全計算を行うタイミング
   static constexpr TriggerEvent kRefreshTrigger =
-      (AssociatedKing == Side::kFriend) ?
-      TriggerEvent::kFriendKingMoved : TriggerEvent::kEnemyKingMoved;
+      (AssociatedKing == Side::kFriend) ? TriggerEvent::kFriendKingMoved : TriggerEvent::kEnemyKingMoved;
 
   // 特徴量のうち、値が1であるインデックスのリストを取得する
-  static void AppendActiveIndices(const Position& pos, Color perspective,
-                                  IndexList* active);
+  static void AppendActiveIndices(const Position &pos, Color perspective,
+                                  IndexList *active);
 
   // 特徴量のうち、一手前から値が変化したインデックスのリストを取得する
-  static void AppendChangedIndices(const Position& pos, Color perspective,
-                                   IndexList* removed, IndexList* added);
+  static void AppendChangedIndices(const Position &pos, Color perspective,
+                                   IndexList *removed, IndexList *added);
 
   // 玉の位置とBonaPieceと利き数から特徴量のインデックスを求める
   static IndexType MakeIndex(Square sq_k, BonaPiece p, int effect1, int effect2);
 
  private:
   // 駒の情報を取得する
-  static void GetPieces(const Position& pos, Color perspective,
-                        BonaPiece** pieces, Square* sq_target_k);
+  static void GetPieces(const Position &pos, Color perspective,
+                        BonaPiece **pieces, Square *sq_target_k);
 };
 
 }  // namespace Features

@@ -34,11 +34,10 @@ class TrainingFeature {
   static constexpr std::uint32_t kCountBits =
       std::numeric_limits<StorageType>::digits - kIndexBits;
 
-  explicit TrainingFeature(IndexType index) :
-      index_and_count_((index << kCountBits) | 1) {
+  explicit TrainingFeature(IndexType index) : index_and_count_((index << kCountBits) | 1) {
     ASSERT_LV3(index < (1 << kIndexBits));
   }
-  TrainingFeature& operator+=(const TrainingFeature& other) {
+  TrainingFeature &operator+=(const TrainingFeature &other) {
     ASSERT_LV3(other.GetIndex() == GetIndex());
     ASSERT_LV3(other.GetCount() + GetCount() < (1 << kCountBits));
     index_and_count_ += other.GetCount();
@@ -54,7 +53,7 @@ class TrainingFeature {
   IndexType GetCount() const {
     return static_cast<IndexType>(index_and_count_ & ((1 << kCountBits) - 1));
   }
-  bool operator<(const TrainingFeature& other) const {
+  bool operator<(const TrainingFeature &other) const {
     return index_and_count_ < other.index_and_count_;
   }
 
@@ -72,8 +71,7 @@ struct Example {
 
 // ハイパーパラメータの設定などに使用するメッセージ
 struct Message {
-  Message(const std::string& name, const std::string& value = "") :
-      name(name), value(value), num_peekers(0), num_receivers(0) {}
+  Message(const std::string &name, const std::string &value = "") : name(name), value(value), num_peekers(0), num_receivers(0) {}
   const std::string name;
   const std::string value;
   std::uint32_t num_peekers;
@@ -81,7 +79,7 @@ struct Message {
 };
 
 // メッセージを受理するかどうかを判定する
-bool ReceiveMessage(const std::string& name, Message* message) {
+bool ReceiveMessage(const std::string &name, Message *message) {
   const auto subscript = "[" + std::to_string(message->num_peekers) + "]";
   if (message->name.substr(0, name.size() + 1) == name + "[") {
     ++message->num_peekers;
@@ -94,7 +92,7 @@ bool ReceiveMessage(const std::string& name, Message* message) {
 }
 
 // 文字列を分割する
-std::vector<std::string> Split(const std::string& input, char delimiter) {
+std::vector<std::string> Split(const std::string &input, char delimiter) {
   std::istringstream stream(input);
   std::string field;
   std::vector<std::string> fields;
@@ -112,21 +110,20 @@ IntType Round(double value) {
 
 // アライメント付きmake_shared
 template <typename T, typename... ArgumentTypes>
-std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes&&... arguments) {
+std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes &&...arguments) {
 
-    // Trainerクラスのほうでゼロ初期化するのでここではゼロ初期化はされていないメモリで良い。
+  // Trainerクラスのほうでゼロ初期化するのでここではゼロ初期化はされていないメモリで良い。
 
-    void* mem; // 開放すべきメモリアドレス
-    void* ptr_ = LargeMemory::static_alloc(sizeof(T), mem, alignof(T));
-    const auto ptr = new(ptr_)
+  void *mem;  // 開放すべきメモリアドレス
+  void *ptr_ = LargeMemory::static_alloc(sizeof(T), mem, alignof(T));
+  const auto ptr = new (ptr_)
       T(std::forward<ArgumentTypes>(arguments)...);
-    AlignedDeleter<T> deleter;
-    deleter.mem = mem;
-    
-    //sync_cout << "trainer.alloc(" << sizeof(T) << "," << alignof(T) << ")" << sync_endl;
+  AlignedDeleter<T> deleter;
+  deleter.mem = mem;
 
-    return std::shared_ptr<T>(ptr,deleter);
+  //sync_cout << "trainer.alloc(" << sizeof(T) << "," << alignof(T) << ")" << sync_endl;
 
+  return std::shared_ptr<T>(ptr, deleter);
 }
 
 }  // namespace NNUE

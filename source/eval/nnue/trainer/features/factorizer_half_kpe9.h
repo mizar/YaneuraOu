@@ -45,18 +45,18 @@ class Factorizer<HalfKPE9<AssociatedKing>> {
 
   // 学習用特徴量の情報
   static constexpr FeatureProperties kProperties[] = {
-    // kFeaturesHalfKPE9
-    {true, FeatureType::kDimensions},
-    // kFeaturesHalfKP
-    {true, Factorizer<HalfKP<AssociatedKing>>::GetDimensions()},
-    // kFeaturesHalfK
-    {true, SQ_NB},
-    // kFeaturesPE9
-    {true, Factorizer<PE9>::GetDimensions()},
-    // kFeaturesP
-    {true, Factorizer<P>::GetDimensions()},
-    // kFeaturesHalfRelativeKP
-    {true, Factorizer<HalfRelativeKP<AssociatedKing>>::GetDimensions()},
+      // kFeaturesHalfKPE9
+      {true, FeatureType::kDimensions},
+      // kFeaturesHalfKP
+      {true, Factorizer<HalfKP<AssociatedKing>>::GetDimensions()},
+      // kFeaturesHalfK
+      {true, SQ_NB},
+      // kFeaturesPE9
+      {true, Factorizer<PE9>::GetDimensions()},
+      // kFeaturesP
+      {true, Factorizer<P>::GetDimensions()},
+      // kFeaturesHalfRelativeKP
+      {true, Factorizer<HalfRelativeKP<AssociatedKing>>::GetDimensions()},
   };
   static_assert(GetArrayLength(kProperties) == kNumTrainingFeatureTypes, "");
 
@@ -68,7 +68,7 @@ class Factorizer<HalfKPE9<AssociatedKing>> {
 
   // 学習用特徴量のインデックスと学習率のスケールを取得する
   static void AppendTrainingFeatures(
-      IndexType base_index, std::vector<TrainingFeature>* training_features) {
+      IndexType base_index, std::vector<TrainingFeature> *training_features) {
     // kFeaturesHalfKPE9
     IndexType index_offset = AppendBaseFeature<FeatureType>(
         kProperties[kFeaturesHalfKPE9], base_index, training_features);
@@ -86,7 +86,7 @@ class Factorizer<HalfKPE9<AssociatedKing>> {
 
     // kFeaturesHalfK
     {
-      const auto& properties = kProperties[kFeaturesHalfK];
+      const auto &properties = kProperties[kFeaturesHalfK];
       if (properties.active) {
         training_features->emplace_back(index_offset + sq_k);
         index_offset += properties.dimensions;

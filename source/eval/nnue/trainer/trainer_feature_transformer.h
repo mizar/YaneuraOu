@@ -37,15 +37,15 @@ class Trainer<FeatureTransformer> {
   template <typename T>
   friend struct AlignedDeleter;
   template <typename T, typename... ArgumentTypes>
-  friend std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes&&... arguments);
+  friend std::shared_ptr<T> MakeAlignedSharedPtr(ArgumentTypes &&...arguments);
 
   // ファクトリ関数
-  static std::shared_ptr<Trainer> Create(LayerType* target_layer) {
+  static std::shared_ptr<Trainer> Create(LayerType *target_layer) {
     return MakeAlignedSharedPtr<Trainer>(target_layer);
   }
 
   // ハイパーパラメータなどのオプションを設定する
-  void SendMessage(Message* message) {
+  void SendMessage(Message *message) {
     if (ReceiveMessage("momentum", message)) {
       momentum_ = static_cast<LearnFloatType>(std::stod(message->value));
     }
@@ -69,7 +69,7 @@ class Trainer<FeatureTransformer> {
 
   // パラメータを乱数で初期化する
   template <typename RNG>
-  void Initialize(RNG& rng) {
+  void Initialize(RNG &rng) {
     std::fill(std::begin(weights_), std::end(weights_), +kZero);
     const double kSigma = 0.1 / std::sqrt(RawFeatures::kMaxActiveDimensions);
     auto distribution = std::normal_distribution<double>(0.0, kSigma);
@@ -84,7 +84,7 @@ class Trainer<FeatureTransformer> {
   }
 
   // 順伝播
-  const LearnFloatType* Propagate(const std::vector<Example>& batch) {
+  const LearnFloatType *Propagate(const std::vector<Example> &batch) {
     if (output_.size() < kOutputDimensions * batch.size()) {
       output_.resize(kOutputDimensions * batch.size());
       gradients_.resize(kOutputDimensions * batch.size());
@@ -98,7 +98,7 @@ class Trainer<FeatureTransformer> {
         const IndexType output_offset = batch_offset + kHalfDimensions * c;
 #if defined(USE_BLAS)
         cblas_scopy(kHalfDimensions, biases_, 1, &output_[output_offset], 1);
-        for (const auto& feature : batch[b].training_features[c]) {
+        for (const auto &feature : batch[b].training_features[c]) {
           const IndexType weights_offset = kHalfDimensions * feature.GetIndex();
           cblas_saxpy(kHalfDimensions, (float)feature.GetCount(),
                       &weights_[weights_offset], 1, &output_[output_offset], 1);
@@ -107,7 +107,7 @@ class Trainer<FeatureTransformer> {
         for (IndexType i = 0; i < kHalfDimensions; ++i) {
           output_[output_offset + i] = biases_[i];
         }
-        for (const auto& feature : batch[b].training_features[c]) {
+        for (const auto &feature : batch[b].training_features[c]) {
           const IndexType weights_offset = kHalfDimensions * feature.GetIndex();
           for (IndexType i = 0; i < kHalfDimensions; ++i) {
             output_[output_offset + i] +=
@@ -134,7 +134,7 @@ class Trainer<FeatureTransformer> {
   }
 
   // 逆伝播
-  void Backpropagate(const LearnFloatType* gradients,
+  void Backpropagate(const LearnFloatType *gradients,
                      LearnFloatType learning_rate) {
     const LearnFloatType local_learning_rate =
         learning_rate * learning_rate_scale_;
@@ -143,7 +143,7 @@ class Trainer<FeatureTransformer> {
       for (IndexType i = 0; i < kOutputDimensions; ++i) {
         const IndexType index = batch_offset + i;
         gradients_[index] = gradients[index] *
-            ((output_[index] > kZero) * (output_[index] < kOne));
+                            ((output_[index] > kZero) * (output_[index] < kOne));
       }
     }
     // 重み行列は入力に出現した特徴量に対応する列のみを更新するため、
@@ -172,9 +172,10 @@ class Trainer<FeatureTransformer> {
         const IndexType batch_offset = kOutputDimensions * b;
         for (IndexType c = 0; c < 2; ++c) {
           const IndexType output_offset = batch_offset + kHalfDimensions * c;
-          for (const auto& feature : (*batch_)[b].training_features[c]) {
+          for (const auto &feature : (*batch_)[b].training_features[c]) {
 #if defined(_OPENMP)
-            if (feature.GetIndex() % num_threads != thread_index) continue;
+            if (feature.GetIndex() % num_threads != thread_index)
+              continue;
 #endif
             const IndexType weights_offset =
                 kHalfDimensions * feature.GetIndex();
@@ -207,7 +208,7 @@ class Trainer<FeatureTransformer> {
       const IndexType batch_offset = kOutputDimensions * b;
       for (IndexType c = 0; c < 2; ++c) {
         const IndexType output_offset = batch_offset + kHalfDimensions * c;
-        for (const auto& feature : (*batch_)[b].training_features[c]) {
+        for (const auto &feature : (*batch_)[b].training_features[c]) {
           const IndexType weights_offset = kHalfDimensions * feature.GetIndex();
           const auto scale = static_cast<LearnFloatType>(
               effective_learning_rate / feature.GetCount());
@@ -221,7 +222,7 @@ class Trainer<FeatureTransformer> {
 #endif
     for (IndexType b = 0; b < batch_->size(); ++b) {
       for (IndexType c = 0; c < 2; ++c) {
-        for (const auto& feature : (*batch_)[b].training_features[c]) {
+        for (const auto &feature : (*batch_)[b].training_features[c]) {
           observed_features.set(feature.GetIndex());
         }
       }
@@ -230,14 +231,13 @@ class Trainer<FeatureTransformer> {
 
  private:
   // コンストラクタ
-  Trainer(LayerType* target_layer) :
-      batch_(nullptr),
-      target_layer_(target_layer),
-      biases_(),
-      weights_(),
-      biases_diff_(),
-      momentum_(0.0),
-      learning_rate_scale_(1.0) {
+  Trainer(LayerType *target_layer) : batch_(nullptr),
+                                     target_layer_(target_layer),
+                                     biases_(),
+                                     weights_(),
+                                     biases_diff_(),
+                                     momentum_(0.0),
+                                     learning_rate_scale_(1.0) {
     min_pre_activation_ = std::numeric_limits<LearnFloatType>::max();
     max_pre_activation_ = std::numeric_limits<LearnFloatType>::lowest();
     std::fill(std::begin(min_activations_), std::end(min_activations_),
@@ -261,7 +261,7 @@ class Trainer<FeatureTransformer> {
           j, &training_features);
       for (IndexType i = 0; i < kHalfDimensions; ++i) {
         double sum = 0.0;
-        for (const auto& feature : training_features) {
+        for (const auto &feature : training_features) {
           sum += weights_[kHalfDimensions * feature.GetIndex() + i];
         }
         target_layer_->weights_[kHalfDimensions * j + i] =
@@ -339,10 +339,10 @@ class Trainer<FeatureTransformer> {
   static constexpr LearnFloatType kOne = static_cast<LearnFloatType>(1.0);
 
   // ミニバッチ
-  const std::vector<Example>* batch_;
+  const std::vector<Example> *batch_;
 
   // 学習対象の層
-  LayerType* const target_layer_;
+  LayerType *const target_layer_;
 
   // パラメータ
   alignas(kCacheLineSize) LearnFloatType biases_[kHalfDimensions];

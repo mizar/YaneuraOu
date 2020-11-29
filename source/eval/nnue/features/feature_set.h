@@ -53,10 +53,9 @@ struct InsertToSet<T, CompileTimeList<T, First, Remaining...>, AnotherValue> {
       CompileTimeList<T, First, Remaining...>::Contains(AnotherValue),
       CompileTimeList<T, First, Remaining...>,
       std::conditional_t<(AnotherValue < First),
-          CompileTimeList<T, AnotherValue, First, Remaining...>,
-          typename AppendToList<T, typename InsertToSet<
-              T, CompileTimeList<T, Remaining...>, AnotherValue>::Result,
-              First>::Result>>;
+                         CompileTimeList<T, AnotherValue, First, Remaining...>,
+                         typename AppendToList<T, typename InsertToSet<T, CompileTimeList<T, Remaining...>, AnotherValue>::Result,
+                                               First>::Result>>;
 };
 template <typename T, T Value>
 struct InsertToSet<T, CompileTimeList<T>, Value> {
@@ -71,7 +70,7 @@ class FeatureSetBase {
   // 特徴量のうち、値が1であるインデックスのリストを取得する
   template <typename IndexListType>
   static void AppendActiveIndices(
-      const Position& pos, TriggerEvent trigger, IndexListType active[2]) {
+      const Position &pos, TriggerEvent trigger, IndexListType active[2]) {
     for (const auto perspective : COLOR) {
       Derived::CollectActiveIndices(
           pos, trigger, perspective, &active[perspective]);
@@ -81,33 +80,34 @@ class FeatureSetBase {
   // 特徴量のうち、一手前から値が変化したインデックスのリストを取得する
   template <typename PositionType, typename IndexListType>
   static void AppendChangedIndices(
-      const PositionType& pos, TriggerEvent trigger,
+      const PositionType &pos, TriggerEvent trigger,
       IndexListType removed[2], IndexListType added[2], bool reset[2]) {
-    const auto& dp = pos.state()->dirtyPiece;
-    if (dp.dirty_num == 0) return;
+    const auto &dp = pos.state()->dirtyPiece;
+    if (dp.dirty_num == 0)
+      return;
 
     for (const auto perspective : COLOR) {
       reset[perspective] = false;
       switch (trigger) {
-        case TriggerEvent::kNone:
-          break;
-        case TriggerEvent::kFriendKingMoved:
-          reset[perspective] =
-              dp.pieceNo[0] == PIECE_NUMBER_KING + perspective;
-          break;
-        case TriggerEvent::kEnemyKingMoved:
-          reset[perspective] =
-              dp.pieceNo[0] == PIECE_NUMBER_KING + ~perspective;
-          break;
-        case TriggerEvent::kAnyKingMoved:
-          reset[perspective] = dp.pieceNo[0] >= PIECE_NUMBER_KING;
-          break;
-        case TriggerEvent::kAnyPieceMoved:
-          reset[perspective] = true;
-          break;
-        default:
-          ASSERT_LV5(false);
-          break;
+      case TriggerEvent::kNone:
+        break;
+      case TriggerEvent::kFriendKingMoved:
+        reset[perspective] =
+            dp.pieceNo[0] == PIECE_NUMBER_KING + perspective;
+        break;
+      case TriggerEvent::kEnemyKingMoved:
+        reset[perspective] =
+            dp.pieceNo[0] == PIECE_NUMBER_KING + ~perspective;
+        break;
+      case TriggerEvent::kAnyKingMoved:
+        reset[perspective] = dp.pieceNo[0] >= PIECE_NUMBER_KING;
+        break;
+      case TriggerEvent::kAnyPieceMoved:
+        reset[perspective] = true;
+        break;
+      default:
+        ASSERT_LV5(false);
+        break;
       }
       if (reset[perspective]) {
         Derived::CollectActiveIndices(
@@ -125,9 +125,8 @@ class FeatureSetBase {
 // 特徴量セットを表すクラステンプレート
 // 実行時の計算量を線形にするために、内部の処理はテンプレート引数の逆順に行う
 template <typename FirstFeatureType, typename... RemainingFeatureTypes>
-class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> :
-    public FeatureSetBase<
-        FeatureSet<FirstFeatureType, RemainingFeatureTypes...>> {
+class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> : public FeatureSetBase<
+                                                                   FeatureSet<FirstFeatureType, RemainingFeatureTypes...>> {
  private:
   using Head = FirstFeatureType;
   using Tail = FeatureSet<RemainingFeatureTypes...>;
@@ -144,7 +143,7 @@ class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> :
       Head::kMaxActiveDimensions + Tail::kMaxActiveDimensions;
   // 差分計算の代わりに全計算を行うタイミングのリスト
   using SortedTriggerSet = typename InsertToSet<TriggerEvent,
-      typename Tail::SortedTriggerSet, Head::kRefreshTrigger>::Result;
+                                                typename Tail::SortedTriggerSet, Head::kRefreshTrigger>::Result;
   static constexpr auto kRefreshTriggers = SortedTriggerSet::kValues;
 
   // 特徴量名を取得する
@@ -156,8 +155,8 @@ class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> :
   // 特徴量のうち、値が1であるインデックスのリストを取得する
   template <typename IndexListType>
   static void CollectActiveIndices(
-      const Position& pos, const TriggerEvent trigger, const Color perspective,
-      IndexListType* const active) {
+      const Position &pos, const TriggerEvent trigger, const Color perspective,
+      IndexListType *const active) {
     Tail::CollectActiveIndices(pos, trigger, perspective, active);
     if (Head::kRefreshTrigger == trigger) {
       const auto start = active->size();
@@ -171,8 +170,8 @@ class FeatureSet<FirstFeatureType, RemainingFeatureTypes...> :
   // 特徴量のうち、一手前から値が変化したインデックスのリストを取得する
   template <typename IndexListType>
   static void CollectChangedIndices(
-      const Position& pos, const TriggerEvent trigger, const Color perspective,
-      IndexListType* const removed, IndexListType* const added) {
+      const Position &pos, const TriggerEvent trigger, const Color perspective,
+      IndexListType *const removed, IndexListType *const added) {
     Tail::CollectChangedIndices(pos, trigger, perspective, removed, added);
     if (Head::kRefreshTrigger == trigger) {
       const auto start_removed = removed->size();
@@ -224,8 +223,8 @@ class FeatureSet<FeatureType> : public FeatureSetBase<FeatureSet<FeatureType>> {
  private:
   // 特徴量のうち、値が1であるインデックスのリストを取得する
   static void CollectActiveIndices(
-      const Position& pos, const TriggerEvent trigger, const Color perspective,
-      IndexList* const active) {
+      const Position &pos, const TriggerEvent trigger, const Color perspective,
+      IndexList *const active) {
     if (FeatureType::kRefreshTrigger == trigger) {
       FeatureType::AppendActiveIndices(pos, perspective, active);
     }
@@ -233,8 +232,8 @@ class FeatureSet<FeatureType> : public FeatureSetBase<FeatureSet<FeatureType>> {
 
   // 特徴量のうち、一手前から値が変化したインデックスのリストを取得する
   static void CollectChangedIndices(
-      const Position& pos, const TriggerEvent trigger, const Color perspective,
-      IndexList* const removed, IndexList* const added) {
+      const Position &pos, const TriggerEvent trigger, const Color perspective,
+      IndexList *const removed, IndexList *const added) {
     if (FeatureType::kRefreshTrigger == trigger) {
       FeatureType::AppendChangedIndices(pos, perspective, removed, added);
     }
@@ -250,4 +249,4 @@ class FeatureSet<FeatureType> : public FeatureSetBase<FeatureSet<FeatureType>> {
 
 #endif  // defined(EVAL_NNUE)
 
-#endif // #ifndef NNUE_FEATURE_SET_H_INCLUDED
+#endif  // #ifndef NNUE_FEATURE_SET_H_INCLUDED

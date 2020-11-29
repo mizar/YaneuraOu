@@ -24,14 +24,14 @@ void SetBatchSize(u64 size);
 void SetGlobalLearningRateScale(double scale);
 
 // ハイパーパラメータなどのオプションを設定する
-void SetOptions(const std::string& options);
+void SetOptions(const std::string &options);
 
 // 学習用評価関数パラメータをファイルから読み直す
-void RestoreParameters(const std::string& dir_name);
+void RestoreParameters(const std::string &dir_name);
 
 // 学習データを1サンプル追加する
-void AddExample(Position& pos, Color rootColor,
-                const Learner::PackedSfenValue& psv, double weight);
+void AddExample(Position &pos, Color rootColor,
+                const Learner::PackedSfenValue &psv, double weight);
 
 // 評価関数パラメータを更新する
 void UpdateParameters(u64 epoch);

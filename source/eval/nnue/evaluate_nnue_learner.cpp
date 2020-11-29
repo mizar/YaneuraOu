@@ -59,7 +59,7 @@ double GetGlobalLearningRateScale() {
 
 // ハイパーパラメータなどのオプションを学習器に伝える
 void SendMessages(std::vector<Message> messages) {
-  for (auto& message : messages) {
+  for (auto &message : messages) {
     trainer->SendMessage(&message);
     ASSERT_LV3(message.num_receivers > 0);
   }
@@ -97,9 +97,9 @@ void SetGlobalLearningRateScale(double scale) {
 }
 
 // ハイパーパラメータなどのオプションを設定する
-void SetOptions(const std::string& options) {
+void SetOptions(const std::string &options) {
   std::vector<Message> messages;
-  for (const auto& option : Split(options, ',')) {
+  for (const auto &option : Split(options, ',')) {
     const auto fields = Split(option, '=');
     ASSERT_LV3(fields.size() == 1 || fields.size() == 2);
     if (fields.size() == 1) {
@@ -112,7 +112,7 @@ void SetOptions(const std::string& options) {
 }
 
 // 学習用評価関数パラメータをファイルから読み直す
-void RestoreParameters(const std::string& dir_name) {
+void RestoreParameters(const std::string &dir_name) {
   const std::string file_name = Path::Combine(dir_name, NNUE::kFileName);
   std::ifstream stream(file_name, std::ios::binary);
   bool result = ReadParameters(stream);
@@ -122,8 +122,8 @@ void RestoreParameters(const std::string& dir_name) {
 }
 
 // 学習データを1サンプル追加する
-void AddExample(Position& pos, Color rootColor,
-                const Learner::PackedSfenValue& psv, double weight) {
+void AddExample(Position &pos, Color rootColor,
+                const Learner::PackedSfenValue &psv, double weight) {
   Example example;
   if (rootColor == pos.side_to_move()) {
     example.sign = 1;
@@ -144,14 +144,15 @@ void AddExample(Position& pos, Color rootColor,
     std::vector<TrainingFeature> training_features;
     for (const auto base_index : active_indices[color]) {
       static_assert(Features::Factorizer<RawFeatures>::GetDimensions() <
-                    (1 << TrainingFeature::kIndexBits), "");
+                        (1 << TrainingFeature::kIndexBits),
+                    "");
       Features::Factorizer<RawFeatures>::AppendTrainingFeatures(
           base_index, &training_features);
     }
     std::sort(training_features.begin(), training_features.end());
 
-    auto& unique_features = example.training_features[color];
-    for (const auto& feature : training_features) {
+    auto &unique_features = example.training_features[color];
+    for (const auto &feature : training_features) {
       if (!unique_features.empty() &&
           feature.GetIndex() == unique_features.back().GetIndex()) {
         unique_features.back() += feature;
@@ -185,7 +186,7 @@ void UpdateParameters(u64 epoch) {
     for (std::size_t b = 0; b < batch.size(); ++b) {
       const auto shallow = static_cast<Value>(Round<std::int32_t>(
           batch[b].sign * network_output[b] * kPonanzaConstant));
-      const auto& psv = batch[b].psv;
+      const auto &psv = batch[b].psv;
       const double gradient = batch[b].sign * Learner::calc_grad(shallow, psv);
       gradients[b] = static_cast<LearnFloatType>(gradient * batch[b].weight);
     }
@@ -220,10 +221,9 @@ void save_eval(std::string dir_name) {
   std::ofstream stream(file_name, std::ios::binary);
   const bool result = NNUE::WriteParameters(stream);
 
-  if (!result)
-  {
-      std::cout << "Error!! : save_eval() failed." << std::endl;
-      Tools::exit();
+  if (!result) {
+    std::cout << "Error!! : save_eval() failed." << std::endl;
+    Tools::exit();
   }
 
   std::cout << "save_eval() finished." << std::endl;

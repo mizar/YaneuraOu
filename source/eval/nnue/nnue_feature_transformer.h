@@ -11,7 +11,7 @@
 #include "nnue_architecture.h"
 #include "features/index_list.h"
 
-#include <cstring> // std::memset()
+#include <cstring>  // std::memset()
 
 namespace Eval {
 
@@ -43,30 +43,30 @@ class FeatureTransformer {
   // 構造を表す文字列
   static std::string GetStructureString() {
     return RawFeatures::GetName() + "[" +
-        std::to_string(kInputDimensions) + "->" +
-        std::to_string(kHalfDimensions) + "x2]";
+           std::to_string(kInputDimensions) + "->" +
+           std::to_string(kHalfDimensions) + "x2]";
   }
 
   // パラメータを読み込む
-  bool ReadParameters(std::istream& stream) {
-    stream.read(reinterpret_cast<char*>(biases_),
+  bool ReadParameters(std::istream &stream) {
+    stream.read(reinterpret_cast<char *>(biases_),
                 kHalfDimensions * sizeof(BiasType));
-    stream.read(reinterpret_cast<char*>(weights_),
+    stream.read(reinterpret_cast<char *>(weights_),
                 kHalfDimensions * kInputDimensions * sizeof(WeightType));
     return !stream.fail();
   }
 
   // パラメータを書き込む
-  bool WriteParameters(std::ostream& stream) const {
-    stream.write(reinterpret_cast<const char*>(biases_),
+  bool WriteParameters(std::ostream &stream) const {
+    stream.write(reinterpret_cast<const char *>(biases_),
                  kHalfDimensions * sizeof(BiasType));
-    stream.write(reinterpret_cast<const char*>(weights_),
+    stream.write(reinterpret_cast<const char *>(weights_),
                  kHalfDimensions * kInputDimensions * sizeof(WeightType));
     return !stream.fail();
   }
 
   // 可能なら差分計算を進める
-  bool UpdateAccumulatorIfPossible(const Position& pos) const {
+  bool UpdateAccumulatorIfPossible(const Position &pos) const {
     const auto now = pos.state();
     if (now->accumulator.computed_accumulation) {
       return true;
@@ -80,11 +80,11 @@ class FeatureTransformer {
   }
 
   // 入力特徴量を変換する
-  void Transform(const Position& pos, OutputType* output, bool refresh) const {
+  void Transform(const Position &pos, OutputType *output, bool refresh) const {
     if (refresh || !UpdateAccumulatorIfPossible(pos)) {
       RefreshAccumulator(pos);
     }
-    const auto& accumulation = pos.state()->accumulator.accumulation;
+    const auto &accumulation = pos.state()->accumulator.accumulation;
 #if defined(USE_AVX2)
     constexpr IndexType kNumChunks = kHalfDimensions / kSimdWidth;
     constexpr int kControl = 0b11011000;
@@ -93,7 +93,7 @@ class FeatureTransformer {
 #elif defined(USE_SSSE3)
     constexpr IndexType kNumChunks = kHalfDimensions / kSimdWidth;
     const __m128i kZero = _mm_setzero_si128();
-#if !defined(USE_SSE41) // SSE4非対応だがSSE3は使える環境
+#if !defined(USE_SSE41)  // SSE4非対応だがSSE3は使える環境
     const __m128i k0x80s = _mm_set1_epi8(-128);
 #endif
 
@@ -105,53 +105,53 @@ class FeatureTransformer {
     for (IndexType p = 0; p < 2; ++p) {
       const IndexType offset = kHalfDimensions * p;
 #if defined(USE_AVX2)
-      auto out = reinterpret_cast<__m256i*>(&output[offset]);
+      auto out = reinterpret_cast<__m256i *>(&output[offset]);
       for (IndexType j = 0; j < kNumChunks; ++j) {
-        __m256i sum0 = _mm256_load_si256(&reinterpret_cast<const __m256i*>(
+        __m256i sum0 = _mm256_load_si256(&reinterpret_cast<const __m256i *>(
             accumulation[perspectives[p]][0])[j * 2 + 0]);
-        __m256i sum1 = _mm256_load_si256(&reinterpret_cast<const __m256i*>(
+        __m256i sum1 = _mm256_load_si256(&reinterpret_cast<const __m256i *>(
             accumulation[perspectives[p]][0])[j * 2 + 1]);
         for (IndexType i = 1; i < kRefreshTriggers.size(); ++i) {
-          sum0 = _mm256_add_epi16(sum0, reinterpret_cast<const __m256i*>(
-              accumulation[perspectives[p]][i])[j * 2 + 0]);
-          sum1 = _mm256_add_epi16(sum1, reinterpret_cast<const __m256i*>(
-              accumulation[perspectives[p]][i])[j * 2 + 1]);
+          sum0 = _mm256_add_epi16(sum0, reinterpret_cast<const __m256i *>(
+                                            accumulation[perspectives[p]][i])[j * 2 + 0]);
+          sum1 = _mm256_add_epi16(sum1, reinterpret_cast<const __m256i *>(
+                                            accumulation[perspectives[p]][i])[j * 2 + 1]);
         }
         _mm256_store_si256(&out[j], _mm256_permute4x64_epi64(_mm256_max_epi8(
-            _mm256_packs_epi16(sum0, sum1), kZero), kControl));
+                                                                 _mm256_packs_epi16(sum0, sum1), kZero),
+                                                             kControl));
       }
 #elif defined(USE_SSSE3)
-      auto out = reinterpret_cast<__m128i*>(&output[offset]);
+      auto out = reinterpret_cast<__m128i *>(&output[offset]);
       for (IndexType j = 0; j < kNumChunks; ++j) {
-        __m128i sum0 = _mm_load_si128(&reinterpret_cast<const __m128i*>(
+        __m128i sum0 = _mm_load_si128(&reinterpret_cast<const __m128i *>(
             accumulation[perspectives[p]][0])[j * 2 + 0]);
-        __m128i sum1 = _mm_load_si128(&reinterpret_cast<const __m128i*>(
+        __m128i sum1 = _mm_load_si128(&reinterpret_cast<const __m128i *>(
             accumulation[perspectives[p]][0])[j * 2 + 1]);
         for (IndexType i = 1; i < kRefreshTriggers.size(); ++i) {
-          sum0 = _mm_add_epi16(sum0, reinterpret_cast<const __m128i*>(
-              accumulation[perspectives[p]][i])[j * 2 + 0]);
-          sum1 = _mm_add_epi16(sum1, reinterpret_cast<const __m128i*>(
-              accumulation[perspectives[p]][i])[j * 2 + 1]);
+          sum0 = _mm_add_epi16(sum0, reinterpret_cast<const __m128i *>(
+                                         accumulation[perspectives[p]][i])[j * 2 + 0]);
+          sum1 = _mm_add_epi16(sum1, reinterpret_cast<const __m128i *>(
+                                         accumulation[perspectives[p]][i])[j * 2 + 1]);
         }
 
         const __m128i packedbytes = _mm_packs_epi16(sum0, sum1);
         _mm_store_si128(&out[j],
 #if defined(USE_SSE41)
-            _mm_max_epi8(packedbytes, kZero)
-#else // SSE4非対応だがSSE3は使える環境
-            _mm_subs_epi8(_mm_adds_epi8(packedbytes, k0x80s), k0x80s)
+                        _mm_max_epi8(packedbytes, kZero)
+#else  // SSE4非対応だがSSE3は使える環境
+                        _mm_subs_epi8(_mm_adds_epi8(packedbytes, k0x80s), k0x80s)
 #endif
         );
-
       }
 #elif defined(USE_NEON)
-      const auto out = reinterpret_cast<int8x8_t*>(&output[offset]);
+      const auto out = reinterpret_cast<int8x8_t *>(&output[offset]);
       for (IndexType j = 0; j < kNumChunks; ++j) {
-        int16x8_t sum = reinterpret_cast<const int16x8_t*>(
+        int16x8_t sum = reinterpret_cast<const int16x8_t *>(
             accumulation[perspectives[p]][0])[j];
         for (IndexType i = 1; i < kRefreshTriggers.size(); ++i) {
-          sum = vaddq_s16(sum, reinterpret_cast<const int16x8_t*>(
-              accumulation[perspectives[p]][i])[j]);
+          sum = vaddq_s16(sum, reinterpret_cast<const int16x8_t *>(
+                                   accumulation[perspectives[p]][i])[j]);
         }
         out[j] = vmax_s8(vqmovn_s16(sum), kZero);
       }
@@ -170,8 +170,8 @@ class FeatureTransformer {
 
  private:
   // 差分計算を用いずに累積値を計算する
-  void RefreshAccumulator(const Position& pos) const {
-    auto& accumulator = pos.state()->accumulator;
+  void RefreshAccumulator(const Position &pos) const {
+    auto &accumulator = pos.state()->accumulator;
     for (IndexType i = 0; i < kRefreshTriggers.size(); ++i) {
       Features::IndexList active_indices[2];
       RawFeatures::AppendActiveIndices(pos, kRefreshTriggers[i],
@@ -187,25 +187,25 @@ class FeatureTransformer {
         for (const auto index : active_indices[perspective]) {
           const IndexType offset = kHalfDimensions * index;
 #if defined(USE_AVX2)
-          auto accumulation = reinterpret_cast<__m256i*>(
+          auto accumulation = reinterpret_cast<__m256i *>(
               &accumulator.accumulation[perspective][i][0]);
-          auto column = reinterpret_cast<const __m256i*>(&weights_[offset]);
+          auto column = reinterpret_cast<const __m256i *>(&weights_[offset]);
           constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth / 2);
           for (IndexType j = 0; j < kNumChunks; ++j) {
             accumulation[j] = _mm256_add_epi16(accumulation[j], column[j]);
           }
 #elif defined(USE_SSE2)
-          auto accumulation = reinterpret_cast<__m128i*>(
+          auto accumulation = reinterpret_cast<__m128i *>(
               &accumulator.accumulation[perspective][i][0]);
-          auto column = reinterpret_cast<const __m128i*>(&weights_[offset]);
+          auto column = reinterpret_cast<const __m128i *>(&weights_[offset]);
           constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth / 2);
           for (IndexType j = 0; j < kNumChunks; ++j) {
             accumulation[j] = _mm_add_epi16(accumulation[j], column[j]);
           }
 #elif defined(USE_NEON)
-          auto accumulation = reinterpret_cast<int16x8_t*>(
+          auto accumulation = reinterpret_cast<int16x8_t *>(
               &accumulator.accumulation[perspective][i][0]);
-          auto column = reinterpret_cast<const int16x8_t*>(&weights_[offset]);
+          auto column = reinterpret_cast<const int16x8_t *>(&weights_[offset]);
           constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth / 2);
           for (IndexType j = 0; j < kNumChunks; ++j) {
             accumulation[j] = vaddq_s16(accumulation[j], column[j]);
@@ -224,9 +224,9 @@ class FeatureTransformer {
   }
 
   // 差分計算を用いて累積値を計算する
-  void UpdateAccumulator(const Position& pos) const {
+  void UpdateAccumulator(const Position &pos) const {
     const auto prev_accumulator = pos.state()->previous->accumulator;
-    auto& accumulator = pos.state()->accumulator;
+    auto &accumulator = pos.state()->accumulator;
     for (IndexType i = 0; i < kRefreshTriggers.size(); ++i) {
       Features::IndexList removed_indices[2], added_indices[2];
       bool reset[2];
@@ -235,15 +235,15 @@ class FeatureTransformer {
       for (const auto perspective : COLOR) {
 #if defined(USE_AVX2)
         constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth / 2);
-        auto accumulation = reinterpret_cast<__m256i*>(
+        auto accumulation = reinterpret_cast<__m256i *>(
             &accumulator.accumulation[perspective][i][0]);
 #elif defined(USE_SSE2)
         constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth / 2);
-        auto accumulation = reinterpret_cast<__m128i*>(
+        auto accumulation = reinterpret_cast<__m128i *>(
             &accumulator.accumulation[perspective][i][0]);
 #elif defined(USE_NEON)
         constexpr IndexType kNumChunks = kHalfDimensions / (kSimdWidth / 2);
-        auto accumulation = reinterpret_cast<int16x8_t*>(
+        auto accumulation = reinterpret_cast<int16x8_t *>(
             &accumulator.accumulation[perspective][i][0]);
 #endif
         if (reset[perspective]) {
@@ -261,17 +261,17 @@ class FeatureTransformer {
           for (const auto index : removed_indices[perspective]) {
             const IndexType offset = kHalfDimensions * index;
 #if defined(USE_AVX2)
-            auto column = reinterpret_cast<const __m256i*>(&weights_[offset]);
+            auto column = reinterpret_cast<const __m256i *>(&weights_[offset]);
             for (IndexType j = 0; j < kNumChunks; ++j) {
               accumulation[j] = _mm256_sub_epi16(accumulation[j], column[j]);
             }
 #elif defined(USE_SSE2)
-            auto column = reinterpret_cast<const __m128i*>(&weights_[offset]);
+            auto column = reinterpret_cast<const __m128i *>(&weights_[offset]);
             for (IndexType j = 0; j < kNumChunks; ++j) {
               accumulation[j] = _mm_sub_epi16(accumulation[j], column[j]);
             }
 #elif defined(USE_NEON)
-            auto column = reinterpret_cast<const int16x8_t*>(&weights_[offset]);
+            auto column = reinterpret_cast<const int16x8_t *>(&weights_[offset]);
             for (IndexType j = 0; j < kNumChunks; ++j) {
               accumulation[j] = vsubq_s16(accumulation[j], column[j]);
             }
@@ -287,17 +287,17 @@ class FeatureTransformer {
           for (const auto index : added_indices[perspective]) {
             const IndexType offset = kHalfDimensions * index;
 #if defined(USE_AVX2)
-            auto column = reinterpret_cast<const __m256i*>(&weights_[offset]);
+            auto column = reinterpret_cast<const __m256i *>(&weights_[offset]);
             for (IndexType j = 0; j < kNumChunks; ++j) {
               accumulation[j] = _mm256_add_epi16(accumulation[j], column[j]);
             }
 #elif defined(USE_SSE2)
-            auto column = reinterpret_cast<const __m128i*>(&weights_[offset]);
+            auto column = reinterpret_cast<const __m128i *>(&weights_[offset]);
             for (IndexType j = 0; j < kNumChunks; ++j) {
               accumulation[j] = _mm_add_epi16(accumulation[j], column[j]);
             }
 #elif defined(USE_NEON)
-            auto column = reinterpret_cast<const int16x8_t*>(&weights_[offset]);
+            auto column = reinterpret_cast<const int16x8_t *>(&weights_[offset]);
             for (IndexType j = 0; j < kNumChunks; ++j) {
               accumulation[j] = vaddq_s16(accumulation[j], column[j]);
             }

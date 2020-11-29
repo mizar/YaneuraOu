@@ -28,7 +28,7 @@ class Factorizer {
 
   // 学習用特徴量のインデックスと学習率のスケールを取得する
   static void AppendTrainingFeatures(
-      IndexType base_index, std::vector<TrainingFeature>* training_features) {
+      IndexType base_index, std::vector<TrainingFeature> *training_features) {
     ASSERT_LV5(base_index < FeatureType::kDimensions);
     training_features->emplace_back(base_index);
   }
@@ -44,7 +44,7 @@ struct FeatureProperties {
 template <typename FeatureType>
 IndexType AppendBaseFeature(
     FeatureProperties properties, IndexType base_index,
-    std::vector<TrainingFeature>* training_features) {
+    std::vector<TrainingFeature> *training_features) {
   ASSERT_LV5(properties.dimensions == FeatureType::kDimensions);
   ASSERT_LV5(base_index < FeatureType::kDimensions);
   training_features->emplace_back(base_index);
@@ -55,7 +55,7 @@ IndexType AppendBaseFeature(
 template <typename FeatureType>
 IndexType InheritFeaturesIfRequired(
     IndexType index_offset, FeatureProperties properties, IndexType base_index,
-    std::vector<TrainingFeature>* training_features) {
+    std::vector<TrainingFeature> *training_features) {
   if (!properties.active) {
     return 0;
   }
@@ -65,7 +65,7 @@ IndexType InheritFeaturesIfRequired(
   Factorizer<FeatureType>::AppendTrainingFeatures(
       base_index, training_features);
   for (auto i = start; i < training_features->size(); ++i) {
-    auto& feature = (*training_features)[i];
+    auto &feature = (*training_features)[i];
     ASSERT_LV5(feature.GetIndex() < Factorizer<FeatureType>::GetDimensions());
     feature.ShiftIndex(index_offset);
   }
