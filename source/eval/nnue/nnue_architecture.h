@@ -36,16 +36,16 @@
 
 namespace Eval::NNUE {
 
-	static_assert(kTransformedFeatureDimensions % kMaxSimdWidth == 0, "");
-	static_assert(Network::kOutputDimensions == 1, "");
-	static_assert(std::is_same<Network::OutputType, std::int32_t>::value, "");
+static_assert(kTransformedFeatureDimensions % kMaxSimdWidth == 0, "");
+static_assert(Network::kOutputDimensions == 1, "");
+static_assert(std::is_same<Network::OutputType, std::int32_t>::value, "");
 
-	// Trigger for full calculation instead of difference calculation
-	// 差分計算の代わりに全計算を行うタイミングのリスト
-	constexpr auto kRefreshTriggers = RawFeatures::kRefreshTriggers;
+// Trigger for full calculation instead of difference calculation
+// 差分計算の代わりに全計算を行うタイミングのリスト
+constexpr auto kRefreshTriggers = RawFeatures::kRefreshTriggers;
 
 }  // namespace Eval::NNUE
 
 #endif  // defined(EVAL_NNUE)
 
-#endif // #ifndef NNUE_ARCHITECTURE_H_INCLUDED
+#endif  // #ifndef NNUE_ARCHITECTURE_H_INCLUDED
