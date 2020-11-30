@@ -17,6 +17,9 @@ BraceWrapping:
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
 ColumnLimit: 120
+IndentWidth: 4
 PenaltyExcessCharacter: 1000
 SortIncludes: false
 Standard: Auto
+TabWidth: 4
+UseTab: ForIndentation
