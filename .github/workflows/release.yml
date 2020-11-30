@@ -5,11 +5,10 @@ on:
     tags:
       # 動作条件を変えたい場合、 workflow-syntax-for-github-actions#フィルタパターンのチートシート 参照。
       # https://docs.github.com/ja/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
-      - 'v*'
-      - 'V*'
+      - "v*"
+      - "V*"
 
 jobs:
-
   build-windows:
     # ubuntu-latest = windows-2019
     # https://docs.github.com/ja/free-pro-team@latest/actions/reference/specifications-for-github-hosted-runners
@@ -17,15 +16,20 @@ jobs:
 
     strategy:
       matrix:
-        target: [ normal, tournament, evallearn, gensfen ]
-        archcpu: [ 'ZEN2,ZEN1,AVX512VNNI,AVX512,AVX2,SSE42', 'SSE41,SSSE3,SSE2,NO_SSE', 'ZEN3,AVXVNNI,OTHER' ]
+        target: [normal, tournament, evallearn, gensfen]
+        archcpu:
+          [
+            "ZEN2,ZEN1,AVX512VNNI,AVX512,AVX2,SSE42",
+            "SSE41,SSSE3,SSE2,NO_SSE",
+            "ZEN3,AVXVNNI,OTHER",
+          ]
         edition:
-          - 'YANEURAOU_ENGINE_NNUE,YANEURAOU_ENGINE_NNUE_HALFKPE9,YANEURAOU_ENGINE_NNUE_KP256'
-          - 'YANEURAOU_ENGINE_KPPT,YANEURAOU_ENGINE_KPP_KKPT'
+          - "YANEURAOU_ENGINE_NNUE,YANEURAOU_ENGINE_NNUE_HALFKPE9,YANEURAOU_ENGINE_NNUE_KP256"
+          - "YANEURAOU_ENGINE_KPPT,YANEURAOU_ENGINE_KPP_KKPT"
           - YANEURAOU_ENGINE_MATERIAL*
           - MATE_ENGINE
           - USER_ENGINE
-        compiler: [ clang++, g++ ]
+        compiler: [clang++, g++]
         exclude:
           # Release target exclude: edition USER_ENGINE
           - edition: USER_ENGINE
@@ -35,14 +39,14 @@ jobs:
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
           # `-march=znver3`: LLVM12 support
-          - archcpu: 'ZEN3,AVXVNNI,OTHER'
+          - archcpu: "ZEN3,AVXVNNI,OTHER"
           # Release target exclude: archcpu 'SSE41,SSSE3,SSE2,NO_SSE' and target 'tournament,evallearn'
           - target: tournament
-            archcpu: 'SSE41,SSSE3,SSE2,NO_SSE'
+            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
           - target: evallearn
-            archcpu: 'SSE41,SSSE3,SSE2,NO_SSE'
+            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
           - target: gensfen
-            archcpu: 'SSE41,SSSE3,SSE2,NO_SSE'
+            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
           # 以下のエディションには機械学習の実装が存在しない
           # There is no machine learning implementation for the following editions
           - edition: YANEURAOU_ENGINE_MATERIAL*
@@ -58,26 +62,26 @@ jobs:
             target: gensfen
 
     steps:
-    - name: Checkout own repository
-      uses: actions/checkout@v2
-      with:
-        path: main
+      - name: Checkout own repository
+        uses: actions/checkout@v2
+        with:
+          path: main
 
-    - name: Install pkg
-      run: |
-        C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
-        C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
-        C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m openblas:m openmp:m toolchain:m base-devel: msys2-devel:'
+      - name: Install pkg
+        run: |
+          C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
+          C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
+          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m openblas:m openmp:m toolchain:m base-devel: msys2-devel:'
 
-    - name: make
-      run: |
-        $env:PATH+=';C:\msys64';
-        .\main\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }} -Target ${{ matrix.target }} -Cpu ${{ matrix.archcpu }}
+      - name: make
+        run: |
+          $env:PATH+=';C:\msys64';
+          .\main\script\msys2_build.ps1 -Edition ${{ matrix.edition }} -Compiler ${{ matrix.compiler }} -Target ${{ matrix.target }} -Cpu ${{ matrix.archcpu }}
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: build-windows
-        path: ./main/build/**/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-windows
+          path: ./main/build/**/*
 
   build-android:
     # ubuntu-latest = ubuntu-18.04
@@ -100,23 +104,23 @@ jobs:
           - edition: USER_ENGINE
 
     steps:
-    - name: Setup Android NDK r21d
-      uses: nttld/setup-ndk@v1
-      with:
-        ndk-version: r21d
+      - name: Setup Android NDK r21d
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21d
 
-    - name: Checkout own repository
-      uses: actions/checkout@v2
-      with:
-        path: main
+      - name: Checkout own repository
+        uses: actions/checkout@v2
+        with:
+          path: main
 
-    - name: ndk-build
-      run: ./main/script/android_build.sh -e ${{ matrix.edition }}
+      - name: ndk-build
+        run: ./main/script/android_build.sh -e ${{ matrix.edition }}
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: build-android
-        path: ./main/build/**/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-android
+          path: ./main/build/**/*
 
   release-pkg:
     name: Release package
@@ -192,22 +196,28 @@ jobs:
             2. KPP_KKPT型
             3. NNUE型
               a. 標準NNUE(HalfKP)型
-              b. HalfKPE9型 cf. [NNUE-HalfKPE9](https://github.com/tttak/YaneuraOu/releases/tag/V4.89_NNUE-HalfKPE9)
-              c. K-P型 cf. [魚沼産やねうら王できました](http://yaneuraou.yaneu.com/2019/02/12/%e9%ad%9a%e6%b2%bc%e7%94%a3%e3%82%84%e3%81%ad%e3%81%86%e3%82%89%e7%8e%8b%e3%81%a7%e3%81%8d%e3%81%be%e3%81%97%e3%81%9f/)
-            4. MaterialLv1～6
+              b. HalfKPE9型
+                 cf. [NNUE-HalfKPE9](https://github.com/tttak/YaneuraOu/releases/tag/V4.89_NNUE-HalfKPE9)
+              c. K-P型
+                 cf. [魚沼産やねうら王できました](http://yaneuraou.yaneu.com/2019/02/12/%e9%ad%9a%e6%b2%bc%e7%94%a3%e3%82%84%e3%81%ad%e3%81%86%e3%82%89%e7%8e%8b%e3%81%a7%e3%81%8d%e3%81%be%e3%81%97%e3%81%9f/)
+            4. MaterialLv1～7
               a. MaterialLv1 駒得のみ
               b. MaterialLv2 駒得＋手駒評価
-                [【連載】評価関数を作ってみよう！その1](http://yaneuraou.yaneu.com/2020/11/17/make-evaluate-function/)
+                cf. [【連載】評価関数を作ってみよう！その1](http://yaneuraou.yaneu.com/2020/11/17/make-evaluate-function/)
               c. MaterialLv3 ＋盤上の利きを評価
-                [【連載】評価関数を作ってみよう！その2](http://yaneuraou.yaneu.com/2020/11/19/make-evaluate-function-2/)
-                [【連載】評価関数を作ってみよう！その3](http://yaneuraou.yaneu.com/2020/11/20/make-evaluate-function-3/)
-                [【連載】評価関数を作ってみよう！その4](http://yaneuraou.yaneu.com/2020/11/23/make-evaluate-function-4/)
+                cf. [【連載】評価関数を作ってみよう！その2](http://yaneuraou.yaneu.com/2020/11/19/make-evaluate-function-2/)
+                cf. [【連載】評価関数を作ってみよう！その3](http://yaneuraou.yaneu.com/2020/11/20/make-evaluate-function-3/)
+                cf. [【連載】評価関数を作ってみよう！その4](http://yaneuraou.yaneu.com/2020/11/23/make-evaluate-function-4/)
               d. MaterialLv4 ＋複数の利きに減衰評価
-                [【連載】評価関数を作ってみよう！その5](http://yaneuraou.yaneu.com/2020/11/25/make-evaluate-function-5/)
+                cf. [【連載】評価関数を作ってみよう！その5](http://yaneuraou.yaneu.com/2020/11/25/make-evaluate-function-5/)
               e. MaterialLv5 ＋利きの価値合算テーブル
-                [【連載】評価関数を作ってみよう！その6](http://yaneuraou.yaneu.com/2020/11/26/make-evaluate-function-6/)
+                cf. [【連載】評価関数を作ってみよう！その6](http://yaneuraou.yaneu.com/2020/11/26/make-evaluate-function-6/)
               f. MaterialLv6 ＋KKPEE9テーブルに一本化
-                [【連載】評価関数を作ってみよう！その7](http://yaneuraou.yaneu.com/2020/11/27/make-evaluate-function-7/)
+                cf. [【連載】評価関数を作ってみよう！その7](http://yaneuraou.yaneu.com/2020/11/27/make-evaluate-function-7/)
+              g. MaterialLv7 ＋味方・敵の駒の利きによる加減
+                cf. [【連載】評価関数を作ってみよう！その8](http://yaneuraou.yaneu.com/2020/11/30/make-evaluate-function-8/)
+              h. ~~MaterialLv8 ＋玉近傍への味方駒の利きと駒の有無~~
+                ~~cf. [【連載】評価関数を作ってみよう！その9](http://yaneuraou.yaneu.com/2020/12/01/%e3%80%90%e9%80%a3%e8%bc%89%e3%80%91%e8%a9%95%e4%be%a1%e9%96%a2%e6%95%b0%e3%82%92%e4%bd%9c%e3%81%a3%e3%81%a6%e3%81%bf%e3%82%88%e3%81%86%ef%bc%81%e3%81%9d%e3%81%ae9/)~~
             5. tanuki-詰将棋エンジン
 
             に対する
@@ -265,4 +275,3 @@ jobs:
           asset_path: release/build-android.7z
           asset_name: ${{ steps.version.outputs.filename }}-android.7z
           asset_content_type: application/octet-stream
-
