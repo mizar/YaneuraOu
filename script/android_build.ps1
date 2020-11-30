@@ -57,11 +57,11 @@ Push-Location (Join-Path $PSScriptRoot ..);
     EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=8";
     Dir = ".\build\android\MaterialLv8";
   };
-<#
   @{
     EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=9";
     Dir = ".\build\android\MaterialLv9";
   };
+<#
   @{
     EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=10";
     Dir = ".\build\android\MaterialLv10";
