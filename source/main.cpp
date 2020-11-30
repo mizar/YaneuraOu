@@ -11,8 +11,7 @@
 //  main()
 // ----------------------------------------
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	// --- 全体的な初期化
 
 	Misc::init(argv);
@@ -21,7 +20,7 @@ int main(int argc, char* argv[])
 	Position::init();
 	Search::init();
 	Threads.set(Options["Threads"]);
-	//Search::clear();
+	// Search::clear();
 	Eval::init();
 
 	// USIコマンドの応答部

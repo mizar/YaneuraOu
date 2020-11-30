@@ -13,12 +13,8 @@
 // 棋譜からの学習や、自ら思考させて定跡を生成するときなど、
 // 複数スレッドが個別にSearch::think()を呼び出したいときに用いるヘルパクラス。
 // このクラスを派生させて用いる。
-struct MultiThink
-{
-	MultiThink()
-	{
-		loop_count = 0;
-	}
+struct MultiThink {
+	MultiThink() { loop_count = 0; }
 
 	// マスタースレッドからこの関数を呼び出すと、スレッドがそれぞれ思考して、
 	// 思考終了条件を満たしたところで制御を返す。
@@ -45,11 +41,11 @@ struct MultiThink
 
 	// go_think()したときにcallback_seconds[秒]ごとにcallbackされる。
 	std::function<void()> callback_func;
-	u64 callback_seconds = 600;
+	u64                   callback_seconds = 600;
 
 	// workerが処理する(Search::think()を呼び出す)回数を設定する。
 	void set_loop_max(u64 loop_max_) { loop_max = loop_max_; }
-	
+
 	// set_loop_max()で設定した値を取得する。
 	u64 get_loop_max() const { return loop_max; }
 
@@ -59,8 +55,7 @@ struct MultiThink
 	// 生成した局面数と、カウンターの値が一致しなくなってしまうので注意すること。
 	u64 get_next_loop_count() {
 		std::unique_lock<std::mutex> lk(loop_mutex);
-		if (loop_count >= loop_max)
-			return UINT64_MAX;
+		if (loop_count >= loop_max) return UINT64_MAX;
 		return loop_count++;
 	}
 
@@ -73,11 +68,11 @@ struct MultiThink
 	// worker threadがI/Oにアクセスするときのmutex
 	std::mutex io_mutex;
 
-protected:
+   protected:
 	// 乱数発生器本体
 	AsyncPRNG prng;
 
-private:
+   private:
 	// workerが処理する(Search::think()を呼び出す)回数
 	std::atomic<u64> loop_max;
 	// workerが処理した(Search::think()を呼び出した)回数
@@ -90,52 +85,42 @@ private:
 
 	// スレッドの終了フラグ。
 	// vector<bool>にすると複数スレッドから書き換えようとしたときに正しく反映されないことがある…はず。
-	typedef u8 Flag;
+	typedef u8        Flag;
 	std::vector<Flag> thread_finished;
-
 };
 
 // idle時間にtaskを処理する仕組み。
 // masterは好きなときにpush_task_async()でtaskを渡す。
 // slaveは暇なときにon_idle()を実行すると、taskを一つ取り出してqueueがなくなるまで実行を続ける。
 // MultiThinkのthread workerをmaster-slave方式で書きたいときに用いると便利。
-struct TaskDispatcher
-{
+struct TaskDispatcher {
 	typedef std::function<void(size_t /* thread_id */)> Task;
 
 	// slaveはidle中にこの関数を呼び出す。
-	void on_idle(size_t thread_id)
-	{
+	void on_idle(size_t thread_id) {
 		Task task;
-		while ((task = get_task_async()) != nullptr)
-			task(thread_id);
+		while ((task = get_task_async()) != nullptr) task(thread_id);
 
 		Tools::sleep(1);
 	}
 
 	// [ASYNC] taskを一つ積む。
-	void push_task_async(Task task)
-	{
+	void push_task_async(Task task) {
 		std::unique_lock<std::mutex> lk(task_mutex);
 		tasks.push_back(task);
 	}
 
 	// task用の配列の要素をsize分だけ事前に確保する。
-	void task_reserve(size_t size)
-	{
-		tasks.reserve(size);
-	}
+	void task_reserve(size_t size) { tasks.reserve(size); }
 
-protected:
+   protected:
 	// taskの集合
 	std::vector<Task> tasks;
 
 	// [ASYNC] taskを一つ取り出す。on_idle()から呼び出される。
-	Task get_task_async()
-	{
+	Task get_task_async() {
 		std::unique_lock<std::mutex> lk(task_mutex);
-		if (tasks.size() == 0)
-			return nullptr;
+		if (tasks.size() == 0) return nullptr;
 		Task task = *tasks.rbegin();
 		tasks.pop_back();
 		return task;
@@ -145,6 +130,6 @@ protected:
 	std::mutex task_mutex;
 };
 
-#endif // defined(EVAL_LEARN) && defined(YANEURAOU_ENGINE)
+#endif  // defined(EVAL_LEARN) && defined(YANEURAOU_ENGINE)
 
 #endif

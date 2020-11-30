@@ -29,34 +29,34 @@
 
 namespace Book {
 
-using Key = uint64_t;
+using Key   = uint64_t;
 using Score = int;
 
 struct AperyBookEntry {
-    Key key;
-    uint16_t fromToPro;
-    uint16_t count;
-    Score score;
+	Key      key;
+	uint16_t fromToPro;
+	uint16_t count;
+	Score    score;
 };
 
 class AperyBook {
-public:
-    explicit AperyBook(const std::string& filename);
-    const std::vector<AperyBookEntry>& get_entries(const Position& pos) const;
-    static Key bookKey(const Position& pos);
-    size_t size() const { return book_.size(); }
+   public:
+	explicit AperyBook(const std::string& filename);
+	const std::vector<AperyBookEntry>& get_entries(const Position& pos) const;
+	static Key                         bookKey(const Position& pos);
+	size_t                             size() const { return book_.size(); }
 
-private:
-    static void init();
+   private:
+	static void init();
 
-    std::vector<AperyBookEntry> empty_entries_;
-    std::unordered_map<Key, std::vector<AperyBookEntry>> book_;
+	std::vector<AperyBookEntry>                          empty_entries_;
+	std::unordered_map<Key, std::vector<AperyBookEntry>> book_;
 
-    static Key ZobPiece[PIECE_NB - 1][SQ_NB];
-    static Key ZobHand[PIECE_HAND_NB - 1][19];
-    static Key ZobTurn;
+	static Key ZobPiece[PIECE_NB - 1][SQ_NB];
+	static Key ZobHand[PIECE_HAND_NB - 1][19];
+	static Key ZobTurn;
 };
 
-}
+}  // namespace Book
 
-#endif // #ifndef APERY_BOOK_HPP
+#endif  // #ifndef APERY_BOOK_HPP

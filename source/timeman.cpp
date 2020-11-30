@@ -9,21 +9,19 @@
 
 namespace {
 
-  // これぐらい自分が指すと終局すると考えて計画を練る。
-  const int MoveHorizon = 80;
+// これぐらい自分が指すと終局すると考えて計画を練る。
+const int MoveHorizon = 80;
 
-  // 思考時間のrtimeが指定されたときに用いる乱数
-  PRNG prng;
+// 思考時間のrtimeが指定されたときに用いる乱数
+PRNG prng;
 
-} // namespace
-
+}  // namespace
 
 // 今回の思考時間を計算して、optimum(),maximum()が値をきちんと返せるようにする。
 // これは探索の開始時に呼び出されて、今回の指し手のための思考時間を計算する。
 // limitsで指定された条件に基いてうまく計算する。
 // ply : ここまでの手数。平手の初期局面なら1。(0ではない)
-void Timer::init(Search::LimitsType& limits, Color us, int ply)
-{
+void Timer::init(Search::LimitsType& limits, Color us, int ply) {
 #if 0
 	// nodes as timeモード
 	TimePoint npmsec = Options["nodestime"];
@@ -73,8 +71,7 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 	//   別の方法で調整すべき。ただ、対人でソフトに早指ししたいときには意味があるような…。
 	int slowMover = (int)Options["SlowMover"];
 
-	if (limits.rtime)
-	{
+	if (limits.rtime) {
 		// これが指定されているときは最小思考時間をランダム化する。
 		// 連続自己対戦時に同じ進行になるのを回避するためのもの。
 		// 終盤で大きく持ち時間を変えると、勝率が5割に寄ってしまうのでそれには注意。
@@ -82,8 +79,7 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 		auto r = limits.rtime;
 #if 1
 		// 指し手が進むごとに減衰していく曲線にする。
-		if (ply)
-			r += (int)prng.rand((int)std::min(r * 0.5f, r * 10.0f / (ply)));
+		if (ply) r += (int)prng.rand((int)std::min(r * 0.5f, r * 10.0f / (ply)));
 #endif
 
 		remain_time = minimumTime = optimumTime = maximumTime = r;
@@ -99,14 +95,12 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 	// だから2足しておくのが正解。
 	const int MTG = std::min((limits.max_game_ply - ply + 2) / 2, MoveHorizon);
 
-	if (MTG <= 0)
-	{
+	if (MTG <= 0) {
 		// 本来、終局までの最大手数が指定されているわけだから、この条件で呼び出されるはずはないのだが…。
 		sync_cout << "info string max_game_ply is too small." << sync_endl;
 		return;
 	}
-	if (MTG == 1)
-	{
+	if (MTG == 1) {
 		// この手番で終了なので使いきれば良い。
 		minimumTime = optimumTime = maximumTime = remain_time;
 		return;
@@ -126,10 +120,10 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 		// みたいな感じで考える
 
 		// 残り手数において残り時間はあとどれくらいあるのか。
-		TimePoint remain_estimate = limits.time[us]
-			+ limits.inc[us] * MTG
-			// 秒読み時間も残り手数に付随しているものとみなす。
-			+ limits.byoyomi[us] * MTG;
+		TimePoint remain_estimate = limits.time[us] +
+		                            limits.inc[us] * MTG
+		                            // 秒読み時間も残り手数に付随しているものとみなす。
+		                            + limits.byoyomi[us] * MTG;
 
 		// 1秒ずつは絶対消費していくねんで！
 		remain_estimate -= (MTG + 1) * 1000;
@@ -142,8 +136,7 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 		float max_ratio = 5.0f;
 
 		// 切れ負けルールにおいては、5分を切っていたら、このratioを抑制する。
-		if (limits.inc[us] == 0 && limits.byoyomi[us] == 0)
-		{
+		if (limits.inc[us] == 0 && limits.byoyomi[us] == 0) {
 			// 3分     : ratio = 3.0
 			// 2分     : ratio = 2.0
 			// 1分以下 : ratio = 1.0固定
@@ -162,13 +155,11 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 		// Ponderが有効になっている場合、ponderhitすると時間が本来の予測より余っていくので思考時間を心持ち多めにとっておく。
 		// これ本当はゲーム開始時にUSIコマンドで送られてくるべきだと思う。
 		//    →　将棋所では、送られてきてた。"USI_Ponder"  [2019/04/29]
-		if (/* Threads.main()->received_go_ponder*/ Options["USI_Ponder"])
-			optimumTime += optimumTime / 4;
+		if (/* Threads.main()->received_go_ponder*/ Options["USI_Ponder"]) optimumTime += optimumTime / 4;
 	}
 
 	// 秒読みモードでかつ、持ち時間がないなら、最小思考時間も最大思考時間もその時間にしたほうが得
-	if (limits.byoyomi[us])
-	{
+	if (limits.byoyomi[us]) {
 		// 持ち時間が少ないなら(秒読み時間の1.2倍未満なら)、思考時間を使いきったほうが得
 		// これには持ち時間がゼロのケースも含まれる。
 		if (limits.time[us] < (int)(limits.byoyomi[us] * 1.2))
@@ -179,7 +170,6 @@ void Timer::init(Search::LimitsType& limits, Color us, int ply)
 	minimumTime = std::min(round_up(minimumTime), remain_time);
 	optimumTime = std::min(optimumTime, remain_time);
 	maximumTime = std::min(round_up(maximumTime), remain_time);
-
 }
 
 #endif

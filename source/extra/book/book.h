@@ -9,220 +9,216 @@
 #include <unordered_map>
 #include <fstream>
 
-namespace Search { struct LimitsType; };
-
+namespace Search {
+struct LimitsType;
+};
 
 // 定跡処理関連のnamespace
-namespace Book
-{
-	// ある局面における指し手(定跡の局面での指し手を格納するのに用いる)
-	struct BookPos
-	{
-		// ここでの指し手表現は32bit型Moveではなく、16bit型Move(Move16)なので、
-		// Position::do_move()などにはPosition::to_move()を用いて32bit化してから用いること。
+namespace Book {
+// ある局面における指し手(定跡の局面での指し手を格納するのに用いる)
+struct BookPos {
+	// ここでの指し手表現は32bit型Moveではなく、16bit型Move(Move16)なので、
+	// Position::do_move()などにはPosition::to_move()を用いて32bit化してから用いること。
 
-		Move16 bestMove; // この局面での指し手
-		Move16 nextMove; // その指し手を指したときの予想される相手の指し手
+	Move16 bestMove;  // この局面での指し手
+	Move16 nextMove;  // その指し手を指したときの予想される相手の指し手
 
-		int value;     // bestMoveを指したときの局面の評価値
-		int depth;     // bestMoveの探索深さ
-		uint64_t num;  // 何らかの棋譜集において、この指し手が採択された回数。
-		float prob;    // ↑のnumをパーセンテージで表現したもの。(read_bookしたときには反映される。ファイルには書き出していない。)
+	int      value;  // bestMoveを指したときの局面の評価値
+	int      depth;  // bestMoveの探索深さ
+	uint64_t num;    // 何らかの棋譜集において、この指し手が採択された回数。
+	float
+	    prob;  // ↑のnumをパーセンテージで表現したもの。(read_bookしたときには反映される。ファイルには書き出していない。)
 
-		BookPos(Move16 best, Move16 next, int v, int d, uint64_t n)
-			: bestMove(best), nextMove(next), value(v), depth(d), num(n) , prob(0) {}
+	BookPos(Move16 best, Move16 next, int v, int d, uint64_t n)
+	    : bestMove(best), nextMove(next), value(v), depth(d), num(n), prob(0) {}
 
-		// bestMoveが等しいかを返す
-		bool operator == (const BookPos& rhs) const
-		{
-			return bestMove == rhs.bestMove;
-		}
+	// bestMoveが等しいかを返す
+	bool operator==(const BookPos& rhs) const { return bestMove == rhs.bestMove; }
 
-		// std::sort()で出現回数に対して降順ソートされて欲しいのでこう定義する。
-		// また出現回数が同じ時は、評価値順に降順ソートされて欲しいので…。
-		bool operator < (const BookPos& rhs) const {
-			return (num != rhs.num) ? (num > rhs.num ) : (value > rhs.value);
-		}
+	// std::sort()で出現回数に対して降順ソートされて欲しいのでこう定義する。
+	// また出現回数が同じ時は、評価値順に降順ソートされて欲しいので…。
+	bool operator<(const BookPos& rhs) const { return (num != rhs.num) ? (num > rhs.num) : (value > rhs.value); }
+};
+
+static std::ostream& operator<<(std::ostream& os, BookPos c);
+
+// ある局面での指し手の集合がPosMoveList。
+// メモリ上ではこれをshared_ptrでくるんで保持する。
+// ある局面が定跡に登録されている局面であるかを調べる関数が
+// 指し手を返すときもこのshared_ptrでくるんだものを返す。
+typedef std::vector<BookPos>         PosMoveList;
+typedef std::shared_ptr<PosMoveList> PosMoveListPtr;
+
+// sfen文字列からPosMoveListへの写像。(これが定跡データがメモリ上に存在するときの構造)
+typedef std::unordered_map<std::string /* sfen */, PosMoveListPtr> BookType;
+
+// PosMoveListPtrに対してBookPosを一つ追加するヘルパー関数。
+// (その局面ですでに同じbestMoveの指し手が登録されている場合は上書き動作となる)
+static void insert_book_pos(PosMoveListPtr ptr, const BookPos& bp);
+
+// メモリ上にある定跡ファイル
+// ・sfen文字列をkeyとして、局面の指し手へ変換するのが主な役割。(このとき重複した指し手は除外するものとする)
+// ・on the flyが指定されているときは実際はメモリ上にはないがこれを透過的に扱う。
+struct MemoryBook {
+	// 定跡として登録されているかを調べて返す。
+	// ・見つからなかった場合、nullptrが返る。
+	// ・read_book()のときにon_the_flyが指定されていれば実際にはメモリ上には定跡データが存在しないので
+	// ファイルを調べに行き、PosMoveListをメモリ上に作って、それをくるんだPosMoveListPtrを返す。
+	PosMoveListPtr find(const Position& pos);
+
+	// 定跡を内部に読み込む。
+	// ・Aperyの定跡ファイルは"book/book.bin"だと仮定。(これはon the fly読み込みに非対応なので丸読みする)
+	// ・やねうら王の定跡ファイルは、on_the_flyが指定されているとメモリに丸読みしない。
+	//      Options["BookOnTheFly"]がtrueのときはon the flyで読み込むのでそれ用。
+	// 　　定跡作成時などはこれをtrueにしてはいけない。(メモリに読み込まれないため)
+	// ・同じファイルを二度目は読み込み動作をskipする。
+	// ・filenameはpathとして"book/"を補完しないので生のpathを指定する。
+	Tools::Result read_book(const std::string& filename, bool on_the_fly = false);
+
+	// 定跡ファイルの書き出し
+	// ・sort = 書き出すときにsfen文字列で並び替えるのか。(書き出しにかかる時間増)
+	// →　必ずソートするように変更した。
+	// ・ファイルへの書き出しは、*thisを書き換えないという意味においてconst性があるので関数にconstを付与しておく。
+	// また、事前にis_ready()は呼び出されているものとする。
+	Tools::Result write_book(const std::string& filename /*, bool sort = false*/) const;
+
+	// Aperyの定跡ファイルを読み込む
+	// ・この関数はread_bookの下請けとして存在する。外部から直接呼び出すのは定跡のコンバートの時ぐらい。
+	Tools::Result read_apery_book(const std::string& filename);
+
+	// --------------------------------------------------------------------------
+	//     以下のメンバは、普段は外部から普段は直接アクセスすべきではない
+	//
+	// 定跡を書き換えてwrite_book()で書き出すような作業を行なうときだけアクセスする。
+	// --------------------------------------------------------------------------
+
+	// メモリに読み込んでいる定跡本体。定跡編集の時以外、このメソッドを呼び出すべきではない。
+	BookType* get_body() { return &book_body; }
+
+	// book_body.find()のwrapper。book_body.find()ではなく、こちらのfindを呼び出して用いること。
+	// 例)
+	// auto it = book.find(sfen);
+	//   if (book.is_not_found(it))
+	// のように書ける
+	BookType::iterator find(const std::string& sfen);
+	bool               is_found(const BookType::iterator& it) const { return it != book_body.end(); }
+	bool               is_not_found(const BookType::iterator& it) const { return it == book_body.end(); }
+
+	// メモリに保持している定跡に局面を一つ追加する。
+	// book_body[sfen] = ptr;
+	// と等価。
+	void append(const std::string& sfen, const Book::PosMoveListPtr& ptr) { book_body[sfen] = ptr; }
+
+	// book_bodyに対してBookPosを一つ追加するヘルパー関数。
+	// overwrite : このフラグがtrueならば、その局面ですでに同じbestMoveの指し手が登録されている場合は上書き動作
+	void insert(const std::string& sfen, const BookPos& bp, bool overwrite = true);
+
+	// book_bodyに対してBookType::insert()を呼び出すwrapper。
+	std::pair<BookType::iterator, bool> insert(const std::pair<std::string /*sfen*/, Book::PosMoveListPtr>& p) {
+		return book_body.insert(p);
 	};
 
-	static std::ostream& operator<<(std::ostream& os, BookPos c);
+   protected:
+	// メモリ上に読み込まれた定跡本体
+	// book_body.find()の直接呼び出しは禁止
+	// (Options["IgnoreBookPly"]==trueのときにplyの部分を削ってメモリに読み込んでいるため、一致しないから)
+	// このクラス(MemoryBookクラス)のfind()メソッドを用いること。
+	BookType book_body;
 
-	// ある局面での指し手の集合がPosMoveList。
-	// メモリ上ではこれをshared_ptrでくるんで保持する。
-	// ある局面が定跡に登録されている局面であるかを調べる関数が
-	// 指し手を返すときもこのshared_ptrでくるんだものを返す。
-	typedef std::vector<BookPos> PosMoveList;
-	typedef std::shared_ptr<PosMoveList> PosMoveListPtr;
+	// 末尾のスペース、"\t","\r","\n"を除去する。
+	// Options["IgnoreBookPly"] == trueのときは、さらに数字も除去する。
+	// sfen文字列の末尾にある手数を除去する目的。
+	std::string trim(std::string input);
 
-	// sfen文字列からPosMoveListへの写像。(これが定跡データがメモリ上に存在するときの構造)
-	typedef std::unordered_map<std::string /* sfen */, PosMoveListPtr > BookType;
+	// メモリに丸読みせずにfind()のごとにファイルを調べにいくのか。
+	// これは思考エンジン設定のOptions["BookOnTheFly"]の値を反映したもの。
+	// ただし、read_book()のタイミングで定跡ファイルのopenに失敗したならfalseのままである。
+	// このフラグがtrueのときは、定跡ファイルのopen自体には成功していることが保証される。
+	bool on_the_fly = false;
 
-	// PosMoveListPtrに対してBookPosを一つ追加するヘルパー関数。
-	// (その局面ですでに同じbestMoveの指し手が登録されている場合は上書き動作となる)
-	static void insert_book_pos(PosMoveListPtr ptr, const BookPos& bp);
+	// 前回読み込み時のOptions["IgnoreBookPly"]の値を格納しておく。
+	// これが異なるならファイルの読み直しが必要になる。
+	bool ignoreBookPly = false;
 
-	// メモリ上にある定跡ファイル
-	// ・sfen文字列をkeyとして、局面の指し手へ変換するのが主な役割。(このとき重複した指し手は除外するものとする)
-	// ・on the flyが指定されているときは実際はメモリ上にはないがこれを透過的に扱う。
-	struct MemoryBook
-	{
-		// 定跡として登録されているかを調べて返す。
-		// ・見つからなかった場合、nullptrが返る。
-		// ・read_book()のときにon_the_flyが指定されていれば実際にはメモリ上には定跡データが存在しないので
-		// ファイルを調べに行き、PosMoveListをメモリ上に作って、それをくるんだPosMoveListPtrを返す。
-		PosMoveListPtr find(const Position& pos);
+	// 上のon_the_fly == trueのときに、開いている定跡ファイルのファイルハンドル
+	std::fstream fs;
 
-		// 定跡を内部に読み込む。
-		// ・Aperyの定跡ファイルは"book/book.bin"だと仮定。(これはon the fly読み込みに非対応なので丸読みする)
-		// ・やねうら王の定跡ファイルは、on_the_flyが指定されているとメモリに丸読みしない。
-		//      Options["BookOnTheFly"]がtrueのときはon the flyで読み込むのでそれ用。
-		// 　　定跡作成時などはこれをtrueにしてはいけない。(メモリに読み込まれないため)
-		// ・同じファイルを二度目は読み込み動作をskipする。
-		// ・filenameはpathとして"book/"を補完しないので生のpathを指定する。
-		Tools::Result read_book(const std::string& filename, bool on_the_fly = false);
+	// read_book()のときに読み込んだbookの名前
+	// ・on_the_fly == trueのときは、読み込む予定のファイルの名前。
+	// ・二度目のread_book()の呼び出しのときにすでに読み込んである(or ファイルをopenしてある)かどうかの
+	// 判定のためにファイル名を内部的に保持してある。
+	std::string book_name;
+	std::string pure_book_name;  // book_nameからフォルダ名を取り除いたもの。
+};
 
-		// 定跡ファイルの書き出し
-		// ・sort = 書き出すときにsfen文字列で並び替えるのか。(書き出しにかかる時間増)
-		// →　必ずソートするように変更した。
-		// ・ファイルへの書き出しは、*thisを書き換えないという意味においてconst性があるので関数にconstを付与しておく。
-		// また、事前にis_ready()は呼び出されているものとする。
-		Tools::Result write_book(const std::string& filename /*, bool sort = false*/) const;
-
-		// Aperyの定跡ファイルを読み込む
-		// ・この関数はread_bookの下請けとして存在する。外部から直接呼び出すのは定跡のコンバートの時ぐらい。
-		Tools::Result read_apery_book(const std::string& filename);
-
-		// --------------------------------------------------------------------------
-		//     以下のメンバは、普段は外部から普段は直接アクセスすべきではない 
-		//
-		// 定跡を書き換えてwrite_book()で書き出すような作業を行なうときだけアクセスする。
-		// --------------------------------------------------------------------------
-
-		// メモリに読み込んでいる定跡本体。定跡編集の時以外、このメソッドを呼び出すべきではない。
-		BookType* get_body() { return &book_body;}
-
-		// book_body.find()のwrapper。book_body.find()ではなく、こちらのfindを呼び出して用いること。
-		// 例)
-		// auto it = book.find(sfen);
-		//   if (book.is_not_found(it))
-		// のように書ける
-		BookType::iterator find(const std::string& sfen);
-		bool is_found(const BookType::iterator& it) const { return it != book_body.end(); }
-		bool is_not_found(const BookType::iterator& it) const { return it == book_body.end(); }
-
-		// メモリに保持している定跡に局面を一つ追加する。
-		// book_body[sfen] = ptr;
-		// と等価。
-		void append(const std::string& sfen, const Book::PosMoveListPtr& ptr) { book_body[sfen] = ptr; }
-
-		// book_bodyに対してBookPosを一つ追加するヘルパー関数。
-		// overwrite : このフラグがtrueならば、その局面ですでに同じbestMoveの指し手が登録されている場合は上書き動作
-		void insert(const std::string& sfen, const BookPos& bp , bool overwrite = true);
-
-		// book_bodyに対してBookType::insert()を呼び出すwrapper。
-		std::pair<BookType::iterator,bool> insert(const std::pair<std::string/*sfen*/, Book::PosMoveListPtr>& p) { return book_body.insert(p);  };
-
-	protected:
-
-		// メモリ上に読み込まれた定跡本体
-		// book_body.find()の直接呼び出しは禁止
-		// (Options["IgnoreBookPly"]==trueのときにplyの部分を削ってメモリに読み込んでいるため、一致しないから)
-		// このクラス(MemoryBookクラス)のfind()メソッドを用いること。
-		BookType book_body;
-
-		// 末尾のスペース、"\t","\r","\n"を除去する。
-		// Options["IgnoreBookPly"] == trueのときは、さらに数字も除去する。
-		// sfen文字列の末尾にある手数を除去する目的。
-		std::string trim(std::string input);
-
-		// メモリに丸読みせずにfind()のごとにファイルを調べにいくのか。
-		// これは思考エンジン設定のOptions["BookOnTheFly"]の値を反映したもの。
-		// ただし、read_book()のタイミングで定跡ファイルのopenに失敗したならfalseのままである。
-		// このフラグがtrueのときは、定跡ファイルのopen自体には成功していることが保証される。
-		bool on_the_fly = false;
-
-		// 前回読み込み時のOptions["IgnoreBookPly"]の値を格納しておく。
-		// これが異なるならファイルの読み直しが必要になる。
-		bool ignoreBookPly = false;
-
-		// 上のon_the_fly == trueのときに、開いている定跡ファイルのファイルハンドル
-		std::fstream fs;
-
-		// read_book()のときに読み込んだbookの名前
-		// ・on_the_fly == trueのときは、読み込む予定のファイルの名前。
-		// ・二度目のread_book()の呼び出しのときにすでに読み込んである(or ファイルをopenしてある)かどうかの
-		// 判定のためにファイル名を内部的に保持してある。
-		std::string book_name;
-		std::string pure_book_name; // book_nameからフォルダ名を取り除いたもの。
-	};
-
-#if defined (ENABLE_MAKEBOOK_CMD)
-	// USI拡張コマンド。"makebook"。定跡ファイルを作成する。
-	// フォーマット等についてはdoc/解説.txt を見ること。
-	extern void makebook_cmd(Position& pos, std::istringstream& is);
+#if defined(ENABLE_MAKEBOOK_CMD)
+// USI拡張コマンド。"makebook"。定跡ファイルを作成する。
+// フォーマット等についてはdoc/解説.txt を見ること。
+extern void makebook_cmd(Position& pos, std::istringstream& is);
 #endif
 
-	// 思考エンジンにおいて定跡の指し手の選択をする部分を切り出したもの。
-	struct BookMoveSelector
-	{
-		// extra_option()で呼び出すと、定跡関係のオプション項目をオプション(OptionMap)に追加する。
-		void init(USI::OptionsMap & o);
+// 思考エンジンにおいて定跡の指し手の選択をする部分を切り出したもの。
+struct BookMoveSelector {
+	// extra_option()で呼び出すと、定跡関係のオプション項目をオプション(OptionMap)に追加する。
+	void init(USI::OptionsMap& o);
 
-		// 定跡ファイルの読み込み。
-		// ・Search::clear()からこの関数を呼び出す。
-		// ・Search::clear()は、USIのisreadyコマンドのときに呼び出されるので
-		// 　定跡をメモリに丸読みするのであればこのタイミングで行なう。
-		// ・Search::clear()が呼び出されたときのOptions["BookOnTheFly"]の値をcaptureして使う。(ことになる)
-		void read_book() { memory_book.read_book(get_book_name(), (bool)Options["BookOnTheFly"]); }
+	// 定跡ファイルの読み込み。
+	// ・Search::clear()からこの関数を呼び出す。
+	// ・Search::clear()は、USIのisreadyコマンドのときに呼び出されるので
+	// 　定跡をメモリに丸読みするのであればこのタイミングで行なう。
+	// ・Search::clear()が呼び出されたときのOptions["BookOnTheFly"]の値をcaptureして使う。(ことになる)
+	void read_book() { memory_book.read_book(get_book_name(), (bool)Options["BookOnTheFly"]); }
 
-		// --- 定跡の指し手の選択
+	// --- 定跡の指し手の選択
 
-		// 現在の局面が定跡に登録されているかを調べる。
-		// ・定跡にhitした場合は、trueが返るので、このままrootMoves[0]を指すようにすれば良い。
-		// ・定跡の指し手の選択は、思考エンジンのオプション設定に従う。
-		// ・定跡のなかにPonderの指し手(bestmoveの次の指し手)がもしあればそれはrootMoves[0].pv[1]に返る。
-		// ・ただしrootMoves[0].pv[1]が合法手である保証はない。合法手でなければGUI側が弾くと思う。
-		// ・limit.silent == falseのときには画面に何故その指し手が選ばれたのか理由を出力する。
-		// ・この関数自体はthread safeなのでread_book()したあとは非同期に呼び出して問題ない。
-		// 　ただし、on_the_flyのときは、ディスクアクセスが必要で、その部分がthread safeではないので
-		//   on_the_fly == falseでなければ、非同期にこの関数を呼び出してはならない。
-		// ・Options["USI_OwnBook"]==trueにすることでエンジン側の定跡を有効化されていないなら、
-		// 　probe()には常に失敗する。(falseが返る)
-		bool probe(Thread& th , Search::LimitsType& limit);
+	// 現在の局面が定跡に登録されているかを調べる。
+	// ・定跡にhitした場合は、trueが返るので、このままrootMoves[0]を指すようにすれば良い。
+	// ・定跡の指し手の選択は、思考エンジンのオプション設定に従う。
+	// ・定跡のなかにPonderの指し手(bestmoveの次の指し手)がもしあればそれはrootMoves[0].pv[1]に返る。
+	// ・ただしrootMoves[0].pv[1]が合法手である保証はない。合法手でなければGUI側が弾くと思う。
+	// ・limit.silent == falseのときには画面に何故その指し手が選ばれたのか理由を出力する。
+	// ・この関数自体はthread safeなのでread_book()したあとは非同期に呼び出して問題ない。
+	// 　ただし、on_the_flyのときは、ディスクアクセスが必要で、その部分がthread safeではないので
+	//   on_the_fly == falseでなければ、非同期にこの関数を呼び出してはならない。
+	// ・Options["USI_OwnBook"]==trueにすることでエンジン側の定跡を有効化されていないなら、
+	// 　probe()には常に失敗する。(falseが返る)
+	bool probe(Thread& th, Search::LimitsType& limit);
 
-		// 現在の局面が定跡に登録されているかを調べる。
-		// ・pos.RootMovesを持っていないときに、現在の局面が定跡にhitするか調べてhitしたらその指し手を返す。
-		// ・定跡の指し手の選択は、思考エンジンのオプション設定に従う。
-		// ・定跡にhitしなかった場合はMOVE_NONEが返る。
-		// ・画面には何も表示しない。
-		// ・この関数自体はthread safeなのでread_book()したあとは非同期に呼び出して問題ない。
-		// 　ただし、on_the_flyのときは、ディスクアクセスが必要で、その部分がthread safeではないので
-		//   on_the_fly == falseでなければ、非同期にこの関数を呼び出してはならない。
-		Move probe(Position& pos);
+	// 現在の局面が定跡に登録されているかを調べる。
+	// ・pos.RootMovesを持っていないときに、現在の局面が定跡にhitするか調べてhitしたらその指し手を返す。
+	// ・定跡の指し手の選択は、思考エンジンのオプション設定に従う。
+	// ・定跡にhitしなかった場合はMOVE_NONEが返る。
+	// ・画面には何も表示しない。
+	// ・この関数自体はthread safeなのでread_book()したあとは非同期に呼び出して問題ない。
+	// 　ただし、on_the_flyのときは、ディスクアクセスが必要で、その部分がthread safeではないので
+	//   on_the_fly == falseでなければ、非同期にこの関数を呼び出してはならない。
+	Move probe(Position& pos);
 
-	protected:
-		// メモリに読み込んだ定跡ファイル
-		MemoryBook memory_book;
+   protected:
+	// メモリに読み込んだ定跡ファイル
+	MemoryBook memory_book;
 
-		// 読み込んだ定跡ファイル名
-		std::string book_name;
+	// 読み込んだ定跡ファイル名
+	std::string book_name;
 
-		// 定跡ファイル名を返す。
-		// Option["BookDir"]が定跡ファイルの入っているフォルダなのでこれを連結した定跡ファイルのファイル名を返す。
-		std::string get_book_name() const { return Path::Combine((std::string)Options["BookDir"], (std::string)Options["BookFile"]); }
+	// 定跡ファイル名を返す。
+	// Option["BookDir"]が定跡ファイルの入っているフォルダなのでこれを連結した定跡ファイルのファイル名を返す。
+	std::string get_book_name() const {
+		return Path::Combine((std::string)Options["BookDir"], (std::string)Options["BookFile"]);
+	}
 
-		// probe()の下請け
-		// forceHit == trueのときは、設定オプションの値を無視して強制的に定跡にhitさせる。(BookPvMovesの実装で用いる)
-		bool probe_impl(Position& rootPos, bool silent, Move16& bestMove, Move16& ponderMove , bool forceHit = false);
+	// probe()の下請け
+	// forceHit == trueのときは、設定オプションの値を無視して強制的に定跡にhitさせる。(BookPvMovesの実装で用いる)
+	bool probe_impl(Position& rootPos, bool silent, Move16& bestMove, Move16& ponderMove, bool forceHit = false);
 
-		// 定跡のpv文字列を生成して返す。
-		// m : 局面posで進める指し手
-		// depth : 残りdepth
-		std::string pv_builder(Position& pos, Move16 m , int depth);
+	// 定跡のpv文字列を生成して返す。
+	// m : 局面posで進める指し手
+	// depth : 残りdepth
+	std::string pv_builder(Position& pos, Move16 m, int depth);
 
-		AsyncPRNG prng;
-	};
+	AsyncPRNG prng;
+};
 
-}
+}  // namespace Book
 
-#endif // #ifndef _BOOK_H_
+#endif  // #ifndef _BOOK_H_
