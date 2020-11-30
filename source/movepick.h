@@ -10,7 +10,7 @@
 #include "types.h"
 
 // -----------------------
-//		history
+//      history
 // -----------------------
 
 /// StatsEntryはstat tableの値を格納する。これは、大抵数値であるが、指し手やnestされたhistoryでさえありうる。
@@ -212,8 +212,9 @@ private:
 	// refutations[2] : counter move(コンストラクタで渡された、前の局面の指し手に対する応手)
 	// cur           : 次に返す指し手
 	// endMoves      : 生成された指し手の末尾
-	// endBadCapture : BadCaptureの終端(captureの指し手を試すフェイズでのendMovesから後方に向かって悪い捕獲の指し手を移動させていく時に用いる)
-	ExtMove refutations[3] , *cur, *endMoves, *endBadCaptures;
+	// endBadCapture : BadCaptureの終端
+	//    (captureの指し手を試すフェイズでのendMovesから後方に向かって悪い捕獲の指し手を移動させていく時に用いる)
+	ExtMove refutations[3], *cur, *endMoves, *endBadCaptures;
 
 	// 指し手生成の段階
 	int stage;

@@ -97,7 +97,7 @@ void bench_cmd(Position& current, istringstream& is)
 	// 評価関数の読み込み等
 	is_ready();
 
-//	TT.clear();
+	// TT.clear();
 	// → is_ready()のなかでsearch::clear()が呼び出されて、そのなかでTT.clear()しているのでこの初期化は不要。
 
 	// トータルの探索したノード数

@@ -17,7 +17,7 @@ namespace Learner {
 	// -----------------------------------
 	//  棋譜を生成するworker(スレッドごと)
 	// -----------------------------------
-//	const static int GENSFEN_MULTI_PV = 24; // 1)
+	// const static int GENSFEN_MULTI_PV = 24; // 1)
 	const static int GENSFEN_MULTI_PV = 8;  // 2)
 
 	// 訪問済みnodeに関する情報を記録しておく構造体。

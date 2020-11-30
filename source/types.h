@@ -72,7 +72,8 @@ constexpr bool is_ok(Rank r) { return RANK_ZERO <= r && r < RANK_NB; }
 constexpr bool canPromote(const Color c, const Rank fromOrToRank) {
 	// ASSERT_LV1(is_ok(c) && is_ok(fromOrToRank));
 	// 先手9bit(9段) + 後手9bit(9段) = 18bitのbit列に対して、判定すればいい。
-	// ただし ×9みたいな掛け算をするのは嫌なのでbit shiftで済むように先手16bit、後手16bitの32bitのbit列に対して判定する。
+	// ただし ×9みたいな掛け算をするのは嫌なのでbit shiftで済むように
+	// 先手16bit、後手16bitの32bitのbit列に対して判定する。
 	// このcastにおいて、VC++2015ではwarning C4800が出る。
 	return static_cast<bool>(0x1c00007u & (1u << ((c << 4) + fromOrToRank)));
 }
@@ -95,6 +96,8 @@ static std::ostream& operator<<(std::ostream& os, Rank r) { os << (char)('a' + r
 // --------------------
 //        升目
 // --------------------
+
+// clang-format off
 
 // 盤上の升目に対応する定数。
 // 盤上右上(１一が0)、左下(９九)が80
@@ -136,12 +139,16 @@ enum Square: int32_t
 	SQ_LDD = int(SQ_LD) + int(SQ_D), // 左下下
 };
 
+// clang-format on
+
 // sqが盤面の内側を指しているかを判定する。assert()などで使う用。
 // 駒は駒落ちのときにSQ_NBに移動するので、値としてSQ_NBは許容する。
 constexpr bool is_ok(Square sq) { return SQ_ZERO <= sq && sq <= SQ_NB; }
 
 // sqが盤面の内側を指しているかを判定する。assert()などで使う用。玉は盤上にないときにSQ_NBを取るのでこの関数が必要。
 constexpr bool is_ok_plus1(Square sq) { return SQ_ZERO <= sq && sq < SQ_NB_PLUS1; }
+
+// clang-format off
 
 // 与えられたSquareに対応する筋を返すテーブル。file_of()で用いる。
 constexpr File SquareToFile[SQ_NB_PLUS1] =
@@ -158,9 +165,13 @@ constexpr File SquareToFile[SQ_NB_PLUS1] =
 	FILE_NB, // 玉が盤上にないときにこの位置に移動させることがあるので
 };
 
+// clang-format on
+
 // 与えられたSquareに対応する筋を返す。
 // →　行数は長くなるが速度面においてテーブルを用いる。
 constexpr File file_of(Square sq) { /* return (File)(sq / 9); */ /*ASSERT_LV2(is_ok(sq));*/ return SquareToFile[sq]; }
+
+// clang-format off
 
 // 与えられたSquareに対応する段を返すテーブル。rank_of()で用いる。
 constexpr Rank SquareToRank[SQ_NB_PLUS1] =
@@ -176,6 +187,8 @@ constexpr Rank SquareToRank[SQ_NB_PLUS1] =
 	RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, RANK_9,
 	RANK_NB, // 玉が盤上にないときにこの位置に移動させることがあるので
 };
+
+// clang-format on
 
 // 与えられたSquareに対応する段を返す。
 // →　行数は長くなるが速度面においてテーブルを用いる。
@@ -487,7 +500,7 @@ static std::string usi_piece(Piece pc) { return std::string((pc & 32) ? "D":"")
 // 駒に対して、それが先後、どちらの手番の駒であるかを返す。
 constexpr Color color_of(Piece pc)
 {
-//	return (pc & PIECE_WHITE) ? WHITE : BLACK;
+	// return (pc & PIECE_WHITE) ? WHITE : BLACK;
 	static_assert(PIECE_WHITE == 16 && WHITE == 1 && BLACK == 0, "");
 	return (Color)((pc & PIECE_WHITE) >> 4);
 }

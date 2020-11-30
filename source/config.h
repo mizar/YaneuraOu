@@ -20,9 +20,9 @@
 
 #if !defined (USE_MAKEFILE)
 
-#define YANEURAOU_ENGINE_NNUE            // やねうら王 通常探索部 NNUE評価関数
-//#define MATE_ENGINE                      // 詰め将棋solverとしてリリースする場合。(開発中2017/05/06～)
-//#define USER_ENGINE                      // ユーザーの思考エンジン
+#define YANEURAOU_ENGINE_NNUE  // やねうら王 通常探索部 NNUE評価関数
+//#define MATE_ENGINE  // 詰め将棋solverとしてリリースする場合。(開発中2017/05/06～)
+//#define USER_ENGINE  // ユーザーの思考エンジン
 
 #else
 
@@ -159,7 +159,7 @@ constexpr int MAX_PLY_NUM = 246;
 //       いるときのみがKPPPTの評価対象となる。(そこ以外に玉があるときは普通のKPPT)
 // ※4 : 以前、EVAL_NO_USEという評価関数なしのものが選択できるようになっていたが、
 //       需要がほとんどない上に、ソースコードがifdefの嵐になるので読みづらいのでバッサリ削除した。
-//		代わりにEVAL_MATERIALを使うと良い。追加コストはほぼ無視できる。
+//       代わりにEVAL_MATERIALを使うと良い。追加コストはほぼ無視できる。
 // ※5 : MATERIAL_LEVELというシンボルで評価関数のタイプを選択できる。
 //       #define MATERIAL_LEVEL 001 なら、駒得のみの評価関数
 //       #define MATERIAL_LEVEL 002 なら…

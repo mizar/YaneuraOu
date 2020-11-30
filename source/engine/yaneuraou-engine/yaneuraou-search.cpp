@@ -135,10 +135,11 @@ void init_param();
 using namespace Search;
 using namespace Eval;
 
-//namespace Search {
-//
-//	LimitsType Limits;
-//}
+#if 0
+namespace Search {
+LimitsType Limits;
+}
+#endif
 // →　これはやねうら王ではtypes.cppのほうに書くようにする。
 
 namespace {
@@ -159,7 +160,7 @@ namespace {
 
 	// Razor marginはdepthに依存しない形で良いことが証明された。(Stockfish10)
 	// これconstexprにできないので、RazorMarginという変数に代入せずにPARAM_RAZORING_MARGINを直接使うことにする。
-//	constexpr int RazorMargin = PARAM_RAZORING_MARGIN;
+	// constexpr int RazorMargin = PARAM_RAZORING_MARGIN;
 
 	// depth(残り探索深さ)に応じたfutility margin。
 	Value futility_margin(Depth d, bool improving) {
@@ -718,7 +719,7 @@ void Thread::search()
 	// timeReduction      : 読み筋が安定しているときに時間を短縮するための係数。
 	// Stockfish9までEasyMoveで処理していたものが廃止され、Stockfish10からこれが導入された。
 	// totBestMoveChanges : 直近でbestMoveが変化した回数の統計。読み筋の安定度の目安にする。
-	double timeReduction = 1.0 , totBestMoveChanges = 0;;
+	double timeReduction = 1.0, totBestMoveChanges = 0;
 
 	// この局面の手番側
 	Color us = rootPos.side_to_move();
@@ -1257,8 +1258,10 @@ namespace {
 		// givesCheck			: moveによって王手になるのか
 		// improving			: 直前のnodeから評価値が上がってきているのか
 		//   このフラグを各種枝刈りのmarginの決定に用いる
-		//   cf. Tweak probcut margin with 'improving' flag : https://github.com/official-stockfish/Stockfish/commit/c5f6bd517c68e16c3ead7892e1d83a6b1bb89b69
-		//   cf. Use evaluation trend to adjust futility margin : https://github.com/official-stockfish/Stockfish/commit/65c3bb8586eba11277f8297ef0f55c121772d82c
+		//   cf. Tweak probcut margin with 'improving' flag :
+		//   https://github.com/official-stockfish/Stockfish/commit/c5f6bd517c68e16c3ead7892e1d83a6b1bb89b69
+		//   cf. Use evaluation trend to adjust futility margin :
+		//   https://github.com/official-stockfish/Stockfish/commit/65c3bb8586eba11277f8297ef0f55c121772d82c
 		// priorCapture         : 1つ前の局面は駒を取る指し手か？
 		bool formerPv ,givesCheck, improving, /*didLMR,*/ priorCapture;
 
@@ -1599,9 +1602,11 @@ namespace {
 		else if (ss->ttHit)
 		{
 
-			//		ss->staticEval = eval = tte->eval();
-			//		if (eval == VALUE_NONE)
-			//			  ss->staticEval = eval = evaluate(pos);
+#if 0
+		ss->staticEval = eval = tte->eval();
+		if (eval == VALUE_NONE)
+			ss->staticEval = eval = evaluate(pos);
+#endif
 
 			// 置換表にhitしたなら、評価値が記録されているはずだから、それを取り出しておく。
 			// あとで置換表に書き込むときにこの値を使えるし、各種枝刈りはこの評価値をベースに行なうから。
@@ -1619,14 +1624,16 @@ namespace {
 		else
 		{
 
-			//		if ((ss - 1)->currentMove != MOVE_NULL)
-			//		{
-			//			int bonus = -(ss - 1)->statScore / 512;
-			//
-			//			ss->staticEval = eval = evaluate(pos) + bonus;
-			//		}
-			//		else
-			//			ss->staticEval = eval = -(ss - 1)->staticEval + 2 * Eval::Tempo;
+#if 0
+		if ((ss - 1)->currentMove != MOVE_NULL)
+		{
+			int bonus = -(ss - 1)->statScore / 512;
+
+			ss->staticEval = eval = evaluate(pos) + bonus;
+		}
+		else
+			ss->staticEval = eval = -(ss - 1)->staticEval + 2 * Eval::Tempo;
+#endif
 
 			// Null Moveであってもevaluate()はすでに実行しているのでStockfishのような
 			// 簡易計算ではないほうが良いような…。
@@ -2169,22 +2176,24 @@ namespace {
 
 			// Castling延長など(将棋にはキャスリングルールはないので関係ない)
 
-			//// Castling extension
-			//else if (type_of(move) == CASTLING)
-			//	extension = 1;
+#if 0
+		// Castling extension
+		else if (type_of(move) == CASTLING)
+			extension = 1;
 
-			//// Shuffle extension
-			//else if (PvNode
-			//	&& pos.rule50_count() > 18
-			//	&& depth < 3
-			//	&& ss->ply < 3 * thisThread->rootDepth) // To avoid too deep searches
-			//	extension = 1;
+		// Shuffle extension
+		else if (PvNode
+			&& pos.rule50_count() > 18
+			&& depth < 3
+			&& ss->ply < 3 * thisThread->rootDepth) // To avoid too deep searches
+			extension = 1;
 
-			////Passed pawn extension
-			//else if (move == ss->killers[0]
-			//	&& pos.advanced_pawn_push(move)
-			//	&& pos.pawn_passed(us, to_sq(move)))
-			//	extension = 1;
+		//Passed pawn extension
+		else if (move == ss->killers[0]
+			&& pos.advanced_pawn_push(move)
+			&& pos.pawn_passed(us, to_sq(move)))
+			extension = 1;
+#endif
 
 			// -----------------------
 			//   1手進める前の枝刈り

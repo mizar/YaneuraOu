@@ -121,13 +121,15 @@ static TimePoint now() {
 // このclass、Stockfishにあるんだけど、
 // EvalHashとしてLargePageを用いる同等のclassをすでに用意しているので、使わない。
 
-//template<class Entry, int Size>
-//struct HashTable {
-//	Entry* operator[](Key key) { return &table[(uint32_t)key & (Size - 1)]; }
-//
-//private:
-//	std::vector<Entry> table = std::vector<Entry>(Size);
-//};
+#if 0
+template<class Entry, int Size>
+struct HashTable {
+	Entry* operator[](Key key) { return &table[(uint32_t)key & (Size - 1)]; }
+
+   private:
+	std::vector<Entry> table = std::vector<Entry>(Size);
+};
+#endif
 
 // --------------------
 //  sync_out/sync_endl
