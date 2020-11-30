@@ -4,10 +4,10 @@ name: NDK CI (for Android)
 on:
   push:
     branches:
-      - '**'
+      - "**"
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   build:
@@ -28,20 +28,20 @@ jobs:
           - USER_ENGINE
 
     steps:
-    - name: Setup Android NDK r21d
-      uses: nttld/setup-ndk@v1
-      with:
-        ndk-version: r21d
+      - name: Setup Android NDK r21d
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21d
 
-    - name: Checkout own repository
-      uses: actions/checkout@v2
-      with:
-        path: main
+      - name: Checkout own repository
+        uses: actions/checkout@v2
+        with:
+          path: main
 
-    - name: ndk-build
-      run: ./main/script/android_build.sh -e ${{ matrix.edition }}
+      - name: ndk-build
+        run: ./main/script/android_build.sh -e ${{ matrix.edition }}
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: build-android
-        path: ./main/build/**/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-android
+          path: ./main/build/**/*

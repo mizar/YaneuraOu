@@ -30,6 +30,44 @@ Push-Location (Join-Path $PSScriptRoot ..);
     Dir = ".\build\android\MaterialLv1";
   };
   @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=002";
+    Dir = ".\build\android\MaterialLv2";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=003";
+    Dir = ".\build\android\MaterialLv3";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=004";
+    Dir = ".\build\android\MaterialLv4";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=005";
+    Dir = ".\build\android\MaterialLv5";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=006";
+    Dir = ".\build\android\MaterialLv6";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=007";
+    Dir = ".\build\android\MaterialLv7";
+  };
+<#
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=008";
+    Dir = ".\build\android\MaterialLv8";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=009";
+    Dir = ".\build\android\MaterialLv9";
+  };
+  @{
+    EDITION = "YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=010";
+    Dir = ".\build\android\MaterialLv10";
+  };
+#>
+  @{
     EDITION = "MATE_ENGINE";
     Dir = ".\build\android\MATE";
   };
