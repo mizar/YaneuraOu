@@ -1,4 +1,5 @@
-﻿// yaneuraou-param.h : 元ファイル
+﻿// clang-format off
+// yaneuraou-param.h : 元ファイル
 // param_conv.pyというPythonのスクリプトにより、以下のファイルは自動生成されます。
 // 1) yaneuraou - param - extern.h
 // 2) yaneuraou - param - array.h

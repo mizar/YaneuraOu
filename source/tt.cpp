@@ -37,8 +37,8 @@ void TTEntry::save(Key k, Value v, bool pv , Bound b, Depth d, Move m , Value ev
 	// b)  A &&  B
 	// c) !A &&  B
 	// の3パターン。b),c)は、B == trueなので、その下にある次のif式が成立して、この局面のhash keyがkey16に格納される。
-	// a)は、B == false すなわち、((u16)(k >> 1)) == key16であり、この局面用のentryであるから、その次のif式が成立しないとしても
-	// 整合性は保てる。
+	// a)は、B == false すなわち、((u16)(k >> 1)) == key16 であり、
+	// この局面用のentryであるから、その次のif式が成立しないとしても整合性は保てる。
 	// a)のケースにおいても、指し手の情報は格納しておいたほうがいい。
 	// これは、このnodeで、TT::probeでhitして、その指し手は試したが、それよりいい手が見つかって、枝刈り等が発生しているような
 	// ケースが考えられる。ゆえに、今回の指し手のほうが、いまの置換表の指し手より価値があると考えられる。
@@ -172,7 +172,8 @@ TTEntry* TranspositionTable::probe(const Key key, bool& found) const
 	for (int i = 0; i < ClusterSize; ++i)
 	{
 		// returnする条件
-		// 1. 空のエントリーを見つけた(そこまではkeyが合致していないので、found==falseにして新規TT_ENTRYのアドレスとして返す)
+		// 1. 空のエントリーを見つけた
+		//    (そこまではkeyが合致していないので、found==falseにして新規TT_ENTRYのアドレスとして返す)
 		// 2. keyが合致しているentryを見つけた。(found==trueにしてそのTT_ENTRYのアドレスを返す)
 
 		// Stockfishのコードだと、1.が成立したタイミングでもgenerationのrefreshをしているが、

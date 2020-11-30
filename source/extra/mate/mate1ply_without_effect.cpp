@@ -1,4 +1,4 @@
-﻿#include "mate1ply.h"
+#include "mate1ply.h"
 
 #if defined(USE_MATE_1PLY) && !defined(LONG_EFFECT_LIBRARY)
 
@@ -1665,7 +1665,7 @@ DC_CHECK:;
 				if (!(check_around_bb(Us, SILVER, sq_king) & from)) continue;
 				// これで王手にはなる。成りも選択したいのでここコピペで書くか..それともlambdaで書くか..コピペでいいか。
 
-				bb = silverEffect(Us, from) & silverEffect(them, sq_king) & bb_move;;
+				bb = silverEffect(Us, from) & silverEffect(them, sq_king) & bb_move;
 				while (bb)
 				{
 					to = bb.pop();
@@ -1678,7 +1678,7 @@ DC_CHECK:;
 					return make_move(from, to);
 				}
 
-				bb = silverEffect(Us, from) & goldEffect(them, sq_king) & bb_move;;
+				bb = silverEffect(Us, from) & goldEffect(them, sq_king) & bb_move;
 				while (bb)
 				{
 					to = bb.pop();

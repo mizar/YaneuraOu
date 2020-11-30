@@ -496,7 +496,7 @@ Tools::Result Position::set_from_packed_sfen(const PackedSfen& sfen , StateInfo 
 	st->materialValue = Eval::material(*this);
 	Eval::compute_eval(*this);
 
-//	sync_cout << sfen() << *this << pieces(BLACK) << pieces(WHITE) << pieces() << sync_endl;
+	// sync_cout << sfen() << *this << pieces(BLACK) << pieces(WHITE) << pieces() << sync_endl;
 
 	//if (!is_ok(*this))
 	//	std::cout << "info string Illigal Position?" << endl;

@@ -195,11 +195,13 @@ HASH_KEY DepthHash(int depth) { return Zobrist::depth[depth]; }
 #if !defined (PRETTY_JP)
 std::string pretty(Piece pc) { return std::string(USI_PIECE).substr(pc * 2, 2); }
 #else
+// clang-format off
 // "□"(四角)は文字フォントによっては半分の幅しかない。"口"(くち)にする。
 std::string USI_PIECE_KANJI[] = {
-	" 口"," 歩"," 香"," 桂"," 銀"," 角"," 飛"," 金"," 玉"," と"," 杏"," 圭"," 全"," 馬"," 龍"," 菌"," 王",
-		  "^歩","^香","^桂","^銀","^角","^飛","^金","^玉","^と","^杏","^圭","^全","^馬","^龍","^菌","^王"
+    " 口"," 歩"," 香"," 桂"," 銀"," 角"," 飛"," 金"," 玉"," と"," 杏"," 圭"," 全"," 馬"," 龍"," 菌"," 王",
+          "^歩","^香","^桂","^銀","^角","^飛","^金","^玉","^と","^杏","^圭","^全","^馬","^龍","^菌","^王"
 };
+// clang-format on
 std::string pretty(Piece pc) {
 #if 1
 	return USI_PIECE_KANJI[pc];
@@ -643,6 +645,7 @@ Bitboard Position::attackers_to(Color c, Square sq, const Bitboard& occ) const
 
 	Color them = ~c;
 
+	// clang-format off
 	// sの地点に敵駒ptをおいて、その利きに自駒のptがあればsに利いているということだ。
 	// 香の利きを求めるコストが惜しいのでrookEffect()を利用する。
 	return
@@ -659,7 +662,7 @@ Bitboard Position::attackers_to(Color c, Square sq, const Bitboard& occ) const
 		// →　HDKは、銀と金のところに含めることによって、参照するテーブルを一個減らして高速化しようというAperyのアイデア。
 			) & pieces(c); // 先後混在しているのでc側の駒だけ最後にマスクする。
 		;
-
+	// clang-format on
 }
 
 // sに利きのあるc側の駒を列挙する。先後両方。
@@ -669,6 +672,7 @@ Bitboard Position::attackers_to(Square sq, const Bitboard& occ) const
 {
 	ASSERT_LV3(sq <= SQ_NB);
 
+	// clang-foramt off
 	// sqの地点に敵駒ptをおいて、その利きに自駒のptがあればsqに利いているということだ。
 	return
 		// 先手の歩・桂・銀・金・HDK
@@ -694,6 +698,7 @@ Bitboard Position::attackers_to(Square sq, const Bitboard& occ) const
 			| (pieces(WHITE , LANCE) & lanceStepEffect(BLACK , sq))
 			// 香も、StepEffectでマスクしたあと飛車の利きを使ったほうが香の利きを求めなくて済んで速い。
 			));
+	// clang-format on
 }
 
 // 打ち歩詰め判定に使う。王に打ち歩された歩の升をpawn_sqとして、c側(王側)のpawn_sqへ利いている駒を列挙する。香が利いていないことは自明。
@@ -709,6 +714,7 @@ inline Bitboard Position::attackers_to_pawn(Color c, Square pawn_sq) const
 	// 馬、龍の利きは考慮しないといけない。しかしここに玉が含まれるので玉は取り除く必要がある。
 	// bb_hdは銀と金のところに加えてしまうことでテーブル参照を一回減らす。
 
+	// clang-format off
 	// sの地点に敵駒ptをおいて、その利きに自駒のptがあればsに利いているということだ。
 	// 打ち歩詰め判定なので、その打たれた歩を歩、香、王で取れることはない。(王で取れないことは事前にチェック済)
 	return
@@ -718,6 +724,7 @@ inline Bitboard Position::attackers_to_pawn(Color c, Square pawn_sq) const
 			| (bishopEffect(pawn_sq, occ)  &  pieces(BISHOP_HORSE)    )
 			| (rookEffect(pawn_sq, occ)    &  pieces(ROOK_DRAGON)     )
 			) & pieces(c);
+	// clang-format on
 }
 
 
@@ -755,11 +762,13 @@ Bitboard Position::pinned_pieces(Color c, Square avoid) const {
 	// avoidを除外して考える。
 	Bitboard avoid_bb = ~Bitboard(avoid);
 
+	// clang-format off
 	pinners = (
 		  (pieces(ROOK_DRAGON)   & rookStepEffect(ksq))
 		| (pieces(BISHOP_HORSE)  & bishopStepEffect(ksq))
 		| (pieces(LANCE)         & lanceStepEffect(c, ksq))
 		) & avoid_bb & pieces(~c);
+	// clang-format on
 
 	while (pinners)
 	{
@@ -777,11 +786,13 @@ Bitboard Position::pinned_pieces(Color c, Square from, Square to) const {
 	// avoidを除外して考える。
 	Bitboard avoid_bb = ~Bitboard(from);
 
+	// clang-format off
 	pinners = (
 		(pieces(ROOK_DRAGON)    & rookStepEffect(ksq))
 		| (pieces(BISHOP_HORSE) & bishopStepEffect(ksq))
 		| (pieces(LANCE)        & lanceStepEffect(c, ksq))
 		) & avoid_bb & pieces(~c);
+	// clang-format on
 
 	// fromからは消えて、toの地点に駒が現れているものとして
 	Bitboard new_pieces = (pieces() & avoid_bb) | to;

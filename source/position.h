@@ -94,8 +94,8 @@ struct StateInfo {
 	// 自駒の駒種Xによって敵玉が王手となる升のbitboard
 	Bitboard checkSquares[PIECE_TYPE_NB];
 
-//  循環局面の何回目であるか  
-//	int        repetition;
+	// 循環局面の何回目であるか
+	// int repetition;
 
 	// この手番側の連続王手は何手前からやっているのか(連続王手の千日手の検出のときに必要)
 	int continuousCheck[COLOR_NB];

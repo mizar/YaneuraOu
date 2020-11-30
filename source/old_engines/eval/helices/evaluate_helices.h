@@ -1,4 +1,4 @@
-﻿#ifndef _EVALUATE_HELICES_H_
+#ifndef _EVALUATE_HELICES_H_
 #define _EVALUATE_HELICES_H_
 
 #include "../../shogi.h"
@@ -67,7 +67,7 @@ namespace Eval
 
 	// 盤上 = 3種(桂・銀・金)が81升×2(先後) + 2種(角・飛)が63升×2(先後)
 	// 手駒 = 3駒(桂・銀・金)×2(先後)×5通り(手駒、0から4枚) + 2駒(角・飛)×2(先後)×3通り(手駒、0～2枚)
-//	static const u64 kppp_fe_end =3 *  81 * 2 + 2 * 63 * 2 + 3 * 2 * 5 + 2 * 2 * 3 + 1;
+	// static const u64 kppp_fe_end = 3 * 81 * 2 + 2 * 63 * 2 + 3 * 2 * 5 + 2 * 2 * 3 + 1;
 
 	// →　角・飛の番号を詰めるとBonaPieceからのmappingが簡単な計算で済まなくなるのでとりあえず詰めない実装で実験してみる。
 	static const u64 kppp_fe_end = 3 * 81 * 2 + 2 * 81 * 2 + 3 * 2 * 5 + 2 * 2 * 3 + 1;
@@ -95,7 +95,7 @@ namespace Eval
 	extern ValueKk(*kk_)[SQ_NB][SQ_NB];
 	extern ValueKkp(*kkp_)[SQ_NB][SQ_NB][fe_end];
 	extern ValueKpp(*kpp_)[SQ_NB][fe_end][fe_end];
-//	extern ValueKppp(*kppp_)[KPPP_KING_SQ][kppp_triangle_fe_end];
+	// extern ValueKppp(*kppp_)[KPPP_KING_SQ][kppp_triangle_fe_end];
 	extern ValueKppp(*kppp_);
 		
 	// 2次元配列で添字がでかいやつ(16GBを超えると)Visual C++2017で C2036(サイズが不明です)のコンパイルエラーになる。

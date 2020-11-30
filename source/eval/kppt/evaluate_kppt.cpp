@@ -1142,7 +1142,7 @@ namespace Eval
 		cout << "---" << endl;
 
 		// KKのKの値を出力する実験的コード
-//		kk_stat();
+		// kk_stat();
 
 	}
 

@@ -1,4 +1,4 @@
-﻿#ifndef _MOVE_PICKER_H_
+#ifndef _MOVE_PICKER_H_
 #define _MOVE_PICKER_H_
 
 #include "shogi.h"

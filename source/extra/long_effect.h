@@ -150,25 +150,29 @@ namespace Effect24
   // DirectからDirectionsへの逆変換
   inline Directions to_directions(Direct d) { return Directions(1 << d); }
 
-  // DirectをSquare型の差分値で表現したもの。
-  const SquareWithWall DirectToDeltaWW_[DIRECT_NB] = {
+// clang-format off
+// DirectをSquare型の差分値で表現したもの。
+const SquareWithWall DirectToDeltaWW_[DIRECT_NB] = {
     SQWW_RU + SQWW_RU   , SQWW_R  + SQWW_RU   , SQWW_R + SQWW_R , SQWW_R + SQWW_RD  , SQWW_RD   + SQWW_RD    ,
     SQWW_RU + SQWW_U    , SQWW_RU             , SQWW_R          , SQWW_RD           , SQWW_RD   + SQWW_D     ,
     SQWW_U  + SQWW_U    , SQWW_U                                , SQWW_D            , SQWW_D    + SQWW_D     ,
     SQWW_LU + SQWW_U    , SQWW_LU             , SQWW_L          , SQWW_LD           , SQWW_LD   + SQWW_D     ,
     SQWW_LU + SQWW_LU   , SQWW_L  + SQWW_LU   , SQWW_L + SQWW_L , SQWW_L  + SQWW_LD , SQWW_LD   + SQWW_LD    ,
-  };
-  inline SquareWithWall DirectToDeltaWW(Direct d) { ASSERT_LV3(is_ok(d));  return DirectToDeltaWW_[d]; }
+};
+inline SquareWithWall DirectToDeltaWW(Direct d) { ASSERT_LV3(is_ok(d));  return DirectToDeltaWW_[d]; }
+// clang-format on
 
-  // DirectをSquare型の差分値で表現したもの。
-  const Square DirectToDelta_[DIRECT_NB] = {
+// clang-format off
+// DirectをSquare型の差分値で表現したもの。
+const Square DirectToDelta_[DIRECT_NB] = {
     SQ_RU + SQ_RU   , SQ_R + SQ_RU   , SQ_R + SQ_R , SQ_R  + SQ_RD  , SQ_RD + SQ_RD  ,
     SQ_RU + SQ_U    , SQ_RU          , SQ_R        , SQ_RD          , SQ_RD + SQ_D   ,
     SQ_U  + SQ_U    , SQ_U                         , SQ_D           , SQ_D  + SQ_D   ,
     SQ_LU + SQ_U    , SQ_LU          , SQ_L        , SQ_LD          , SQ_LD + SQ_D   ,
     SQ_LU + SQ_LU   , SQ_L + SQ_LU   , SQ_L + SQ_L , SQ_L  + SQ_LD  , SQ_LD + SQ_LD  ,
-  };
-  inline Square DirectToDelta(Direct d) { ASSERT_LV3(is_ok(d));  return DirectToDelta_[d]; }
+};
+inline Square DirectToDelta(Direct d) { ASSERT_LV3(is_ok(d));  return DirectToDelta_[d]; }
+// clang-format on
 
   // 24近傍で8近傍に利く長い利きの方向。24近傍 = 4筋*9段+5升=41升 ≦ 48升*WordBoard = 96byte = ymm(32) * 3
   extern ymm ymm_direct_to_around8[3];

@@ -1,4 +1,4 @@
-﻿#include "../../types.h"
+#include "../../types.h"
 
 #if defined (YANEURAOU_ENGINE)
 
@@ -528,7 +528,7 @@ void MainThread::search()
 				std::swap(rootMoves[0], *it_move);
 
 				// 1手詰めのときのスコアにしておく。
-				rootMoves[0].score = mate_in(/*ss->ply*/ 1 + 1);;
+				rootMoves[0].score = mate_in(/*ss->ply*/ 1 + 1);
 
 				// rootで宣言勝ちのときにもそのPVを出力したほうが良い。
 				if (!Limits.silent)
@@ -718,7 +718,7 @@ void Thread::search()
 	// timeReduction      : 読み筋が安定しているときに時間を短縮するための係数。
 	// Stockfish9までEasyMoveで処理していたものが廃止され、Stockfish10からこれが導入された。
 	// totBestMoveChanges : 直近でbestMoveが変化した回数の統計。読み筋の安定度の目安にする。
-	double timeReduction = 1.0 , totBestMoveChanges = 0;;
+	double timeReduction = 1.0 , totBestMoveChanges = 0;
 
 	// この局面の手番側
 	Color us = rootPos.side_to_move();
@@ -2262,13 +2262,15 @@ namespace {
 			// moveCountが大きいものなどは探索深さを減らしてざっくり調べる。
 			// alpha値を更新しそうなら(fail highが起きたら)、full depthで探索しなおす。
 
-			if (    depth >= 3
-				&&  moveCount > 1 + 3 * rootNode
-				&& (!captureOrPawnPromotion
-					|| moveCountPruning
-					|| ss->staticEval + CapturePieceValue[pos.captured_piece()] <= alpha
-					|| cutNode
-					|| thisThread->ttHitAverage < 432 * TtHitAverageResolution * TtHitAverageWindow / 1024))
+		// clang-format off
+		if (    depth >= 3
+			&&  moveCount > 1 + 3 * rootNode
+			&& (!captureOrPawnPromotion
+				|| moveCountPruning
+				|| ss->staticEval + CapturePieceValue[pos.captured_piece()] <= alpha
+				|| cutNode
+				|| thisThread->ttHitAverage < 432 * TtHitAverageResolution * TtHitAverageWindow / 1024))
+		// clang-format on
 			{
 				// Reduction量
 				Depth r = reduction(improving, depth, moveCount);
@@ -3035,7 +3037,7 @@ namespace {
 					bestMove = move;
 
 					if (PvNode)  // Update pv even in fail-high case
-					// fail-highの場合もPVは更新する。
+					             // fail-highの場合もPVは更新する。
 						update_pv(ss->pv, move, (ss + 1)->pv);
 
 					if (PvNode && value < beta) // Update alpha here!

@@ -63,7 +63,7 @@ namespace Eval
 	extern ValueKk(*kk_)[SQ_NB][SQ_NB];
 	extern ValueKkp(*kkp_)[SQ_NB][SQ_NB][fe_end];
 	extern ValueKpp(*kpp_)[SQ_NB][fe_end][fe_end];
-//	extern ValueKppp(*kppp_)[KPPP_KING_SQ][kppp_triangle_fe_end];
+	// extern ValueKppp(*kppp_)[KPPP_KING_SQ][kppp_triangle_fe_end];
 	extern ValueKppp(*kppp_);
 		
 	// 2次元配列で添字がでかいやつ(16GBを超えると)Visual C++2017で C2036(サイズが不明です)のコンパイルエラーになる。

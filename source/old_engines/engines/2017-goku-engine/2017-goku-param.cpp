@@ -1,4 +1,4 @@
-﻿#include "../../shogi.h"
+#include "../../shogi.h"
 
 #if defined (YANEURAOU_2018_OTAFUKU_ENGINE) || defined(YANEURAOU_2018_GOKU_ENGINE)
 
@@ -2708,7 +2708,7 @@ void MainThread::think()
 				std::swap(rootMoves[0], *it_move);
 
 				// 1手詰めのときのスコアにしておく。
-				rootMoves[0].score = mate_in(/*ss->ply*/ 1 + 1);;
+				rootMoves[0].score = mate_in(/*ss->ply*/ 1 + 1);
 
 				// rootで宣言勝ちのときにもそのPVを出力したほうが良い。
 				if (!Limits.silent)

@@ -17,7 +17,7 @@ namespace Learner {
 	// -----------------------------------
 	//  棋譜を生成するworker(スレッドごと)
 	// -----------------------------------
-//	const static int GENSFEN_MULTI_PV = 24; // 1)
+	// const static int GENSFEN_MULTI_PV = 24; // 1)
 	const static int GENSFEN_MULTI_PV = 8;  // 2)
 
 	// 訪問済みnodeに関する情報を記録しておく構造体。
@@ -298,7 +298,7 @@ namespace Learner {
 
 					if (abs(value1) >= eval_limit)
 					{
-						//					sync_cout << pos << "eval limit = " << eval_limit << " over , move = " << pv1[0] << sync_endl;
+						// sync_cout << pos << "eval limit = " << eval_limit << " over , move = " << pv1[0] << sync_endl;
 
 						// この局面でvalue1 >= eval_limitならば、(この局面の手番側の)勝ちである。
 						flush_psv((value1 >= eval_limit) ? 1 : -1);
