@@ -47,34 +47,60 @@ $TGCOMPILERS = @('clang++';'g++';);
   };
   @{
     BUILDDIR = 'MaterialLv2';
-    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=002';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=2';
     BUILDNAME = 'YaneuraOu_MaterialLv2';
     TARGET = @('normal';'tournament';'gensfen';);
   };
   @{
     BUILDDIR = 'MaterialLv3';
-    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=003';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=3';
     BUILDNAME = 'YaneuraOu_MaterialLv3';
     TARGET = @('normal';'tournament';'gensfen';);
   };
   @{
     BUILDDIR = 'MaterialLv4';
-    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=004';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=4';
     BUILDNAME = 'YaneuraOu_MaterialLv4';
     TARGET = @('normal';'tournament';'gensfen';);
   };
   @{
     BUILDDIR = 'MaterialLv5';
-    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=005';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=5';
     BUILDNAME = 'YaneuraOu_MaterialLv5';
     TARGET = @('normal';'tournament';'gensfen';);
   };
   @{
     BUILDDIR = 'MaterialLv6';
-    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=006';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=6';
     BUILDNAME = 'YaneuraOu_MaterialLv6';
     TARGET = @('normal';'tournament';'gensfen';);
   };
+  @{
+    BUILDDIR = 'MaterialLv7';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=7';
+    BUILDNAME = 'YaneuraOu_MaterialLv7';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+  @{
+    BUILDDIR = 'MaterialLv8';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=8';
+    BUILDNAME = 'YaneuraOu_MaterialLv8';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+<#
+  @{
+    BUILDDIR = 'MaterialLv9';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=9';
+    BUILDNAME = 'YaneuraOu_MaterialLv9';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+  @{
+    BUILDDIR = 'MaterialLv10';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=10';
+    BUILDNAME = 'YaneuraOu_MaterialLv10';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+#>
   @{
     BUILDDIR = 'MATE';
     EDITION = 'MATE_ENGINE';

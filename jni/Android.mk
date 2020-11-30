@@ -67,154 +67,181 @@ EXTRA_CPPFLAGS =
 # 001 : 普通の駒得のみの評価関数
 # 002 : …
 # cf.【連載】評価関数を作ってみよう！その1 : http://yaneuraou.yaneu.com/2020/11/17/make-evaluate-function/
-MATERIAL_LEVEL = 001
+MATERIAL_LEVEL = 1
 
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_KPPT)
-  CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_KPPT
-  ENGINE_NAME := YaneuraOu_KPPT
+	CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_KPPT
+	ENGINE_NAME := YaneuraOu_KPPT
 endif
 
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_KPP_KKPT)
-  CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_KPP_KKPT
-  ENGINE_NAME := YaneuraOu_KPP_KKPT
+	CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_KPP_KKPT
+	ENGINE_NAME := YaneuraOu_KPP_KKPT
 endif
 
-ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_MATERIAL)
-  CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_MATERIAL
-  ENGINE_NAME := YaneuraOu_MaterialLv1
+ifeq ($(findstring YANEURAOU_ENGINE_MATERIAL,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_MATERIAL)
+	CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_MATERIAL
+	ENGINE_NAME := YaneuraOu_MaterialLv1
+	ifeq ($(MATERIAL_LEVEL),2)
+		ENGINE_NAME := YaneuraOu_MaterialLv2
+	endif
+	ifeq ($(MATERIAL_LEVEL),3)
+		ENGINE_NAME := YaneuraOu_MaterialLv3
+	endif
+	ifeq ($(MATERIAL_LEVEL),4)
+		ENGINE_NAME := YaneuraOu_MaterialLv4
+	endif
+	ifeq ($(MATERIAL_LEVEL),5)
+		ENGINE_NAME := YaneuraOu_MaterialLv5
+	endif
+	ifeq ($(MATERIAL_LEVEL),6)
+		ENGINE_NAME := YaneuraOu_MaterialLv6
+	endif
+	ifeq ($(MATERIAL_LEVEL),7)
+		ENGINE_NAME := YaneuraOu_MaterialLv7
+	endif
+	ifeq ($(MATERIAL_LEVEL),8)
+		ENGINE_NAME := YaneuraOu_MaterialLv8
+	endif
+	ifeq ($(MATERIAL_LEVEL),9)
+		ENGINE_NAME := YaneuraOu_MaterialLv9
+	endif
+	ifeq ($(MATERIAL_LEVEL),10)
+		ENGINE_NAME := YaneuraOu_MaterialLv10
+	endif
 endif
 
 ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_NNUE)
-  CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_NNUE
-  ENGINE_NAME := YaneuraOu_NNUE
-  ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_KP256)
-    ENGINE_NAME := YaneuraOu_NNUE_KP256
-    CPPFLAGS += -DEVAL_NNUE_KP256
-  else
-    ifeq ($(NNUE_EVAL_ARCH),KP256)
-      ENGINE_NAME := YaneuraOu_NNUE_KP256
-      CPPFLAGS += -DEVAL_NNUE_KP256
-    endif
-  endif
-  ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKPE9)
-    ENGINE_NAME := YaneuraOu_NNUE_HALFKPE9
-    CPPFLAGS += -DEVAL_NNUE_HALFKPE9
-  else
-    ifeq ($(NNUE_EVAL_ARCH),HALFKPE9)
-      ENGINE_NAME := YaneuraOu_NNUE_HALFKPE9
-      CPPFLAGS += -DEVAL_NNUE_HALFKPE9
-    endif
-  endif
+	CPPFLAGS += -DUSE_MAKEFILE -DYANEURAOU_ENGINE_NNUE
+	ENGINE_NAME := YaneuraOu_NNUE
+	ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_KP256)
+		ENGINE_NAME := YaneuraOu_NNUE_KP256
+		CPPFLAGS += -DEVAL_NNUE_KP256
+	else
+		ifeq ($(NNUE_EVAL_ARCH),KP256)
+			ENGINE_NAME := YaneuraOu_NNUE_KP256
+			CPPFLAGS += -DEVAL_NNUE_KP256
+		endif
+	endif
+	ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_NNUE_HALFKPE9)
+		ENGINE_NAME := YaneuraOu_NNUE_HALFKPE9
+		CPPFLAGS += -DEVAL_NNUE_HALFKPE9
+	else
+		ifeq ($(NNUE_EVAL_ARCH),HALFKPE9)
+			ENGINE_NAME := YaneuraOu_NNUE_HALFKPE9
+			CPPFLAGS += -DEVAL_NNUE_HALFKPE9
+		endif
+	endif
 endif
 
 ifeq ($(YANEURAOU_EDITION),MATE_ENGINE)
-  CPPFLAGS += -DUSE_MAKEFILE -DMATE_ENGINE
-  ENGINE_NAME := tanuki_MATE
+	CPPFLAGS += -DUSE_MAKEFILE -DMATE_ENGINE
+	ENGINE_NAME := tanuki_MATE
 endif
 
 ifeq ($(YANEURAOU_EDITION),USER_ENGINE)
-  CPPFLAGS += -DUSE_MAKEFILE -DUSER_ENGINE
-  ENGINE_NAME := YaneuraOu_USER
+	CPPFLAGS += -DUSE_MAKEFILE -DUSER_ENGINE
+	ENGINE_NAME := YaneuraOu_USER
 endif
 
 ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
-  CPPFLAGS += -DIS_64BIT -DUSE_NEON -mfpu=neon
-  LOCAL_ARM_NEON := true
+	CPPFLAGS += -DIS_64BIT -DUSE_NEON -mfpu=neon
+	LOCAL_ARM_NEON := true
 endif
 
 ifeq ($(TARGET_ARCH_ABI),x86_64)
-  CPPFLAGS += -DIS_64BIT -DUSE_SSE42 -msse4.2
+	CPPFLAGS += -DIS_64BIT -DUSE_SSE42 -msse4.2
 endif
 
 ifeq ($(TARGET_ARCH_ABI),x86)
-  CPPFLAGS += -DNO_SSE
+	CPPFLAGS += -DNO_SSE
 endif
 
 ifeq ($(TARGET_ARCH_ABI),armeabi-v7a)
-  CPPFLAGS += -DUSE_NEON -mfpu=neon
-  LOCAL_ARM_NEON := true
+	CPPFLAGS += -DUSE_NEON -mfpu=neon
+	LOCAL_ARM_NEON := true
 endif
 
 LOCAL_SRC_FILES := \
-  ../source/main.cpp                                                   \
-  ../source/types.cpp                                                  \
-  ../source/bitboard.cpp                                               \
-  ../source/misc.cpp                                                   \
-  ../source/movegen.cpp                                                \
-  ../source/position.cpp                                               \
-  ../source/usi.cpp                                                    \
-  ../source/usi_option.cpp                                             \
-  ../source/thread.cpp                                                 \
-  ../source/tt.cpp                                                     \
-  ../source/movepick.cpp                                               \
-  ../source/timeman.cpp                                                \
-  ../source/benchmark.cpp                                              \
-  ../source/extra/book/apery_book.cpp                                  \
-  ../source/extra/book/book.cpp                                        \
-  ../source/extra/book/makebook2019.cpp                                \
-  ../source/extra/bitop.cpp                                            \
-  ../source/extra/long_effect.cpp                                      \
-  ../source/extra/mate/mate1ply_with_effect.cpp                        \
-  ../source/extra/mate/mate1ply_without_effect.cpp                     \
-  ../source/extra/mate/mate_n_ply.cpp                                  \
-  ../source/extra/test_cmd.cpp                                         \
-  ../source/extra/sfen_packer.cpp                                      \
-  ../source/extra/kif_converter/kif_convert_tools.cpp                  \
-  ../source/eval/evaluate_bona_piece.cpp                               \
-  ../source/eval/evaluate.cpp                                          \
-  ../source/eval/evaluate_io.cpp                                       \
-  ../source/eval/evaluate_mir_inv_tools.cpp                            \
-  ../source/learn/learner.cpp                                          \
-  ../source/learn/learning_tools.cpp                                   \
-  ../source/learn/multi_think.cpp
+	../source/main.cpp                                                   \
+	../source/types.cpp                                                  \
+	../source/bitboard.cpp                                               \
+	../source/misc.cpp                                                   \
+	../source/movegen.cpp                                                \
+	../source/position.cpp                                               \
+	../source/usi.cpp                                                    \
+	../source/usi_option.cpp                                             \
+	../source/thread.cpp                                                 \
+	../source/tt.cpp                                                     \
+	../source/movepick.cpp                                               \
+	../source/timeman.cpp                                                \
+	../source/benchmark.cpp                                              \
+	../source/extra/book/apery_book.cpp                                  \
+	../source/extra/book/book.cpp                                        \
+	../source/extra/book/makebook2019.cpp                                \
+	../source/extra/bitop.cpp                                            \
+	../source/extra/long_effect.cpp                                      \
+	../source/extra/mate/mate1ply_with_effect.cpp                        \
+	../source/extra/mate/mate1ply_without_effect.cpp                     \
+	../source/extra/mate/mate_n_ply.cpp                                  \
+	../source/extra/test_cmd.cpp                                         \
+	../source/extra/sfen_packer.cpp                                      \
+	../source/extra/kif_converter/kif_convert_tools.cpp                  \
+	../source/eval/evaluate_bona_piece.cpp                               \
+	../source/eval/evaluate.cpp                                          \
+	../source/eval/evaluate_io.cpp                                       \
+	../source/eval/evaluate_mir_inv_tools.cpp                            \
+	../source/learn/learner.cpp                                          \
+	../source/learn/learning_tools.cpp                                   \
+	../source/learn/multi_think.cpp
 
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_KPPT)
 LOCAL_SRC_FILES += \
-  ../source/eval/kppt/evaluate_kppt.cpp                                \
-  ../source/eval/kppt/evaluate_kppt_learner.cpp                        \
-  ../source/engine/yaneuraou-engine/yaneuraou-search.cpp
+	../source/eval/kppt/evaluate_kppt.cpp                                \
+	../source/eval/kppt/evaluate_kppt_learner.cpp                        \
+	../source/engine/yaneuraou-engine/yaneuraou-search.cpp
 endif
 
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_KPP_KKPT)
 LOCAL_SRC_FILES += \
-  ../source/eval/kppt/evaluate_kppt.cpp                                \
-  ../source/eval/kpp_kkpt/evaluate_kpp_kkpt.cpp                        \
-  ../source/eval/kpp_kkpt/evaluate_kpp_kkpt_learner.cpp                \
-  ../source/engine/yaneuraou-engine/yaneuraou-search.cpp
+	../source/eval/kppt/evaluate_kppt.cpp                                \
+	../source/eval/kpp_kkpt/evaluate_kpp_kkpt.cpp                        \
+	../source/eval/kpp_kkpt/evaluate_kpp_kkpt_learner.cpp                \
+	../source/engine/yaneuraou-engine/yaneuraou-search.cpp
 endif
 
 ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_MATERIAL)
 LOCAL_SRC_FILES += \
-  ../source/engine/yaneuraou-engine/yaneuraou-search.cpp               \
-  ../source/eval/material/evaluate_material.cpp
+	../source/engine/yaneuraou-engine/yaneuraou-search.cpp               \
+	../source/eval/material/evaluate_material.cpp
 
 CPPFLAGS += -DMATERIAL_LEVEL=$(MATERIAL_LEVEL)
 endif
 
 ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_NNUE)
 LOCAL_SRC_FILES += \
-  ../source/eval/nnue/evaluate_nnue.cpp                                \
-  ../source/eval/nnue/evaluate_nnue_learner.cpp                        \
-  ../source/eval/nnue/nnue_test_command.cpp                            \
-  ../source/eval/nnue/features/k.cpp                                   \
-  ../source/eval/nnue/features/p.cpp                                   \
-  ../source/eval/nnue/features/half_kp.cpp                             \
-  ../source/eval/nnue/features/half_relative_kp.cpp                    \
-  ../source/eval/nnue/features/half_kpe9.cpp                           \
-  ../source/eval/nnue/features/pe9.cpp                                 \
-  ../source/engine/yaneuraou-engine/yaneuraou-search.cpp
+	../source/eval/nnue/evaluate_nnue.cpp                                \
+	../source/eval/nnue/evaluate_nnue_learner.cpp                        \
+	../source/eval/nnue/nnue_test_command.cpp                            \
+	../source/eval/nnue/features/k.cpp                                   \
+	../source/eval/nnue/features/p.cpp                                   \
+	../source/eval/nnue/features/half_kp.cpp                             \
+	../source/eval/nnue/features/half_relative_kp.cpp                    \
+	../source/eval/nnue/features/half_kpe9.cpp                           \
+	../source/eval/nnue/features/pe9.cpp                                 \
+	../source/engine/yaneuraou-engine/yaneuraou-search.cpp
 endif
 
 ifeq ($(YANEURAOU_EDITION),MATE_ENGINE)
 LOCAL_SRC_FILES += \
-  ../source/engine/mate-engine/mate-search.cpp                         \
-  ../source/eval/material/evaluate_material.cpp
+	../source/engine/mate-engine/mate-search.cpp                         \
+	../source/eval/material/evaluate_material.cpp
 endif
 
 ifeq ($(YANEURAOU_EDITION),USER_ENGINE)
 LOCAL_SRC_FILES += \
-  ../source/engine/user-engine/user-search.cpp                         \
-  ../source/eval/material/evaluate_material.cpp
+	../source/engine/user-engine/user-search.cpp                         \
+	../source/eval/material/evaluate_material.cpp
 endif
 
 ifneq ($(ENGINE_NAME),)
@@ -225,14 +252,14 @@ endif
 ifeq ($(findstring dev,$(ENGINE_BRANCH)),dev)
 CPPFLAGS += -DDEV_BRANCH
 LOCAL_SRC_FILES += \
-  ../source/extra/super_sort.cpp
+	../source/extra/super_sort.cpp
 endif
 
 # abe
 ifeq ($(findstring abe,$(ENGINE_BRANCH)),abe)
 CPPFLAGS += -DPV_OUTPUT_DRAW_ONLY
 LOCAL_SRC_FILES += \
-  ../source/extra/super_sort.cpp
+	../source/extra/super_sort.cpp
 endif
 
 
