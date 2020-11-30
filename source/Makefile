@@ -32,7 +32,7 @@ YANEURAOU_EDITION = YANEURAOU_ENGINE_NNUE
 # ターゲットCPU (target cpu)
 
 # 利用できるCPU拡張命令を指定する。
-# 
+#
 # AMDのRyzen(Zen/Zen2)はZEN1/ZEN2を選択するとBMI2命令が使わずに速くなる。(10%程度高速化)
 # Ryzen Zen3シリーズはZEN3を選択。こちらはAVX2用とたぶん変わらない。
 #
@@ -73,7 +73,7 @@ COMPILER = clang++
 
 
 # developing branch // 現状、非公開 (currently private)
-# dev : 開発中のbranchならdevと指定する (developing branch) : 
+# dev : 開発中のbranchならdevと指定する (developing branch) :
 # abe : abe
 #ENGINE_BRANCH = dev
 
@@ -86,7 +86,7 @@ LIBS     =
 INCLUDE  = # -I../include
 
 # makeするときにCPPFLAGSを追加で指定したいときはこれを用いる。
-EXTRA_CPPFLAGS = 
+EXTRA_CPPFLAGS =
 
 # YANEURAOU_EDITION = YANEURAOU_ENGINE_MATERIALのときに指定できる、評価関数の通し番号
 #  1 : 普通の駒得のみの評価関数
@@ -134,13 +134,14 @@ else
 	endif
 endif
 
+TARGETDIR = .
 ifeq ($(OS),Windows_NT)
 	CPPFLAGS += $(WCPPFLAGS)
 	LDFLAGS += -static -Wl,--stack,25000000
-	TARGET = YaneuraOu-by-gcc.exe
+	TARGET = $(TARGETDIR)/YaneuraOu-by-gcc.exe
 else
 	CPPFLAGS += -D_LINUX
-	TARGET = YaneuraOu-by-gcc
+	TARGET = $(TARGETDIR)/YaneuraOu-by-gcc
 endif
 
 # リンク時最適化。
@@ -361,7 +362,7 @@ else ifeq ($(TARGET_CPU),ZEN3)
 
 else ifeq ($(TARGET_CPU),AVX512VNNI)
 
-	CPPFLAGS += -DUSE_AVX512 -DUSE_VNNI -march=cascadelake
+	CPPFLAGS += -DUSE_AVX512 -DUSE_BMI2 -DUSE_VNNI -march=cascadelake
 	# NNUEのコード、USE_VNNIが指定されているとVNNI対応のコードになる。
 	# cascadelakeとicelakeとの違いがあるのかは知らないので、cascadelakeのみでいいや。
 
