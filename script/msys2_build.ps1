@@ -87,13 +87,13 @@ $TGCOMPILERS = @('clang++';'g++';);
     BUILDNAME = 'YaneuraOu_MaterialLv8';
     TARGET = @('normal';'tournament';'gensfen';);
   };
-<#
   @{
     BUILDDIR = 'MaterialLv9';
     EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=9';
     BUILDNAME = 'YaneuraOu_MaterialLv9';
     TARGET = @('normal';'tournament';'gensfen';);
   };
+<#
   @{
     BUILDDIR = 'MaterialLv10';
     EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=10';
