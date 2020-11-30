@@ -165,7 +165,7 @@ namespace Learner {
 			ASSERT_LV3(pos.pos_is_ok());
 
 			// 評価値使わないので、評価関数の計算しなくていいや。
-//			Eval::evaluate(pos);
+			// Eval::evaluate(pos);
 
 			// 局面の保存(手数も保存しておかないといけない)
 			PackedSfenValue ps;

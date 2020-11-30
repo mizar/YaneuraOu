@@ -1504,7 +1504,7 @@ namespace YaneuraOu2017Early
 			// T1,r300,2501 - 73 - 2426(50.76% R5.29)
 			// T1,b1000,2428 - 97 - 2465(49.62% R-2.63)
 			// 1秒のほうではやや勝ち越し。計測できない程度の差だが良しとする。
-//				&& pos.non_pawn_material(pos.side_to_move())
+			//	&& pos.non_pawn_material(pos.side_to_move())
 				&& bestValue > VALUE_MATED_IN_MAX_PLY)
 			{
 

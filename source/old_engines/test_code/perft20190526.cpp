@@ -86,11 +86,11 @@ struct PerftSolver {
 			if (is_promote(pos.state()->lastMove)) result.promotions++;
 #endif
 #if defined (EVAL_PERFT)
-//			cout << pos.sfen() << " , eval = " << Eval::evaluate(pos) << endl;
+			// cout << pos.sfen() << " , eval = " << Eval::evaluate(pos) << endl;
 			/*
 			if (pos.sfen() == "1nsgkgsnl/lr5b1/pppppp+Bpp/9/9/2P6/PP1PPPPPP/7R1/LNSGKGSNL w P 4")
 			{
-//				cout << Eval::evaluate(pos);
+				// cout << Eval::evaluate(pos);
 				Eval::print_eval_stat(pos);
 			}
 			*/

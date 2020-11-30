@@ -537,7 +537,7 @@ void MultiThinkGenSfen::thread_worker(size_t thread_id)
 
 				if (abs(value1) >= eval_limit)
 				{
-//					sync_cout << pos << "eval limit = " << eval_limit << " over , move = " << pv1[0] << sync_endl;
+					// sync_cout << pos << "eval limit = " << eval_limit << " over , move = " << pv1[0] << sync_endl;
 
 					// この局面でvalue1 >= eval_limitならば、(この局面の手番側の)勝ちである。
 					flush_psv((value1 >= eval_limit) ? 1 : -1);
@@ -1997,7 +1997,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 		// これやると13%程度の局面が学習対象から外れてしまう。善悪は微妙。
 		if (pv.size() >= 1 && (u16)pv[0] != ps.move)
 		{
-//			dbg_hit_on(false);
+			// dbg_hit_on(false);
 			continue;
 		}
 #endif
@@ -2007,7 +2007,7 @@ void LearnerThink::thread_worker(size_t thread_id)
 		// →　勝率の関数を通すのでまあいいか…。30%ぐらいの局面が学習対象から外れてしまうしな…。
 		if (abs((s16)r.first - ps.score) >= Eval::PawnValue * 4)
 		{
-//			dbg_hit_on(false);
+			// dbg_hit_on(false);
 			continue;
 		}
 		//		dbg_hit_on(true);

@@ -1,6 +1,7 @@
 ﻿#ifndef YANEURAOU_PARAM_H_INCLUDED
 #define YANEURAOU_PARAM_H_INCLUDED
 
+// clang-format off
 // yaneuraou-param.h : 元ファイル
 // param_conv.pyというPythonのスクリプトにより、以下のファイルは自動生成されます。
 // 1) yaneuraou - param - extern.h
@@ -34,7 +35,7 @@
 // [PARAM] min:100,max:300,step:3,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_FUTILITY_MARGIN_ALPHA1 = 186;
 
-// 
+//
 
 // 元の値 = 170 , step = 20
 // [PARAM] min:100,max:240,step:2,interval:1,time_rate:1,fixed
@@ -196,7 +197,7 @@ PARAM_DEFINE PARAM_REDUCTION_BY_HISTORY = 4828;
 
 //
 // razoring pruning
-// 
+//
 
 // 以下、変更しても計測できるほどの差ではないようだが。
 // 元の値 = 510 , step = 100
@@ -206,7 +207,7 @@ PARAM_DEFINE PARAM_RAZORING_MARGIN = 515;
 
 //
 // etc..
-// 
+//
 
 // 静止探索での1手詰め
 // 元の値 = 1

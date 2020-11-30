@@ -146,7 +146,7 @@ void random_player(Position& pos,uint64_t loop_max)
 							ASSERT(false);
 						} else {
 							pos.undo_move(m);
-//							cout << "M"; // mateだったときにこれを表示してpassした個数のチェック
+							// cout << "M"; // mateだったときにこれを表示してpassした個数のチェック
 							++mate_found;
 
 							// 統計情報の表示
@@ -166,7 +166,7 @@ void random_player(Position& pos,uint64_t loop_max)
 							{
 								pos.undo_move(m);
 								// 局面が表示されすぎて統計情報がわかりにくいときはコメントアウトする
-//								cout << endl << pos << "mated = " << m.move << ", but mate1ply() = MOVE_NONE." << endl;
+								// cout << endl << pos << "mated = " << m.move << ", but mate1ply() = MOVE_NONE." << endl;
 								pos.mate1ply();
 
 								++mate_missed;
@@ -409,7 +409,7 @@ void cooperation_mate_cmd(Position& pos, istringstream& is)
 void generate_moves_cmd(Position& pos)
 {
 	cout << "Generate Moves Test.." << endl;
-//	pos.set("l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w GR5pnsg 1");
+	// pos.set("l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w GR5pnsg 1");
 	auto start = now();
 
 	// 試行回数
@@ -599,13 +599,13 @@ void test_timeman()
 
 	auto simulate = [](Search::LimitsType limits)
 	{
-//		Options["NetworkDelay2"] = "1200";
+		// Options["NetworkDelay2"] = "1200";
 
 		int delay = (int)Options["NetworkDelay"];
 		int delay2 = (int)Options["NetworkDelay2"];
 
 		// 最小思考時間が1秒設定でもうまく動くかな？
-//		Options["MinimumThinkingTime"] = "1000";
+		// Options["MinimumThinkingTime"] = "1000";
 
 		cout << "initial setting "
 			<< " time = " << limits.time[BLACK]
@@ -923,18 +923,20 @@ void exam_book(Position& pos)
 	std::cout << ".. done!" << endl;
 }
 
-
+// clang-format off
 /*
 	定跡を思考によって生成するときに、思考対象局面をリストアップする関数。
 	ソースコードは書き殴ってあり、隠しコマンドでもあるので、積極的に使って欲しいコマンドではなくあくまで参考用。
 
 	// 以下にbatファイルとJenkinsのjobの例を書いておくので、わかる人だけわかって。
 
-	// 思考対象局面のsfenを生成するbatファイルの例
-	// 1. 前回のiteration(JenkinsのJob)で生成した定跡ファイルがa.dbとリネームして、カレントフォルダに存在するものとする。
-	// 2. makebook sortコマンドを使って定跡DBのソートを行ない書き出す。(これをしておかないと二分探索できない)
-	// 3. yaneura_book4.dbが生成される定跡DBである。
-	// 4. ファイル名に日付をつけてバックアップ用のフォルダに保存する処理が書いてある。
+    // 思考対象局面のsfenを生成するbatファイルの例
+    // 1. 前回のiteration(JenkinsのJob)で生成した定跡ファイルがa.dbとリネームして、
+    //    カレントフォルダに存在するものとする。
+    // 2. makebook sortコマンドを使って定跡DBのソートを行ない書き出す。
+    //    (これをしておかないと二分探索できない)
+    // 3. yaneura_book4.dbが生成される定跡DBである。
+    // 4. ファイル名に日付をつけてバックアップ用のフォルダに保存する処理が書いてある。
 
 		set dt=%date%& set tm=%time%
 		if "%tm:~0,5%"==" 0:00" set dt=%date%
@@ -953,11 +955,9 @@ void exam_book(Position& pos)
 		copy %YANEHOME%\book\yaneura_book4.db  %YANEHOME%\book_work\%BUILD_NUMBER%.db
 		start /B /WAIT /D %YANEHOME% %YANEHOME%\exe\YaneuraOuGoku_KPPT.exe multipv %MULTI_PV% , bookfile yaneura_book4.db , evaldir eval/%EVAL_DIR% , threads %HT_CORES% , hash 16384 , makebook think %YANEHOME%\book\%THINK_SFEN% %YANEHOME%\book_work\%BUILD_NUMBER%.db startmoves %START_MOVES% moves %END_MOVES% depth %DEPTH% cluster %CLUSTER% , quit
 
-
 */
-void book_check(Position& pos, Color rootTurn, Book::MemoryBook& book, string sfen, ofstream& of)
-{
-	int ply = pos.game_ply();
+// clang-format on
+void book_check(Position& pos, Color rootTurn, Book::MemoryBook& book, string sfen, ofstream& of) {
 	StateInfo si;
 
 	auto it = book.find(pos);
@@ -1078,7 +1078,7 @@ void book_check_cmd(Position& pos, istringstream& is)
 	is >> turn;
 
 	cout << "book check start.." << endl;
-	cout << "turn = " << turn << endl;;
+	cout << "turn = " << turn << endl;
 
 	string file_name = "book_records.sfen";
 	ofstream of(file_name, ios::out);
@@ -1627,8 +1627,8 @@ void eval_convert(istringstream& is)
 	// Apery(WCSC27)の形式でEVALDIR2/に格納される。
 
 	// 変換に際して、isreadyコマンドが走るので、このときに評価関数ファイルがEvalDirにないといけないが、
-	// このファイルを用意できていなくて読み込みに失敗する場合は、SkipLoadingEval true(これにより、読み込みがスキップされる)
-	// としてから、この"test evalconvert"コマンドを実行すると良い。
+	// このファイルを用意できていなくて読み込みに失敗する場合は、SkipLoadingEval true
+	// (これにより、読み込みがスキップされる) としてから、この"test evalconvert"コマンドを実行すると良い。
 
 	std::string input_format, input_dir, output_format, output_dir;
 	is >> input_format >> input_dir >> output_format >> output_dir;

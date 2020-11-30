@@ -96,7 +96,8 @@ namespace USI
 			// multi pv時、例えば3個目の候補手までしか評価が終わっていなくて(PVIdx==2)、このとき、
 			// 3,4,5個目にあるのは前回のiterationまでずっと評価されていなかった指し手であるような場合に、
 			// これらのpreviousScoreが-VALUE_INFINITE(未初期化状態)でありうる。
-			// (multi pv状態で"go infinite"～"stop"を繰り返すとこの現象が発生する。おそらく置換表にhitしまくる結果ではないかと思う。)
+			// (multi pv状態で"go infinite"～"stop"を繰り返すとこの現象が発生する。
+			//  おそらく置換表にhitしまくる結果ではないかと思う。)
 			if (v == -VALUE_INFINITE)
 				v = VALUE_ZERO; // この場合でもとりあえず出力は行う。
 

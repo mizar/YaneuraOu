@@ -73,6 +73,8 @@ Bitboard LineBB[SQ_NB][4];
 Bitboard CheckCandidateBB[SQ_NB_PLUS1][KING-1][COLOR_NB];
 Bitboard CheckCandidateKingBB[SQ_NB_PLUS1];
 
+// clang-format off
+
 u8 Slide[SQ_NB_PLUS1] = {
   1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 , 1 ,
   10, 10, 10, 10, 10, 10, 10, 10, 10,
@@ -85,6 +87,8 @@ u8 Slide[SQ_NB_PLUS1] = {
   10, 10, 10, 10, 10, 10, 10, 10, 10,
   0 , // SQ_NB用
 };
+
+// clang-format on
 
 Bitboard BetweenBB[785];
 u16 BetweenIndex[SQ_NB_PLUS1][SQ_NB_PLUS1];
@@ -113,6 +117,7 @@ Bitboard RookRankEffect[FILE_NB + 1][128];
 
 #else
 
+// clang-format off
 
 // ----------------------------------
 //  Magic Bitboard Table from Apery
@@ -186,6 +191,8 @@ const int BishopShiftBits[SQ_NB_PLUS1] = {
 	57, 58, 58, 58, 58, 58, 58, 58, 57,
 	0
 };
+
+// clang-format on
 
 #if defined (USE_BMI2)
 #else

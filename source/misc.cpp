@@ -433,7 +433,7 @@ void* aligned_ttmem_alloc(size_t allocSize , void*& mem , size_t align /* ignore
 	// 逆に、評価関数用のメモリもこれで確保するので、何度もこのメッセージが表示されると
 	// 煩わしいので、このメッセージは初回のみの出力と変更する。
 
-//	if (!firstCall)
+	// if (!firstCall)
 	if (largeMemoryAllocFirstCall)
 	{
 		if (mem)

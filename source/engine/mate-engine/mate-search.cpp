@@ -848,7 +848,7 @@ namespace MateEngine
 	void dfpn(Position& r) {
 		Threads.stop = false;
 
-//		transposition_table.Resize();
+		// transposition_table.Resize();
 		// "isready"に対して処理しないといけないのでsearch::clear()で行う。
 
 		// キャッシュの世代を進める

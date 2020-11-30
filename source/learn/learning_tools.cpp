@@ -200,7 +200,7 @@ namespace EvalLearningTools
 
 			ASSERT(x.toIndex() == index);
 
-//			ASSERT((&kppp_ksq_pcpcpc(x.king(), x.piece0(), x.piece1(), x.piece2()) - &kppp[0][0]) == (index - min_index));
+			// ASSERT((&kppp_ksq_pcpcpc(x.king(), x.piece0(), x.piece1(), x.piece2()) - &kppp[0][0]) == (index - min_index));
 		}
 
 	}
