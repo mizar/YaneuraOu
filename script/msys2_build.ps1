@@ -76,6 +76,32 @@ $TGCOMPILERS = @('clang++';'g++';);
     TARGET = @('normal';'tournament';'gensfen';);
   };
   @{
+    BUILDDIR = 'MaterialLv7';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=007';
+    BUILDNAME = 'YaneuraOu_MaterialLv7';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+<#
+  @{
+    BUILDDIR = 'MaterialLv8';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=008';
+    BUILDNAME = 'YaneuraOu_MaterialLv8';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+  @{
+    BUILDDIR = 'MaterialLv9';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=009';
+    BUILDNAME = 'YaneuraOu_MaterialLv9';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+  @{
+    BUILDDIR = 'MaterialLv10';
+    EDITION = 'YANEURAOU_ENGINE_MATERIAL MATERIAL_LEVEL=010';
+    BUILDNAME = 'YaneuraOu_MaterialLv10';
+    TARGET = @('normal';'tournament';'gensfen';);
+  };
+#>
+  @{
     BUILDDIR = 'MATE';
     EDITION = 'MATE_ENGINE';
     BUILDNAME = 'tanuki_MATE';

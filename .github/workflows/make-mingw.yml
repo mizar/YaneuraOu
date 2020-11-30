@@ -4,10 +4,10 @@ name: Make CI (MinGW for Windows)
 on:
   push:
     branches:
-      - '**'
+      - "**"
   pull_request:
     branches:
-      - '**'
+      - "**"
 
 jobs:
   build:
@@ -26,9 +26,14 @@ jobs:
           - YANEURAOU_ENGINE_MATERIAL*
           - MATE_ENGINE
           - USER_ENGINE
-        compiler: [ x86_64-w64-mingw32-g++-posix, i686-w64-mingw32-g++-posix ]
-        target: [ 'normal,tournament', gensfen, evallearn ]
-        archcpu: [ 'AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1', 'ZEN3,ZEN2,AVX512VNNI,AVX512,AVXVNNI', 'NO_SSE' ]
+        compiler: [x86_64-w64-mingw32-g++-posix, i686-w64-mingw32-g++-posix]
+        target: ["normal,tournament", gensfen, evallearn]
+        archcpu:
+          [
+            "AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1",
+            "ZEN3,ZEN2,AVX512VNNI,AVX512,AVXVNNI",
+            "NO_SSE",
+          ]
         exclude:
           # NNUEの教師生成/機械学習ビルドにはBLASが必要だが、現状はUbuntuのMinGWでOpenBLASを扱えない
           # NNUE's machine learning build requires BLAS, but currently Ubuntu's MinGW cannot handle OpenBLAS
@@ -59,33 +64,33 @@ jobs:
             target: gensfen
           # 32bit compiler x 64bit archcpu
           - compiler: i686-w64-mingw32-g++-posix
-            archcpu: 'AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1'
+            archcpu: "AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1"
           # Ubuntu-18.04 MinGW は archcpu ZEN3,ZEN2,AVX512VNNI,AVXVNNI のサポートを行わない
           # ubuntu-18.04 MinGW will not support the archcpu ZEN3,ZEN2,AVX512VNNI,AVXVNNI
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
           # `-march=znver2`: LLVM9, GCC9 support
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
           # `-march=znver3`: LLVM12 support
-          - archcpu: 'ZEN3,ZEN2,AVX512VNNI,AVX512,AVXVNNI'
+          - archcpu: "ZEN3,ZEN2,AVX512VNNI,AVX512,AVXVNNI"
           # 64bit compiler x 32bit archcpu
           - compiler: x86_64-w64-mingw32-g++-posix
             archcpu: NO_SSE
 
     steps:
-    - name: Checkout own repository
-      uses: actions/checkout@v2
-      with:
-        path: main
+      - name: Checkout own repository
+        uses: actions/checkout@v2
+        with:
+          path: main
 
-    - name: install openblas
-      run: |
-        sudo apt update
-        sudo apt install build-essential libopenblas-dev mingw-w64
+      - name: install openblas
+        run: |
+          sudo apt update
+          sudo apt install build-essential libopenblas-dev mingw-w64
 
-    - name: make
-      run: ./main/script/mingw_gcc.sh -e ${{ matrix.edition }} -c ${{ matrix.compiler }} -t ${{ matrix.target }} -a ${{ matrix.archcpu }}
+      - name: make
+        run: ./main/script/mingw_gcc.sh -e ${{ matrix.edition }} -c ${{ matrix.compiler }} -t ${{ matrix.target }} -a ${{ matrix.archcpu }}
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: build-mingw
-        path: ./main/build/**/*
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-mingw
+          path: ./main/build/**/*
