@@ -8,8 +8,7 @@
 
 #include <thread>
 
-void MultiThink::go_think()
-{
+void MultiThink::go_think() {
 	// あとでOptionsの設定を復元するためにコピーで保持しておく。
 	auto oldOptions = Options;
 
@@ -31,17 +30,15 @@ void MultiThink::go_think()
 
 	// threadをOptions["Threads"]の数だけ生成して思考開始。
 	std::vector<std::thread> threads;
-	auto thread_num = (size_t)Options["Threads"];
+	auto                     thread_num = (size_t)Options["Threads"];
 
 	// worker threadの終了フラグの確保
 	thread_finished.resize(thread_num);
-	
+
 	// worker threadの起動
-	for (size_t i = 0; i < thread_num; ++i)
-	{
+	for (size_t i = 0; i < thread_num; ++i) {
 		thread_finished[i] = 0;
-		threads.push_back(std::thread([i, this]
-		{ 
+		threads.push_back(std::thread([i, this] {
 			// プロセッサの全スレッドを使い切る。
 			WinProcGroup::bindThisThread(i);
 
@@ -61,34 +58,26 @@ void MultiThink::go_think()
 	// そこで終了フラグを自前でチェックする必要がある。
 
 	// すべてのスレッドが終了したかを判定する関数
-	auto threads_done = [&]()
-	{
+	auto threads_done = [&]() {
 		// ひとつでも終了していなければfalseを返す
 		for (auto& f : thread_finished)
-			if (!f)
-				return false;
+			if (!f) return false;
 		return true;
 	};
 
 	// コールバック関数が設定されているならコールバックする。
-	auto do_a_callback = [&]()
-	{
-		if (callback_func)
-			callback_func();
+	auto do_a_callback = [&]() {
+		if (callback_func) callback_func();
 	};
 
-
-	for (u64 i = 0 ; ; )
-	{
+	for (u64 i = 0;;) {
 		// 全スレッドが終了していたら、ループを抜ける。
-		if (threads_done())
-			break;
+		if (threads_done()) break;
 
 		Tools::sleep(1000);
 
 		// callback_secondsごとにcallback_func()が呼び出される。
-		if (++i == callback_seconds)
-		{
+		if (++i == callback_seconds) {
 			do_a_callback();
 			// ↑から戻ってきてからカウンターをリセットしているので、
 			// do_a_callback()のなかでsave()などにどれだけ時間がかかろうと
@@ -105,8 +94,7 @@ void MultiThink::go_think()
 
 	// 終了したフラグは立っているがスレッドの終了コードの実行中であるということはありうるので
 	// join()でその終了を待つ必要がある。
-	for (auto& th : threads)
-		th.join();
+	for (auto& th : threads) th.join();
 
 	// 全スレッドが終了しただけでfileの書き出しスレッドなどはまだ動いていて
 	// 作業自体は完了していない可能性があるのでスレッドがすべて終了したことだけ出力する。
@@ -114,10 +102,7 @@ void MultiThink::go_think()
 
 	// Optionsを書き換えたので復元。
 	// 値を代入しないとハンドラが起動しないのでこうやって復元する。
-	for (auto& s : oldOptions)
-		Options[s.first] = std::string(s.second);
-
+	for (auto& s : oldOptions) Options[s.first] = std::string(s.second);
 }
 
-
-#endif // defined(EVAL_LEARN)
+#endif  // defined(EVAL_LEARN)

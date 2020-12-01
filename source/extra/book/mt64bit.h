@@ -27,15 +27,11 @@
 
 // 64bit のランダムな値を返す為のクラス
 class MT64bit : public std::mt19937_64 {
-public:
-    MT64bit() : std::mt19937_64() {}
-    explicit MT64bit(const unsigned int seed) : std::mt19937_64(seed) {}
-    uint64_t random() {
-        return (*this)();
-    }
-    uint64_t randomFewBits() {
-        return random() & random() & random();
-    }
+   public:
+	MT64bit() : std::mt19937_64() {}
+	explicit MT64bit(const unsigned int seed) : std::mt19937_64(seed) {}
+	uint64_t random() { return (*this)(); }
+	uint64_t randomFewBits() { return random() & random() & random(); }
 };
 
-#endif // #ifndef APERY_MT64BIT_HPP
+#endif  // #ifndef APERY_MT64BIT_HPP

@@ -40,7 +40,6 @@ PARAM_DEFINE PARAM_FUTILITY_AT_PARENT_NODE_MARGIN = 256;
 // [PARAM] min:2,max:10,step:1,interval:1,time_rate:1
 PARAM_DEFINE PARAM_FUTILITY_AT_PARENT_NODE_SEE_DEPTH = 4;
 
-
 //
 // null move dynamic pruning
 //
@@ -61,7 +60,6 @@ PARAM_DEFINE PARAM_NULL_MOVE_DYNAMIC_BETA = 67;
 // [PARAM] min:4,max:10,step:1,interval:1,time_rate:1
 PARAM_DEFINE PARAM_NULL_MOVE_RETURN_DEPTH = 12;
 
-
 //
 // probcut
 //
@@ -70,7 +68,6 @@ PARAM_DEFINE PARAM_NULL_MOVE_RETURN_DEPTH = 12;
 // 元の値 = 5
 // [PARAM] min:3,max:10,step:1,interval:1,time_rate:1
 PARAM_DEFINE PARAM_PROBCUT_DEPTH = 5;
-
 
 //
 // singular extension
@@ -95,7 +92,6 @@ PARAM_DEFINE PARAM_SINGULAR_MARGIN = 16;
 // [PARAM] min:64,max:192,step:32,interval:1,time_rate:1
 PARAM_DEFINE PARAM_SINGULAR_SEARCH_DEPTH = 128;
 
-
 //
 // pruning by move count,history,etc..
 //
@@ -116,20 +112,18 @@ PARAM_DEFINE PARAM_PRUNING_BY_HISTORY_DEPTH = 4;
 // [PARAM] min:5000,max:30000,step:256,interval:1,time_rate:1
 PARAM_DEFINE PARAM_REDUCTION_BY_HISTORY = 20000;
 
-
 //
 // Internal iterative deeping
-// 
+//
 
 // historyの値によってreductionするときの係数
 // 元の値 = 256
 // [PARAM] min:128,max:384,step:16,interval:1,time_rate:1
 PARAM_DEFINE PARAM_IID_MARGIN_ALPHA = 256;
 
-
 //
 // razoring pruning
-// 
+//
 
 // 元の値 = 483, 570, 603, 554
 // 4つ目、大きめの値が最適値かも。
@@ -148,14 +142,13 @@ PARAM_DEFINE PARAM_RAZORING_MARGIN4 = 554;
 
 //
 // etc..
-// 
+//
 
 // この個数までquietの指し手を登録してhistoryなどを増減させる。
 // 元の値 = 64
 // 将棋では駒打ちがあるから少し増やしたほうがいいかも。
 // [PARAM] min:32,max:128,step:2,interval:1,time_rate:1
 PARAM_DEFINE PARAM_QUIET_SEARCH_COUNT = 64;
-
 
 //
 // history of changed parameters
