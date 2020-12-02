@@ -3,6 +3,8 @@ Language: Cpp
 BasedOnStyle: Google
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
 BraceWrapping:
   AfterClass: true
   AfterControlStatement: true
