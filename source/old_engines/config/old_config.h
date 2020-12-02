@@ -100,7 +100,6 @@
 //#define LONG_EFFECT_LIBRARY
 #endif
 
-
 #ifdef MUST_CAPTURE_SHOGI_ENGINE
 #define ENGINE_NAME "YaneuraOu MustCaptureShogi"
 #define EVAL_KPPT
@@ -131,13 +130,8 @@
 //#define LONG_EFFECT_LIBRARY
 #endif
 
-
 #ifdef RANDOM_PLAYER_ENGINE
 #define ENGINE_NAME "YaneuraOu random player"
 #define EVAL_NO_USE
 #define ASSERT_LV 3
 #endif
-
-
-
-

@@ -24,8 +24,7 @@
 // 探索時に用いる、それぞれのスレッド
 // これを思考スレッド数だけ確保する。
 // ただしメインスレッドはこのclassを継承してMainThreadにして使う。
-class Thread
-{
+class Thread {
 	// exitフラグやsearchingフラグの状態を変更するときのmutex
 	std::mutex mutex;
 
@@ -37,13 +36,12 @@ class Thread
 
 	// exit      : このフラグが立ったら終了する。
 	// searching : 探索中であるかを表すフラグ。プログラムを簡素化するため、事前にtrueにしてある。
-	bool exit = false , searching = true;
+	bool exit = false, searching = true;
 
 	// stack領域を増やしたstd::thread
 	NativeThread stdThread;
 
-public:
-
+   public:
 	// ThreadPoolで何番目のthreadであるかをコンストラクタで渡すこと。この値は、idx(スレッドID)となる。
 	explicit Thread(size_t n);
 	virtual ~Thread();
@@ -87,13 +85,12 @@ public:
 	// selDepth  : rootから最大、何手目まで探索したか(選択深さの最大)
 	// nmpMinPly : null moveの前回の適用ply
 	// nmpColor  : null moveの前回の適用Color
-	int selDepth ,nmpMinPly;
+	int   selDepth, nmpMinPly;
 	Color nmpColor;
 
 	// nodes     : このスレッドが探索したノード数(≒Position::do_move()を呼び出した回数)
- 	// bestMoveChanges : 反復深化においてbestMoveが変わった回数。nodeの安定性の指標として用いる。全スレ分集計して使う。
-	std::atomic<uint64_t> nodes,/* tbHits,*/ bestMoveChanges;
-
+	// bestMoveChanges : 反復深化においてbestMoveが変わった回数。nodeの安定性の指標として用いる。全スレ分集計して使う。
+	std::atomic<uint64_t> nodes, /* tbHits,*/ bestMoveChanges;
 
 	// 探索開始局面
 	Position rootPos;
@@ -108,15 +105,15 @@ public:
 
 	// rootDepth      : 反復深化の深さ
 	//					Lazy SMPなのでスレッドごとにこの変数を保有している。
-	// 
+	//
 	// completedDepth : このスレッドに関して、終了した反復深化の深さ
 	//
 	Depth rootDepth, completedDepth;
 
 	// 近代的なMovePickerではオーダリングのために、スレッドごとにhistoryとcounter movesなどのtableを持たないといけない。
-	CounterMoveHistory counterMoves;
-	LowPlyHistory lowPlyHistory;
-	ButterflyHistory mainHistory;
+	CounterMoveHistory    counterMoves;
+	LowPlyHistory         lowPlyHistory;
+	ButterflyHistory      mainHistory;
 	CapturePieceToHistory captureHistory;
 
 	// コア数が多いか、長い持ち時間においては、ContinuationHistoryもスレッドごとに確保したほうが良いらしい。
@@ -126,7 +123,7 @@ public:
 	ContinuationHistory continuationHistory[2][2];
 
 	// Stockfish10ではスレッドごとにcontemptを保持するように変わった。
-	//Score contempt;
+	// Score contempt;
 
 	// 反復深化のループで何度fail highしたかのカウンター
 	int failedHighCnt;
@@ -144,19 +141,16 @@ public:
 	// 学習用の実行ファイルでは、スレッドごとに置換表を持ちたい。
 	TranspositionTable tt;
 #endif
-
 };
-  
 
 // 探索時のmainスレッド(これがmasterであり、これ以外はslaveとみなす)
-struct MainThread: public Thread
-{
+struct MainThread : public Thread {
 	// constructorはThreadのものそのまま使う。
 	using Thread::Thread;
 
 	// 探索を開始する時に呼び出される。
 	void search() override;
-	
+
 	// 思考時間の終わりが来たかをチェックする。
 	void check_time();
 
@@ -175,7 +169,7 @@ struct MainThread: public Thread
 	// デクリメントしていきこれが0になるごとに思考をストップするのか判定する。
 	int callsCnt;
 
-	//bool stopOnPonderhit;
+	// bool stopOnPonderhit;
 	// →　やねうら王では、このStockfishのponderの仕組みを使わない。(もっと上手にponderの時間を活用したいため)
 
 	// ponder : "go ponder" コマンドでの探索中であるかを示すフラグ
@@ -195,7 +189,6 @@ struct MainThread: public Thread
 	Move ponder_candidate;
 };
 
-
 // 思考で用いるスレッドの集合体
 // 継承はあまり使いたくないが、for(auto* th:Threads) ... のようにして回せて便利なのでこうしてある。
 //
@@ -203,10 +196,10 @@ struct MainThread: public Thread
 // Threads(スレッドオブジェクト)はglobalに配置するし、スレッドの初期化の際には
 // スレッドが保持する思考エンジンが使う変数等がすべてが初期化されていて欲しいからである。
 // スレッドの生成はset(options["Threads"])で行い、スレッドの終了はset(0)で行なう。
-struct ThreadPool: public std::vector<Thread*>
-{
+struct ThreadPool : public std::vector<Thread*> {
 	// mainスレッドに思考を開始させる。
-	void start_thinking(const Position& pos, StateListPtr& states , const Search::LimitsType& limits , bool ponderMode = false);
+	void start_thinking(const Position& pos, StateListPtr& states, const Search::LimitsType& limits,
+	                    bool ponderMode = false);
 
 	// set()で生成したスレッドの初期化
 	void clear();
@@ -233,16 +226,14 @@ struct ThreadPool: public std::vector<Thread*>
 	// stop   : 探索中にこれがtrueになったら探索を即座に終了すること。
 	// increaseDepth : 一定間隔ごとに反復深化の探索depthが増えて行っているかをチェックするためのフラグ
 	//                 増えて行ってないなら、同じ深さを再度探索するのに用いる。
-	std::atomic_bool stop , increaseDepth;
-	
-private:
+	std::atomic_bool stop, increaseDepth;
 
+   private:
 	// 現局面までのStateInfoのlist
 	StateListPtr setupStates;
 
 	// Threadクラスの特定のメンバー変数を足し合わせたものを返す。
-	uint64_t accumulate(std::atomic<uint64_t> Thread::* member) const {
-
+	uint64_t accumulate(std::atomic<uint64_t> Thread::*member) const {
 		uint64_t sum = 0;
 		for (Thread* th : *this)
 			sum += (th->*member).load(std::memory_order_relaxed);
@@ -253,5 +244,4 @@ private:
 // ThreadPoolのglobalな実体
 extern ThreadPool Threads;
 
-#endif // #ifndef THREAD_H_INCLUDED
-
+#endif  // #ifndef THREAD_H_INCLUDED

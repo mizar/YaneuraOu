@@ -14,8 +14,7 @@ namespace Eval {
 namespace NNUE {
 
 // 学習の初期化を行う
-void InitializeTraining(double eta1, u64 eta1_epoch,
-                        double eta2, u64 eta2_epoch, double eta3);
+void InitializeTraining(double eta1, u64 eta1_epoch, double eta2, u64 eta2_epoch, double eta3);
 
 // ミニバッチのサンプル数を設定する
 void SetBatchSize(u64 size);
@@ -30,8 +29,7 @@ void SetOptions(const std::string& options);
 void RestoreParameters(const std::string& dir_name);
 
 // 学習データを1サンプル追加する
-void AddExample(Position& pos, Color rootColor,
-                const Learner::PackedSfenValue& psv, double weight);
+void AddExample(Position& pos, Color rootColor, const Learner::PackedSfenValue& psv, double weight);
 
 // 評価関数パラメータを更新する
 void UpdateParameters(u64 epoch);

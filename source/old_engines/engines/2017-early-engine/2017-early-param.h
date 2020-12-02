@@ -18,11 +18,10 @@
 // [PARAM] min:100,max:240,step:1,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_FUTILITY_MARGIN_ALPHA = 143;
 
-// 
+//
 // 元の値 = 200
 // [PARAM] min:100,max:240,step:2,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_FUTILITY_MARGIN_BETA = 200;
-
 
 // 静止探索でのfutility pruning
 // 元の値 = 128
@@ -85,7 +84,6 @@ PARAM_DEFINE PARAM_NULL_MOVE_MARGIN = 32;
 // [PARAM] min:4,max:15,step:1,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_NULL_MOVE_RETURN_DEPTH = 13;
 
-
 //
 // probcut
 //
@@ -99,7 +97,6 @@ PARAM_DEFINE PARAM_PROBCUT_DEPTH = 5;
 // 元の値 = 200
 // [PARAM] min:100,max:300,step:2,interval:2,time_rate:1,fixed
 PARAM_DEFINE PARAM_PROBCUT_MARGIN = 220;
-
 
 //
 // singular extension
@@ -124,7 +121,6 @@ PARAM_DEFINE PARAM_SINGULAR_MARGIN = 200;
 // [PARAM] min:8,max:32,step:1,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_SINGULAR_SEARCH_DEPTH_ALPHA = 16;
 
-
 //
 // pruning by move count,history,etc..
 //
@@ -140,27 +136,24 @@ PARAM_DEFINE PARAM_PRUNING_BY_MOVE_COUNT_DEPTH = 17;
 // [PARAM] min:2,max:32,step:1,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_PRUNING_BY_HISTORY_DEPTH = 8;
 
-
 // historyの値によってreductionするときの係数
 // これ、元のが (hist - 8000) / 20000みたいな意味ありげな値なので下手に変更しないほうが良さげ。
 // 元の値 = 4000
 // [PARAM] min:2000,max:8000,step:40,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_REDUCTION_BY_HISTORY = 4000;
 
-
 //
 // Internal iterative deeping
-// 
+//
 
 // historyの値によってreductionするときの係数
 // 元の値 = 256
 // [PARAM] min:128,max:384,step:1,interval:2,time_rate:1,fixed
 PARAM_DEFINE PARAM_IID_MARGIN_ALPHA = 261;
 
-
 //
 // razoring pruning
-// 
+//
 
 // この値は、未使用。razoringはdepth < ONE_PLYでは行わないため。
 // 元の値 = 0
@@ -179,7 +172,6 @@ PARAM_DEFINE PARAM_RAZORING_MARGIN3 = 593;
 // [PARAM] min:400,max:700,step:5,interval:2,time_rate:1,fixed
 PARAM_DEFINE PARAM_RAZORING_MARGIN4 = 539;
 
-
 //
 // LMR reduction table
 //
@@ -187,7 +179,6 @@ PARAM_DEFINE PARAM_RAZORING_MARGIN4 = 539;
 // 元の値 = 131
 // [PARAM] min:64,max:256,step:2,interval:2,time_rate:1,fixed
 PARAM_DEFINE PARAM_REDUCTION_ALPHA = 135;
-
 
 //
 // futility move count table
@@ -211,10 +202,9 @@ PARAM_DEFINE PARAM_FUTILITY_MOVE_COUNT_BETA0 = 742;
 // [PARAM] min:500,max:2000,step:2,interval:2,time_rate:1,fixed
 PARAM_DEFINE PARAM_FUTILITY_MOVE_COUNT_BETA1 = 1002;
 
-
 //
 // etc..
-// 
+//
 
 // この個数までquietの指し手を登録してhistoryなどを増減させる。
 // 元の値 = 64
@@ -222,7 +212,6 @@ PARAM_DEFINE PARAM_FUTILITY_MOVE_COUNT_BETA1 = 1002;
 // →　そうでもなかった。固定しておく。
 // [PARAM] min:32,max:128,step:1,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_QUIET_SEARCH_COUNT = 64;
-
 
 // 静止探索での1手詰め
 // 元の値 = 1
@@ -242,11 +231,9 @@ PARAM_DEFINE PARAM_SEARCH_MATE1 = 1;
 // [PARAM] min:1,max:5,step:2,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_WEAK_MATE_PLY = 1;
 
-
 // aspiration searchの増加量
 // 元の値 = 18
 // [PARAM] min:12,max:40,step:3,interval:1,time_rate:1,fixed
 PARAM_DEFINE PARAM_ASPIRATION_SEARCH_DELTA = 18;
-
 
 #endif

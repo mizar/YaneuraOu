@@ -14,11 +14,9 @@
 // 勝敗の出力のときについでに対局棋譜を出力する機能
 //#define OUTPUT_KIF_LOG
 
-
 // USIに追加オプションを設定したいときは、この関数を定義すること。
 // USI::init()のなかからコールバックされる。
-void USI::extra_option(USI::OptionsMap & o)
-{
+void USI::extra_option(USI::OptionsMap& o) {
 	// "engine_configX.txt"が配置してあるフォルダ
 	o["EngineConfigDir"] << Option("");
 
@@ -28,8 +26,7 @@ void USI::extra_option(USI::OptionsMap & o)
 }
 
 // 子プロセスを実行して、子プロセスの標準入出力をリダイレクトするのをお手伝いするクラス。
-struct ProcessNegotiator
-{
+struct ProcessNegotiator {
 	ProcessNegotiator() { init(); }
 
 	virtual ~ProcessNegotiator() {
@@ -48,28 +45,25 @@ struct ProcessNegotiator
 #endif
 
 	// 子プロセスの実行
-	void run(string app_path_)
-	{
+	void run(string app_path_) {
 		int numa = (int)Options["EngineNuma"];
-		if (numa != -1)
-		{
+		if (numa != -1) {
 			// numaが指定されているので、それを反映させる。
 			// cmd.exe経由でstartコマンドを叩く。(やねうらお考案)
 
 			app_path_ = "cmd.exe /c start /B /WAIT /NODE " + to_string(numa) + " " + app_path_;
 
 			/*
-				/NODE
-				Numa node(実行するプロセッサグループ)の指定
+			    /NODE
+			    Numa node(実行するプロセッサグループ)の指定
 
-				/B
-				実行したコマンドを別窓で開かないためのオプション。
+			    /B
+			    実行したコマンドを別窓で開かないためのオプション。
 
-				/WAIT
-				/Bを指定したときにはこれを指定して、本窓の終了を待機しないと
-				プロセス実行中に制御を抜けてしまい、file descriptorがleakする。
+			    /WAIT
+			    /Bを指定したときにはこれを指定して、本窓の終了を待機しないと
+			    プロセス実行中に制御を抜けてしまい、file descriptorがleakする。
 			*/
-
 		}
 
 		wstring app_path = to_wstring(app_path_);
@@ -77,37 +71,34 @@ struct ProcessNegotiator
 		ZeroMemory(&pi, sizeof(pi));
 		ZeroMemory(&si, sizeof(si));
 
-		si.cb = sizeof(si);
-		si.hStdInput = child_std_in_read;
+		si.cb         = sizeof(si);
+		si.hStdInput  = child_std_in_read;
 		si.hStdOutput = child_std_out_write;
 		si.dwFlags |= STARTF_USESTDHANDLES;
 
 		// Create the child process
 
-		success = ::CreateProcess(
-			NULL, // ApplicationName
-			(LPWSTR)app_path.c_str(),  // CmdLine
-			NULL, // security attributes
-			NULL, // primary thread security attributes
-			TRUE, // handles are inherited
-			0,    // creation flags
-			NULL, // use parent's environment
-			NULL, // use parent's current directory
-			// ここにカレントディレクトリを指定する。
-			// engine/xxx.exe を起動するなら engine/ を指定するほうがいいような気は少しする。
+		success = ::CreateProcess(NULL,                      // ApplicationName
+		                          (LPWSTR)app_path.c_str(),  // CmdLine
+		                          NULL,                      // security attributes
+		                          NULL,                      // primary thread security attributes
+		                          TRUE,                      // handles are inherited
+		                          0,                         // creation flags
+		                          NULL,                      // use parent's environment
+		                          NULL,                      // use parent's current directory
+		                          // ここにカレントディレクトリを指定する。
+		                          // engine/xxx.exe を起動するなら engine/ を指定するほうがいいような気は少しする。
 
-			&si,  // STARTUPINFO pointer
-			&pi   // receives PROCESS_INFOMATION
+		                          &si,  // STARTUPINFO pointer
+		                          &pi   // receives PROCESS_INFOMATION
 		);
 
-		if (!success)
-		{
+		if (!success) {
 			sync_cout << "Error : failed to CreateProcess" << sync_endl;
 			terminated = true;
 		}
 
-		if (pi.hThread)
-		{
+		if (pi.hThread) {
 			::CloseHandle(pi.hThread);
 			pi.hThread = nullptr;
 		}
@@ -117,17 +108,14 @@ struct ProcessNegotiator
 	// 長手数になるかも知れないので…。
 	static const int BUF_SIZE = 4096;
 
-	string read()
-	{
+	string read() {
 		auto result = read_next();
 		if (!result.empty())
 			return result;
 
-
 		DWORD dwExitCode;
 		::GetExitCodeProcess(pi.hProcess, &dwExitCode);
-		if (dwExitCode != STILL_ACTIVE)
-		{
+		if (dwExitCode != STILL_ACTIVE) {
 			read_buffer += "Error : PROCESS terminated unexpectedly.\n";
 			terminated = true;
 			return read_next();
@@ -137,37 +125,33 @@ struct ProcessNegotiator
 		// pipeにデータがあるのかどうかを調べてからReadFile()する。
 
 		DWORD dwRead, dwReadTotal, dwLeft;
-		CHAR chBuf[BUF_SIZE];
+		CHAR  chBuf[BUF_SIZE];
 
 		// bufferサイズは1文字少なく申告して終端に'\0'を付与してstring化する。
 
-		BOOL success = ::PeekNamedPipe(
-			child_std_out_read, // [in]  handle of named pipe
-			chBuf,              // [out] buffer     
-			BUF_SIZE - 1,         // [in]  buffer size
-			&dwRead,            // [out] bytes read
-			&dwReadTotal,       // [out] total bytes avail
-			&dwLeft             // [out] bytes left this message
+		BOOL success = ::PeekNamedPipe(child_std_out_read,  // [in]  handle of named pipe
+		                               chBuf,               // [out] buffer
+		                               BUF_SIZE - 1,        // [in]  buffer size
+		                               &dwRead,             // [out] bytes read
+		                               &dwReadTotal,        // [out] total bytes avail
+		                               &dwLeft              // [out] bytes left this message
 		);
 
-		if (success && dwReadTotal > 0)
-		{
+		if (success && dwReadTotal > 0) {
 			success = ::ReadFile(child_std_out_read, chBuf, BUF_SIZE - 1, &dwRead, NULL);
 
-			if (success && dwRead != 0)
-			{
-				chBuf[dwRead] = '\0'; // 終端マークを書いて文字列化する。
+			if (success && dwRead != 0) {
+				chBuf[dwRead] = '\0';  // 終端マークを書いて文字列化する。
 				read_buffer += string(chBuf);
 			}
 		}
 		return read_next();
 	}
 
-	bool write(string str)
-	{
-		str += "\r\n"; // 改行コードの付与
+	bool write(string str) {
+		str += "\r\n";  // 改行コードの付与
 		DWORD dwWritten;
-		BOOL success = ::WriteFile(child_std_in_write, str.c_str(), DWORD(str.length()), &dwWritten, NULL);
+		BOOL  success = ::WriteFile(child_std_in_write, str.c_str(), DWORD(str.length()), &dwWritten, NULL);
 
 #ifdef OUTPUT_PROCESS_LOG
 		sync_cout << "[" << pn << "] >" << str << sync_endl;
@@ -179,21 +163,23 @@ struct ProcessNegotiator
 	// プロセスの終了判定
 	bool is_terminated() const { return terminated; }
 
-protected:
-
-	void init()
-	{
+   protected:
+	void init() {
 		terminated = false;
 
 		// pipeの作成
 
 		SECURITY_ATTRIBUTES saAttr;
 
-		saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
-		saAttr.bInheritHandle = TRUE;
+		saAttr.nLength              = sizeof(SECURITY_ATTRIBUTES);
+		saAttr.bInheritHandle       = TRUE;
 		saAttr.lpSecurityDescriptor = NULL;
 
-#define ERROR_MES(mes) { sync_cout << mes << sync_endl; return ; }
+#define ERROR_MES(mes)                 \
+	{                                  \
+		sync_cout << mes << sync_endl; \
+		return;                        \
+	}
 
 		if (!::CreatePipe(&child_std_out_read, &child_std_out_write, &saAttr, 0))
 			ERROR_MES("Error : CreatePipe : std out");
@@ -210,8 +196,7 @@ protected:
 #undef ERROR_MES
 	}
 
-	string read_next()
-	{
+	string read_next() {
 		// read_bufferから改行までを切り出す
 		auto it = read_buffer.find("\n");
 		if (it == string::npos)
@@ -228,8 +213,7 @@ protected:
 		sync_cout << "[" << pn << "] >" << result << sync_endl;
 #endif
 
-		if (result.find("Error") != string::npos)
-		{
+		if (result.find("Error") != string::npos) {
 			// 何らかエラーが起きたので表示させておく。
 			sync_cout << "Error : " << result << sync_endl;
 		}
@@ -238,10 +222,9 @@ protected:
 	}
 
 	// wstring変換
-	wstring to_wstring(const string& src)
-	{
-		size_t ret;
-		wchar_t *wcs = new wchar_t[src.length() + 1];
+	wstring to_wstring(const string& src) {
+		size_t   ret;
+		wchar_t* wcs = new wchar_t[src.length() + 1];
 		::mbstowcs_s(&ret, wcs, src.length() + 1, src.c_str(), _TRUNCATE);
 		wstring result = wcs;
 		delete[] wcs;
@@ -249,7 +232,7 @@ protected:
 	}
 
 	PROCESS_INFORMATION pi;
-	STARTUPINFO si;
+	STARTUPINFO         si;
 
 	HANDLE child_std_out_read;
 	HANDLE child_std_out_write;
@@ -262,82 +245,73 @@ protected:
 	// 受信バッファ
 	string read_buffer;
 
-#ifdef  OUTPUT_PROCESS_LOG
+#ifdef OUTPUT_PROCESS_LOG
 	// プロセス番号(ログ出力のときに使う)
 	int pn;
 #endif
 };
 
-struct EngineState
-{
-	void run(string path, int process_id)
-	{
-#ifdef  OUTPUT_PROCESS_LOG
+struct EngineState {
+	void run(string path, int process_id) {
+#ifdef OUTPUT_PROCESS_LOG
 		pn.set_process_id(process_id);
 #endif
 		pn.run(path);
-		state = START_UP;
+		state            = START_UP;
 		engine_exe_name_ = path;
 	}
 
 	// エンジンに対する終了処理
-	~EngineState()
-	{
+	~EngineState() {
 		// 思考エンジンにquitコマンドを送り終了する
 		// プロセスの終了は~ProcessNegotiator()で待機し、
 		// 終了しなかった場合はTerminateProcess()で強制終了する。
 		pn.write("quit");
 	}
 
-	void on_idle()
-	{
-		switch (state)
-		{
-		case START_UP:
-			pn.write("usi");
-			state = WAIT_USI_OK;
-			break;
+	void on_idle() {
+		switch (state) {
+			case START_UP:
+				pn.write("usi");
+				state = WAIT_USI_OK;
+				break;
 
-		case WAIT_USI_OK:
-		{
-			string line = pn.read();
-			if (line == "usiok")
-				state = IS_READY;
-			else if (line.substr(0, min(line.size(), 8)) == "id name ")
-				engine_name_ = line.substr(8, line.size() - 8);
-			break;
-		}
-
-		case IS_READY:
-			// エンジンの初期化コマンドを送ってやる
-			for (auto line : engine_config)
-				pn.write(line);
-
-			pn.write("isready");
-			state = WAIT_READY_OK;
-			break;
-
-		case WAIT_READY_OK:
-			if (pn.read() == "readyok")
-			{
-				pn.write("usinewgame");
-				state = GAME_START;
+			case WAIT_USI_OK: {
+				string line = pn.read();
+				if (line == "usiok")
+					state = IS_READY;
+				else if (line.substr(0, min(line.size(), 8)) == "id name ")
+					engine_name_ = line.substr(8, line.size() - 8);
+				break;
 			}
-			break;
 
-		case GAME_START:
-			break;
+			case IS_READY:
+				// エンジンの初期化コマンドを送ってやる
+				for (auto line : engine_config)
+					pn.write(line);
 
-		case GAME_OVER:
-			pn.write("gameover");
-			state = START_UP;
-			break;
+				pn.write("isready");
+				state = WAIT_READY_OK;
+				break;
+
+			case WAIT_READY_OK:
+				if (pn.read() == "readyok") {
+					pn.write("usinewgame");
+					state = GAME_START;
+				}
+				break;
+
+			case GAME_START:
+				break;
+
+			case GAME_OVER:
+				pn.write("gameover");
+				state = START_UP;
+				break;
 		}
-
 	}
 
-	Move think(const Position& pos, const string& think_cmd, const string& engine_name)
-	{
+	Move think(const Position& pos, const string& think_cmd, const string& engine_name) {
 		string sfen;
 		sfen = "position startpos moves " + pos.moves_from_start();
 		pn.write(sfen);
@@ -345,32 +319,29 @@ struct EngineState
 		string bestmove;
 
 		auto start = now();
-		while (true)
-		{
+		while (true) {
 			bestmove = pn.read();
 			if (bestmove.find("bestmove") != string::npos)
 				break;
 
 			// タイムアウトチェック(連続自己対戦で1手に1分以上考えさせない
-			if (now() >= start + 60 * 1000)
-			{
+			if (now() >= start + 60 * 1000) {
 				sync_cout << "Error : engine timeout , engine name = " << engine_name << endl << pos << sync_endl;
 				// これ、プロセスが落ちてると思われる。
 				// プロセスを再起動したほうが良いのでは…。
 
-				return MOVE_NULL; // これを返して、終了してもらう。
+				return MOVE_NULL;  // これを返して、終了してもらう。
 			}
 
 			sleep(5);
 		}
 		istringstream is(bestmove);
-		string token;
-		is >> skipws >> token; // "bestmove"
-		is >> token; // "7g7f" etc..
+		string        token;
+		is >> skipws >> token;  // "bestmove"
+		is >> token;            // "7g7f" etc..
 
 		Move m = move_from_usi(pos, token);
-		if (m == MOVE_NONE)
-		{
+		if (m == MOVE_NONE) {
 			sync_cout << "Error : bestmove = " << token << endl << pos << sync_endl;
 			m = MOVE_RESIGN;
 		}
@@ -378,7 +349,12 @@ struct EngineState
 	}
 
 	enum State {
-		START_UP, WAIT_USI_OK, IS_READY, WAIT_READY_OK, GAME_START, GAME_OVER,
+		START_UP,
+		WAIT_USI_OK,
+		IS_READY,
+		WAIT_READY_OK,
+		GAME_START,
+		GAME_OVER,
 	};
 
 	// 対局の準備が出来たのか？
@@ -398,8 +374,7 @@ struct EngineState
 
 	ProcessNegotiator pn;
 
-protected:
-
+   protected:
 	// 内部状態
 	State state;
 
@@ -411,7 +386,6 @@ protected:
 
 	// 実行したエンジンのバイナリ名
 	string engine_exe_name_;
-
 };
 
 // --- Search
@@ -421,7 +395,7 @@ protected:
 
   engine-config1.txt : 1つ目の思考エンジン
   engine-config2.txt : 2つ目の思考エンジン
-  
+
     1行目にengineの実行ファイル名
     2行目に思考時のコマンド
     3行目以降にsetoption等、初期化時に思考エンジンに送りたいコマンドを書く。
@@ -434,7 +408,7 @@ protected:
 
   次に
   goコマンドを打つ。(実行中、stopは利かない)
-  
+
   O : engine1勝ち
   X : engine1負け
   . : 引き分け
@@ -452,123 +426,117 @@ protected:
     このなかからランダムに1行が選ばれてその手数は上のwtimeのところで指定した手数まで進められる。
     デフォルトでは対局回数は100回。定跡の手数は32手目から。
 
-	対局回数は並列化されている分も考慮した、トータルでの対局回数。
-	この回数に達すると対局中のものは中断して打ち切る。
+    対局回数は並列化されている分も考慮した、トータルでの対局回数。
+    この回数に達すると対局中のものは中断して打ち切る。
 
-	また、byoyomiのところは、自動終了オプションを指定するようになっていて、
-	ここが1だと、btimeで指定された回数の対局数をこなすと自動的にquitする。
+    また、byoyomiのところは、自動終了オプションを指定するようになっていて、
+    ここが1だと、btimeで指定された回数の対局数をこなすと自動的にquitする。
 */
 
-void Search::init(){}
+void Search::init() {}
 void Search::clear() {}
 
-namespace
-{
-	// 思考エンジンの実行ファイル名
-	string engine_name[2];
+namespace {
+// 思考エンジンの実行ファイル名
+string engine_name[2];
 
-	// usiコマンドに応答として返ってきたエンジン名
-	string usi_engine_name[2];
+// usiコマンドに応答として返ってきたエンジン名
+string usi_engine_name[2];
 
-	// 思考エンジンの設定
-	vector<string> engine_config_lines[2];
+// 思考エンジンの設定
+vector<string> engine_config_lines[2];
 
-	// 思考コマンド
-	string think_cmd[2];
+// 思考コマンド
+string think_cmd[2];
 
-	// 勝数のトータル
-	uint64_t win, draw, lose;
+// 勝数のトータル
+uint64_t win, draw, lose;
 
-	vector<string> book;
-	PRNG book_rand; // 定跡用の乱数生成器
-	Mutex local_mutex;
+vector<string> book;
+PRNG           book_rand;  // 定跡用の乱数生成器
+Mutex          local_mutex;
 
-	int64_t get_rand(size_t n)
-	{
-		std::unique_lock<Mutex> lk(local_mutex);
-		return book_rand.rand(n);
-	}
-
-	// 対局数
-	atomic<int> games = 0;
-
-	// gamesをインクリメントするときに必要なmutex(atomicなのだが、勢い余って2足すとまずいので..)
-	Mutex games_mutex;
+int64_t get_rand(size_t n) {
+	std::unique_lock<Mutex> lk(local_mutex);
+	return book_rand.rand(n);
 }
+
+// 対局数
+atomic<int> games = 0;
+
+// gamesをインクリメントするときに必要なmutex(atomicなのだが、勢い余って2足すとまずいので..)
+Mutex games_mutex;
+}  // namespace
 
 void MainThread::think() {
+	// 設定の読み込み
+	fstream f[2];
+	string  config_dir = Options["EngineConfigDir"];
+	f[0].open(Path::Combine(config_dir, "engine-config1.txt"));
+	f[1].open(Path::Combine(config_dir, "engine-config2.txt"));
 
-  // 設定の読み込み
-  fstream f[2];
-  string config_dir = Options["EngineConfigDir"];
-  f[0].open(Path::Combine(config_dir,"engine-config1.txt"));
-  f[1].open(Path::Combine(config_dir,"engine-config2.txt"));
+	getline(f[0], engine_name[0]);
+	getline(f[1], engine_name[1]);
 
-  getline(f[0], engine_name[0]);
-  getline(f[1], engine_name[1]);
+	getline(f[0], think_cmd[0]);
+	getline(f[1], think_cmd[1]);
 
-  getline(f[0], think_cmd[0]);
-  getline(f[1], think_cmd[1]);
+	for (int i = 0; i < 2; ++i) {
+		auto& lines = engine_config_lines[i];
+		lines.clear();
+		string line;
+		while (!f[i].eof()) {
+			getline(f[i], line);
+			if (!line.empty())
+				lines.push_back(line);
+		}
+		f[i].close();
+	}
 
-  for (int i = 0; i < 2; ++i) {
-    auto& lines = engine_config_lines[i];
-    lines.clear();
-    string line;
-    while (!f[i].eof())
-    {
-      getline(f[i], line);
-      if (!line.empty())
-        lines.push_back(line);
-    }
-    f[i].close();
-  }
+	win = draw = lose = 0;
+	games             = 0;
 
+	// -- 定跡
+	book.clear();
 
-  win = draw = lose = 0;
-  games = 0;
+	// 定跡ファイル(というか単なる棋譜ファイル)の読み込み
+	fstream fs_book;
+	string  book_file_name = Options["BookSfenFile"];
+	fs_book.open(book_file_name);
+	if (!fs_book.fail()) {
+		sync_cout << "read " + book_file_name << sync_endl;
+		string line;
+		while (!fs_book.eof()) {
+			getline(fs_book, line);
+			if (!line.empty())
+				book.push_back(line);
+			if ((book.size() % 100) == 0)
+				cout << ".";
+		}
+		cout << endl;
+	} else {
+		sync_cout << "Error : can't read book.sfen" << sync_endl;
+	}
 
-  // -- 定跡
-  book.clear();
+	sync_cout << "local game server start : " << engine_name[0] << " vs " << engine_name[1] << sync_endl;
 
-  // 定跡ファイル(というか単なる棋譜ファイル)の読み込み
-  fstream fs_book;
-  string book_file_name = Options["BookSfenFile"];
-  fs_book.open(book_file_name);
-  if (!fs_book.fail())
-  {
-    sync_cout << "read " + book_file_name << sync_endl;
-    string line;
-    while (!fs_book.eof())
-    {
-      getline(fs_book, line);
-      if (!line.empty())
-        book.push_back(line);
-      if ((book.size() % 100) == 0)
-        cout << ".";
-    }
-    cout << endl;
-  } else {
-    sync_cout << "Error : can't read book.sfen" << sync_endl;
-  }
+	// マルチスレッド対応
+	for (auto th : Threads.slaves)
+		th->start_searching();
+	Thread::search();
+	for (auto th : Threads.slaves)
+		th->wait_for_search_finished();
 
-  sync_cout << "local game server start : " << engine_name[0] << " vs " << engine_name[1] << sync_endl;
-
-  // マルチスレッド対応
-  for (auto th : Threads.slaves) th->start_searching(); 
-  Thread::search();
-  for (auto th : Threads.slaves) th->wait_for_search_finished();
-
-  sync_cout << endl << "local game server end : [" << engine_name[0] << "] vs [" << engine_name[1] << "]" << sync_endl;
-  sync_cout << "GameResult " << win << " - " << draw << " - " << lose << sync_endl;
+	sync_cout << endl
+	          << "local game server end : [" << engine_name[0] << "] vs [" << engine_name[1] << "]" << sync_endl;
+	sync_cout << "GameResult " << win << " - " << draw << " - " << lose << sync_endl;
 
 #ifdef ONE_LINE_OUTPUT_MODE
-  sync_cout << "finish" << sync_endl;
+	sync_cout << "finish" << sync_endl;
 #endif
-
 }
 
-void Thread::search()
-{
+void Thread::search() {
 	EngineState es[2];
 	es[0].run(engine_name[0], 0);
 	es[1].run(engine_name[1], 1);
@@ -587,14 +555,13 @@ void Thread::search()
 	// 対局回数。btimeの値がmax_games
 	int max_games = Search::Limits.time[BLACK];
 	if (max_games == 0)
-		max_games = 100; // デフォルトでは100回
+		max_games = 100;  // デフォルトでは100回
 	//  int games = 0;
 
-	  // 定跡の手数
+	// 定跡の手数
 	int max_book_move = Search::Limits.time[WHITE];
 	if (max_book_move == 0)
-		max_book_move = 32; // デフォルトでは32手目から
-
+		max_book_move = 32;  // デフォルトでは32手目から
 
 	auto SetupStates = Search::StateStackPtr(new aligned_stack<StateInfo>);
 
@@ -604,21 +571,19 @@ void Thread::search()
 		game_started = true;
 
 		// 定跡が設定されているならその局面まで進める
-		if (book.size())
-		{
-			int book_number = (int)get_rand(book.size());
+		if (book.size()) {
+			int           book_number = (int)get_rand(book.size());
 			istringstream is(book[book_number]);
-			string token;
-			while (rootPos.game_ply() < max_book_move)
-			{
+			string        token;
+			while (rootPos.game_ply() < max_book_move) {
 				is >> token;
 				if (token == "startpos" || token == "moves")
 					continue;
 
 				Move m = move_from_usi(rootPos, token);
-				if (!is_ok(m))
-				{
-					//  sync_cout << "Error book.sfen , line = " << book_number << " , moves = " << token << endl << rootPos << sync_endl;
+				if (!is_ok(m)) {
+					//  sync_cout << "Error book.sfen , line = " << book_number << " , moves = " << token << endl <<
+					//  rootPos << sync_endl;
 					// →　エラー扱いはしない。
 					break;
 				} else {
@@ -626,7 +591,7 @@ void Thread::search()
 					rootPos.do_move(m, SetupStates->top());
 				}
 			}
-			//cout << rootPos;
+			// cout << rootPos;
 		}
 	};
 
@@ -638,49 +603,47 @@ void Thread::search()
 
 		auto kif =
 #ifdef OUTPUT_KIF_LOG
-			// sfen形式の棋譜を出力する。
-			"startpos moves " + rootPos.moves_from_start();
+		    // sfen形式の棋譜を出力する。
+		    "startpos moves " + rootPos.moves_from_start();
 #else
-			rootPos.sfen();
+		    rootPos.sfen();
 #endif
 
 		{
 			std::unique_lock<Mutex> lk(games_mutex);
-			if (games < max_games)
-			{
+			if (games < max_games) {
 				games++;
 
-				if (rootPos.game_ply() >= 256) // 長手数につき引き分け
+				if (rootPos.game_ply() >= 256)  // 長手数につき引き分け
 				{
 					draw++;
 #ifdef ONE_LINE_OUTPUT_MODE
 					sync_cout << "draw," << kif << sync_endl;
 #else
-					cout << '.'; // 引き分けマーク
+					cout << '.';  // 引き分けマーク
 #endif
-				} else if ((rootPos.side_to_move() == player1_color) ^ !resign)
-				{
+				} else if ((rootPos.side_to_move() == player1_color) ^ !resign) {
 					lose++;
 #ifdef ONE_LINE_OUTPUT_MODE
 					sync_cout << "lose," << kif << sync_endl;
 #else
-					cout << 'X'; // 負けマーク
+					cout << 'X';  // 負けマーク
 #endif
-				} else
-				{
+				} else {
 					win++;
 #ifdef ONE_LINE_OUTPUT_MODE
 					sync_cout << "win," << kif << sync_endl;
 #else
-					cout << 'O'; // 勝ちマーク
+					cout << 'O';  // 勝ちマーク
 #endif
 				}
 			} else {
 				// 終了条件は満たしているはずなのでこれにて終了。
 			}
 		}
-		player1_color = ~player1_color; // 先後入れ替える。
-										//    sync_cout << rootPos << sync_endl; // デバッグ用に投了の局面を表示させてみる
+		player1_color =
+		    ~player1_color;  // 先後入れ替える。
+		                     //    sync_cout << rootPos << sync_endl; // デバッグ用に投了の局面を表示させてみる
 		game_started = false;
 
 		es[0].game_over();
@@ -691,8 +654,7 @@ void Thread::search()
 	};
 
 	string line;
-	while (/*!Threads.stop &&*/ games < max_games)
-	{
+	while (/*!Threads.stop &&*/ games < max_games) {
 		// stopは受け付けないようにする。
 		// そうしないとコマンドラインから実行するときにquitコマンドをqueueに積んでおくことが出来ない。
 
@@ -703,17 +665,16 @@ void Thread::search()
 		if (es[0].pn.is_terminated() || es[1].pn.is_terminated())
 			break;
 
-		if (!game_started && es[0].is_game_started() && es[1].is_game_started())
-		{
+		if (!game_started && es[0].is_game_started() && es[1].is_game_started()) {
 			game_start();
-			//sync_cout << "game start" << sync_endl;
+			// sync_cout << "game start" << sync_endl;
 		}
 
 		// ゲーム中であれば局面を送って思考させる
-		if (game_started)
-		{
-			int player = (rootPos.side_to_move() == player1_color) ? 0 : 1;
-			auto engine_name = es[player].engine_exe_name(); // engine_name()だとエラーが起きたときにどれだかわからない可能性がある。
+		if (game_started) {
+			int  player = (rootPos.side_to_move() == player1_color) ? 0 : 1;
+			auto engine_name =
+			    es[player].engine_exe_name();  // engine_name()だとエラーが起きたときにどれだかわからない可能性がある。
 			Move m = es[player].think(rootPos, think_cmd[player], engine_name);
 
 			// timeoutしたので終了させてしまう。
@@ -721,27 +682,24 @@ void Thread::search()
 				break;
 
 			// 宣言勝ち
-			if (m == rootPos.DeclarationWin())
-			{
+			if (m == rootPos.DeclarationWin()) {
 				game_over(false);
 				continue;
 			}
 
 			// 非合法手を弾く
-			if (m != MOVE_RESIGN && (!rootPos.pseudo_legal(m) || !rootPos.legal(m)))
-			{
-				sync_cout << "Error : illigal move , move = " << m << " , engine name = " << engine_name << endl << rootPos << sync_endl;
+			if (m != MOVE_RESIGN && (!rootPos.pseudo_legal(m) || !rootPos.legal(m))) {
+				sync_cout << "Error : illigal move , move = " << m << " , engine name = " << engine_name << endl
+				          << rootPos << sync_endl;
 				m = MOVE_RESIGN;
 			} else {
-
 				SetupStates->push(StateInfo());
 				rootPos.do_move(m, SetupStates->top());
 			}
 
-			if (m == MOVE_RESIGN || rootPos.is_mated() || rootPos.game_ply() >= 256)
-			{
+			if (m == MOVE_RESIGN || rootPos.is_mated() || rootPos.game_ply() >= 256) {
 				game_over(true);
-				//sync_cout << "game over" << sync_endl;
+				// sync_cout << "game over" << sync_endl;
 			}
 		}
 		sleep(5);
@@ -752,8 +710,7 @@ void Thread::search()
 		game_over(false);
 
 	// メインスレッドならエンジン名を反映
-	if (this == Threads.main())
-	{
+	if (this == Threads.main()) {
 		usi_engine_name[0] = es[0].engine_name();
 		usi_engine_name[1] = es[1].engine_name();
 	}

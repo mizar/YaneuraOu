@@ -1,9 +1,9 @@
-﻿#include <cstring>	// std::memset()
+﻿#include <cstring>  // std::memset()
 #include "misc.h"
 #include "thread.h"
 #include "tt.h"
 
-TranspositionTable TT; // 置換表をglobalに確保。
+TranspositionTable TT;  // 置換表をglobalに確保。
 
 // 置換表のエントリーに対して与えられたデータを保存する。上書き動作
 //   v    : 探索のスコア
@@ -12,8 +12,7 @@ TranspositionTable TT; // 置換表をglobalに確保。
 //   gen  : TT.generation()
 // 引数のgenは、Stockfishにはないが、やねうら王では学習時にスレッドごとに別の局面を探索させたいので
 // スレッドごとに異なるgenerationの値を指定したくてこのような作りになっている。
-void TTEntry::save(Key k, Value v, bool pv , Bound b, Depth d, Move m , Value ev)
-{
+void TTEntry::save(Key k, Value v, bool pv, Bound b, Depth d, Move m, Value ev) {
 	// ASSERT_LV3((-VALUE_INFINITE < v && v < VALUE_INFINITE) || v == VALUE_NONE);
 
 	// 置換表にVALUE_INFINITE以上の値を書き込んでしまうのは本来はおかしいが、
@@ -53,26 +52,22 @@ void TTEntry::save(Key k, Value v, bool pv , Bound b, Depth d, Move m , Value ev
 	// 　少しの深さのマイナスなら許容)
 	// 3. BOUND_EXACT(これはPVnodeで探索した結果で、とても価値のある情報なので無条件で書き込む)
 	// 1. or 2. or 3.
-	if ( b == BOUND_EXACT
-		|| pos_key != key16
-		|| d - DEPTH_OFFSET > depth8 - 4
-		/*|| g != generation() // probe()において非0のkeyとマッチした場合、その瞬間に世代はrefreshされている。　*/
-		)
-	{
+	if (b == BOUND_EXACT || pos_key != key16 || d - DEPTH_OFFSET > depth8 - 4
+	    /*|| g != generation() // probe()において非0のkeyとマッチした場合、その瞬間に世代はrefreshされている。　*/
+	) {
 		ASSERT_LV3(d > DEPTH_OFFSET);
 		ASSERT_LV3(d < 256 + DEPTH_OFFSET);
 
 		key16     = pos_key;
-		depth8    = (uint8_t)(d - DEPTH_OFFSET); // DEPTH_OFFSETだけ下駄履きさせてある。
+		depth8    = (uint8_t)(d - DEPTH_OFFSET);  // DEPTH_OFFSETだけ下駄履きさせてある。
 		genBound8 = (uint8_t)(TT.generation8 | uint8_t(pv) << 2 | b);
-		value16 = (int16_t)v;
+		value16   = (int16_t)v;
 		eval16    = (int16_t)ev;
 	}
 }
 
 // 置換表のサイズを確保しなおす。
 void TranspositionTable::resize(size_t mbSize) {
-
 #if defined(MATE_ENGINE)
 	// MateEngineではこの置換表は用いないので確保しない。
 	return;
@@ -107,10 +102,11 @@ void TranspositionTable::resize(size_t mbSize) {
 	// tableはCacheLineSizeでalignされたメモリに配置したいので、CacheLineSize-1だけ余分に確保する。
 	// callocではなくmallocにしないと初回の探索でTTにアクセスするとき、特に巨大なTTだと
 	// 極めて遅くなるので、mallocで確保して自前でゼロクリアすることでこれを回避する。
-	// cf. Explicitly zero TT upon resize. : https://github.com/official-stockfish/Stockfish/commit/2ba47416cbdd5db2c7c79257072cd8675b61721f
+	// cf. Explicitly zero TT upon resize. :
+	// https://github.com/official-stockfish/Stockfish/commit/2ba47416cbdd5db2c7c79257072cd8675b61721f
 
 	// Large Pageを確保する。ランダムメモリアクセスが5%程度速くなる。
-	table = static_cast<Cluster*>(tt_memory.alloc(clusterCount * sizeof(Cluster),32));
+	table = static_cast<Cluster*>(tt_memory.alloc(clusterCount * sizeof(Cluster), 32));
 
 	// clear();
 
@@ -124,8 +120,7 @@ void TranspositionTable::resize(size_t mbSize) {
 #endif
 }
 
-void TranspositionTable::clear()
-{
+void TranspositionTable::clear() {
 #if defined(MATE_ENGINE)
 	// MateEngineではこの置換表は用いないのでクリアもしない。
 	return;
@@ -136,7 +131,7 @@ void TranspositionTable::clear()
 #if !defined(EVAL_LEARN)
 	// 進捗を表示しながら並列化してゼロクリア
 	// Stockfishのここにあったコードは、独自の置換表を実装した時にも使いたいため、tt.cppに移動させた。
-	Tools::memclear("USI_Hash" , table, size);
+	Tools::memclear("USI_Hash", table, size);
 #else
 	// LEARN版のときは、
 	// 単一スレッドでメモリをクリアする。(他のスレッドは仕事をしているので..)
@@ -147,13 +142,11 @@ void TranspositionTable::clear()
 #endif
 }
 
-TTEntry* TranspositionTable::probe(const Key key, bool& found) const
-{
+TTEntry* TranspositionTable::probe(const Key key, bool& found) const {
 	ASSERT_LV3(clusterCount != 0);
 
 #if defined(USE_GLOBAL_OPTIONS)
-	if (!GlobalOptions.use_hash_probe)
-	{
+	if (!GlobalOptions.use_hash_probe) {
 		// 置換表にhitさせないモードであるなら、見つからなかったことにして
 		// つねに確保しているメモリの先頭要素を返せば良い。(ここに書き込まれたところで問題ない)
 		return found = false, first_entry(0);
@@ -169,8 +162,7 @@ TTEntry* TranspositionTable::probe(const Key key, bool& found) const
 	const uint16_t key16 = (u16)(key >> 1);
 
 	// クラスターのなかから、keyが合致するTT_ENTRYを探す
-	for (int i = 0; i < ClusterSize; ++i)
-	{
+	for (int i = 0; i < ClusterSize; ++i) {
 		// returnする条件
 		// 1. 空のエントリーを見つけた
 		//    (そこまではkeyが合致していないので、found==falseにして新規TT_ENTRYのアドレスとして返す)
@@ -184,9 +176,8 @@ TTEntry* TranspositionTable::probe(const Key key, bool& found) const
 		// Stockfish12からはdepth8 == 0が空のTTEntryを意味するように変わった。
 		// key16は1/65536の確率で0になりうるので…。
 
-		if (tte[i].key16 == key16 || !tte[i].depth8)
-		{
-			tte[i].genBound8 = uint8_t(generation8 | (tte[i].genBound8 & 0x7)); // Refresh
+		if (tte[i].key16 == key16 || !tte[i].depth8) {
+			tte[i].genBound8 = uint8_t(generation8 | (tte[i].genBound8 & 0x7));  // Refresh
 
 			return found = (bool)tte[i].depth8, &tte[i];
 		}
@@ -203,8 +194,8 @@ TTEntry* TranspositionTable::probe(const Key key, bool& found) const
 		// 以上に基いてスコアリングする。
 		// 以上の合計が一番小さいTTEntryを使う。
 
-		if (replace->depth8 - ((263 + generation8 - replace->genBound8) & 0xF8)
-		  >   tte[i].depth8 - ((263 + generation8 -   tte[i].genBound8) & 0xF8))
+		if (replace->depth8 - ((263 + generation8 - replace->genBound8) & 0xF8) >
+		    tte[i].depth8 - ((263 + generation8 - tte[i].genBound8) & 0xF8))
 			replace = &tte[i];
 
 	// generationは256になるとオーバーフローして0になるのでそれをうまく処理できなければならない。
@@ -219,8 +210,7 @@ TTEntry* TranspositionTable::probe(const Key key, bool& found) const
 }
 
 // read onlyであることが保証されているprobe()
-TTEntry* TranspositionTable::read_probe(const Key key, bool& found) const
-{
+TTEntry* TranspositionTable::read_probe(const Key key, bool& found) const {
 	ASSERT_LV3(clusterCount != 0);
 
 #if defined(USE_GLOBAL_OPTIONS)
@@ -228,25 +218,23 @@ TTEntry* TranspositionTable::read_probe(const Key key, bool& found) const
 		return found = false, first_entry(0);
 #endif
 
-	TTEntry* const tte = first_entry(key);
+	TTEntry* const tte   = first_entry(key);
 	const uint16_t key16 = (u16)(key >> 1);
 
-	for (int i = 0; i < ClusterSize; ++i)
-	{
+	for (int i = 0; i < ClusterSize; ++i) {
 		if (tte[i].key16 == key16 || !tte[i].depth8)
-				return found = (bool)tte[i].depth8, &tte[i];
+			return found = (bool)tte[i].depth8, &tte[i];
 	}
 	return found = false, nullptr;
 }
 
-int TranspositionTable::hashfull() const
-{
+int TranspositionTable::hashfull() const {
 	// すべてのエントリーにアクセスすると時間が非常にかかるため、先頭から1000エントリーだけ
 	// サンプリングして使用されているエントリー数を返す。
 
 	// Stockfish11では、1000 Cluster(3000 TTEntry)についてサンプリングするように変更されたが、
 	// 計測時間がもったいないので、古いコードのままにしておく。
-	
+
 	int cnt = 0;
 	for (int i = 0; i < 1000 / ClusterSize; ++i)
 		for (int j = 0; j < ClusterSize; ++j)
@@ -259,8 +247,7 @@ int TranspositionTable::hashfull() const
 #if defined(EVAL_LEARN)
 // スレッド数が変更になった時にThread.set()から呼び出される。
 // これに応じて、スレッドごとに保持しているTTを初期化する。
-void TranspositionTable::init_tt_per_thread()
-{
+void TranspositionTable::init_tt_per_thread() {
 	// スレッド数
 	size_t thread_size = Threads.size();
 
@@ -273,15 +260,14 @@ void TranspositionTable::init_tt_per_thread()
 	// 1スレッドあたりのクラスター数(端数切捨て)
 	// clusterCountは2の倍数でないと駄目なので、端数を切り捨てるためにLSBを0にする。
 	size_t clusterCountPerThread = (clusterCount / thread_size) & ~(size_t)1;
-	 
+
 	ASSERT_LV3((clusterCountPerThread & 1) == 0);
 
 	// これを、自分が確保したglobalな置換表用メモリから切り分けて割当てる。
-	for (size_t i = 0; i < thread_size; ++i)
-	{
-		auto& tt = Threads[i]->tt;
+	for (size_t i = 0; i < thread_size; ++i) {
+		auto& tt        = Threads[i]->tt;
 		tt.clusterCount = clusterCountPerThread;
-		tt.table = this->table + clusterCountPerThread * i;
+		tt.table        = this->table + clusterCountPerThread * i;
 	}
 }
 #endif

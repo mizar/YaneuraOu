@@ -24,4 +24,4 @@
 // これもおまけしておく。
 using namespace std;
 
-#endif // #ifndef _ALL_H_
+#endif  // #ifndef _ALL_H_

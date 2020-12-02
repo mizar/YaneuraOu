@@ -57,8 +57,10 @@ class AffineTransform {
 	// Read network parameters
 	// パラメータを読み込む
 	bool ReadParameters(std::istream& stream) {
-		if (!previous_layer_.ReadParameters(stream)) return false;
-		for (std::size_t i = 0; i < kOutputDimensions; ++i) biases_[i] = read_little_endian<BiasType>(stream);
+		if (!previous_layer_.ReadParameters(stream))
+			return false;
+		for (std::size_t i = 0; i < kOutputDimensions; ++i)
+			biases_[i] = read_little_endian<BiasType>(stream);
 		for (std::size_t i = 0; i < kOutputDimensions * kPaddedInputDimensions; ++i)
 			weights_[i] = read_little_endian<WeightType>(stream);
 		return !stream.fail();
@@ -66,7 +68,8 @@ class AffineTransform {
 
 	// パラメータを書き込む
 	bool WriteParameters(std::ostream& stream) const {
-		if (!previous_layer_.WriteParameters(stream)) return false;
+		if (!previous_layer_.WriteParameters(stream))
+			return false;
 		// TODO : endiannessの調整するコード必要なのでは。(やね)
 		stream.write(reinterpret_cast<const char*>(biases_), kOutputDimensions * sizeof(BiasType));
 		stream.write(reinterpret_cast<const char*>(weights_),

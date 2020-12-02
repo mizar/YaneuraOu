@@ -18,7 +18,6 @@
 // 標準の雑巾絞りにするためにはlearnコマンドで "lambda 1"を指定してやれば良い。
 #define LEARN_ELMO_METHOD
 
-
 // ----------------------
 //        更新式
 // ----------------------
@@ -53,7 +52,6 @@
 // デフォルトでは10億局面に1回。
 #define LEARN_EVAL_SAVE_INTERVAL (1000000000ULL)
 
-
 // ----------------------
 //    目的関数の選択
 // ----------------------
@@ -76,7 +74,6 @@
 
 // ※　他、色々追加するかも。
 
-
 // ----------------------
 // 学習に関するデバッグ設定
 // ----------------------
@@ -84,7 +81,6 @@
 // 学習時のrmseの出力をこの回数に1回に減らす。
 // rmseの計算は1スレッドで行なうためそこそこ時間をとられるので出力を減らすと効果がある。
 #define LEARN_RMSE_OUTPUT_INTERVAL 1
-
 
 // ----------------------
 // ゼロベクトルからの学習
@@ -96,7 +92,6 @@
 // (すごく時間かかる)
 
 //#define RESET_TO_ZERO_VECTOR
-
 
 // ----------------------
 //  学習のときの浮動小数
@@ -110,11 +105,11 @@
 typedef float LearnFloatType;
 
 // doubleを使う場合
-//typedef double LearnFloatType;
+// typedef double LearnFloatType;
 
 // float16を使う場合
 //#include "half_float.h"
-//typedef HalfFloat::float16 LearnFloatType;
+// typedef HalfFloat::float16 LearnFloatType;
 
 // ----------------------
 //  省メモリ化
@@ -155,7 +150,6 @@ typedef float LearnFloatType;
 // 未デバッグなので使わないこと。
 //#define USE_KKPP_LOWER_DIM
 
-
 // ======================
 //  教師局面生成時の設定
 // ======================
@@ -168,7 +162,6 @@ typedef float LearnFloatType;
 // これをするほうが良いかどうかは微妙。
 // #define LEARN_GENSFEN_USE_DRAW_RESULT
 
-
 // ======================
 //       configure
 // ======================
@@ -177,63 +170,60 @@ typedef float LearnFloatType;
 //  elmo(WCSC27)の方法での学習
 // ----------------------
 
-#if defined( LEARN_ELMO_METHOD )
+#if defined(LEARN_ELMO_METHOD)
 #define LOSS_FUNCTION_IS_ELMO_METHOD
 #define ADA_GRAD_UPDATE
 #endif
-
 
 // ----------------------
 // Learnerで用いるstructの定義
 // ----------------------
 #include "../position.h"
 
-namespace Learner
-{
-	// PackedSfenと評価値が一体化した構造体
-	// オプションごとに書き出す内容が異なると教師棋譜を再利用するときに困るので
-	// とりあえず、以下のメンバーはオプションによらずすべて書き出しておく。
-	struct PackedSfenValue
-	{
-		// 局面
-		PackedSfen sfen;
+namespace Learner {
+// PackedSfenと評価値が一体化した構造体
+// オプションごとに書き出す内容が異なると教師棋譜を再利用するときに困るので
+// とりあえず、以下のメンバーはオプションによらずすべて書き出しておく。
+struct PackedSfenValue {
+	// 局面
+	PackedSfen sfen;
 
-		// Learner::search()から返ってきた評価値
-		s16 score;
+	// Learner::search()から返ってきた評価値
+	s16 score;
 
-		// PVの初手
-		// 教師との指し手一致率を求めるときなどに用いる
-		u16 move;
+	// PVの初手
+	// 教師との指し手一致率を求めるときなどに用いる
+	u16 move;
 
-		// 初期局面からの局面の手数。
-		u16 gamePly;
+	// 初期局面からの局面の手数。
+	u16 gamePly;
 
-		// この局面の手番側が、ゲームを最終的に勝っているなら1。負けているなら-1。
-		// 引き分けに至った場合は、0。
-		// 引き分けは、教師局面生成コマンドgensfenにおいて、
-		// LEARN_GENSFEN_DRAW_RESULTが有効なときにだけ書き出す。
-		s8 game_result;
+	// この局面の手番側が、ゲームを最終的に勝っているなら1。負けているなら-1。
+	// 引き分けに至った場合は、0。
+	// 引き分けは、教師局面生成コマンドgensfenにおいて、
+	// LEARN_GENSFEN_DRAW_RESULTが有効なときにだけ書き出す。
+	s8 game_result;
 
-		// 教師局面を書き出したファイルを他の人とやりとりするときに
-		// この構造体サイズが不定だと困るため、paddingしてどの環境でも必ず40bytesになるようにしておく。
-		u8 padding;
+	// 教師局面を書き出したファイルを他の人とやりとりするときに
+	// この構造体サイズが不定だと困るため、paddingしてどの環境でも必ず40bytesになるようにしておく。
+	u8 padding;
 
-		// 32 + 2 + 2 + 2 + 1 + 1 = 40bytes
-	};
+	// 32 + 2 + 2 + 2 + 1 + 1 = 40bytes
+};
 
-	// 読み筋とそのときの評価値を返す型
-	// Learner::search() , Learner::qsearch()で用いる。
-	typedef std::pair<Value, std::vector<Move> > ValueAndPV;
+// 読み筋とそのときの評価値を返す型
+// Learner::search() , Learner::qsearch()で用いる。
+typedef std::pair<Value, std::vector<Move> > ValueAndPV;
 
-	// いまのところ、YANEURAOU_ENGINEしか、このスタブを持っていないが
-	// EVAL_LEARNをdefineするなら、このスタブが必須。
-	extern Learner::ValueAndPV  search(Position& pos, int depth , size_t multiPV = 1 , u64 NodesLimit = 0);
-	extern Learner::ValueAndPV qsearch(Position& pos);
+// いまのところ、YANEURAOU_ENGINEしか、このスタブを持っていないが
+// EVAL_LEARNをdefineするなら、このスタブが必須。
+extern Learner::ValueAndPV search(Position& pos, int depth, size_t multiPV = 1, u64 NodesLimit = 0);
+extern Learner::ValueAndPV qsearch(Position& pos);
 
-	double calc_grad(Value shallow, const PackedSfenValue& psv);
+double calc_grad(Value shallow, const PackedSfenValue& psv);
 
-}
+}  // namespace Learner
 
 #endif
 
-#endif // ifndef _LEARN_H_
+#endif  // ifndef _LEARN_H_

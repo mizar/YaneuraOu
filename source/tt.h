@@ -4,7 +4,8 @@
 #include "types.h"
 #include "misc.h"
 
-// cf.【決定版】コンピュータ将棋のHASHの概念について詳しく : http://yaneuraou.yaneu.com/2018/11/18/%E3%80%90%E6%B1%BA%E5%AE%9A%E7%89%88%E3%80%91%E3%82%B3%E3%83%B3%E3%83%94%E3%83%A5%E3%83%BC%E3%82%BF%E5%B0%86%E6%A3%8B%E3%81%AEhash%E3%81%AE%E6%A6%82%E5%BF%B5%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6/
+// cf.【決定版】コンピュータ将棋のHASHの概念について詳しく :
+// http://yaneuraou.yaneu.com/2018/11/18/%E3%80%90%E6%B1%BA%E5%AE%9A%E7%89%88%E3%80%91%E3%82%B3%E3%83%B3%E3%83%94%E3%83%A5%E3%83%BC%E3%82%BF%E5%B0%86%E6%A3%8B%E3%81%AEhash%E3%81%AE%E6%A6%82%E5%BF%B5%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6/
 
 // --------------------
 //       置換表
@@ -23,13 +24,12 @@
 /// value      16 bit : このnodeでのsearch()の返し値
 /// eval value 16 bit : このnodeでのevaluate()の返し値
 struct TTEntry {
-
 	Move16 move() const { return Move16(move16); }
-	Value value() const { return (Value)value16; }
-	Value eval() const { return (Value)eval16; }
-	Depth depth() const { return (Depth)depth8 + DEPTH_OFFSET; }
-	bool is_pv() const { return (bool)(genBound8 & 0x4); }
-	Bound bound() const { return (Bound)(genBound8 & 0x3); }
+	Value  value() const { return (Value)value16; }
+	Value  eval() const { return (Value)eval16; }
+	Depth  depth() const { return (Depth)depth8 + DEPTH_OFFSET; }
+	bool   is_pv() const { return (bool)(genBound8 & 0x4); }
+	Bound  bound() const { return (Bound)(genBound8 & 0x3); }
 
 	// 置換表のエントリーに対して与えられたデータを保存する。上書き動作
 	//   v    : 探索のスコア
@@ -37,9 +37,9 @@ struct TTEntry {
 	//   pv   : PV nodeであるか
 	//   d    : その時の探索深さ
 	//   m    : ベストな指し手
-	void save(Key k, Value v, bool pv , Bound b, Depth d, Move m, Value ev);
+	void save(Key k, Value v, bool pv, Bound b, Depth d, Move m, Value ev);
 
-private:
+   private:
 	friend struct TranspositionTable;
 
 	// hash keyの下位bit16(bit0は除く)
@@ -73,19 +73,18 @@ private:
 // このクラスターのTT_ENTRYは同じhash keyに対する保存場所である。(保存場所が被ったときに後続のTT_ENTRYを使う)
 // このクラスターが、clusterCount個だけ確保されている。
 struct TranspositionTable {
-
 	// 1クラスターにおけるTTEntryの数
 	// TTEntry 10bytes×3つ + 2(padding) = 32bytes
 	static constexpr int ClusterSize = 3;
 
 	struct Cluster {
 		TTEntry entry[ClusterSize];
-		u8 padding[2]; // 全体を32byteぴったりにするためのpadding
+		u8      padding[2];  // 全体を32byteぴったりにするためのpadding
 	};
 
 	static_assert(sizeof(Cluster) == 32, "Unexpected Cluster size");
 
-public:
+   public:
 	//~TranspositionTable() { aligned_ttmem_free(mem); }
 	// メモリの開放は、LargeMemoryクラスが勝手にやってくれるので、やねうら王では、
 	// このclassのデストラクタでメモリを明示的に開放しなくて良い。
@@ -93,7 +92,7 @@ public:
 	// 新しい探索ごとにこの関数を呼び出す。(generationを加算する。)
 	// USE_GLOBAL_OPTIONSが有効のときは、このタイミングで、Options["Threads"]の値を
 	// キャプチャして、探索スレッドごとの置換表と世代カウンターを用意する。
-	void new_search() { generation8 += 8; } // 下位3bitはPV nodeかどうかのフラグとBoundに用いている。
+	void new_search() { generation8 += 8; }  // 下位3bitはPV nodeかどうかのフラグとBoundに用いている。
 
 	// 置換表のなかから与えられたkeyに対応するentryを探す。
 	// 見つかったならfound == trueにしてそのTT_ENTRY*を返す。
@@ -125,11 +124,12 @@ public:
 	TTEntry* first_entry(const Key key) const {
 		// Stockfishのコード
 		// mul_hi64は、64bit * 64bitの掛け算をして下位64bitを取得する関数。
-		//return &table[mul_hi64(key, clusterCount)].entry[0];
+		// return &table[mul_hi64(key, clusterCount)].entry[0];
 
 		// key(64bit) × clusterCount / 2^64 の値は 0 ～ clusterCount - 1 である。
 		// 掛け算が必要にはなるが、こうすることで custerCountを2^Nで確保しないといけないという制約が外れる。
-		// cf. Allow for general transposition table sizes. : https://github.com/official-stockfish/Stockfish/commit/2198cd0524574f0d9df8c0ec9aaf14ad8c94402b
+		// cf. Allow for general transposition table sizes. :
+		// https://github.com/official-stockfish/Stockfish/commit/2198cd0524574f0d9df8c0ec9aaf14ad8c94402b
 
 		// ※　以下、やねうら王独自拡張
 
@@ -156,7 +156,7 @@ public:
 	void init_tt_per_thread();
 #endif
 
-private:
+   private:
 	friend struct TTEntry;
 
 	// この置換表が保持しているクラスター数。
@@ -171,7 +171,7 @@ private:
 	Cluster* table = nullptr;
 
 	// 確保されたメモリの先頭(alignされていない)
-	//void* mem;
+	// void* mem;
 	// →　やねうら王では、LargeMemoryで確保するのでこれは不要
 
 	// 世代カウンター。new_search()のごとに8ずつ加算する。TTEntry::save()で用いる。
@@ -186,4 +186,4 @@ private:
 // global object。探索部からこのinstanceを参照する。
 extern TranspositionTable TT;
 
-#endif // #ifndef TT_H_INCLUDED
+#endif  // #ifndef TT_H_INCLUDED

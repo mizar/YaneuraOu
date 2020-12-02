@@ -8,9 +8,8 @@
 // -----------------------
 
 // StatBoardsは汎用的な2次元配列であり、様々な統計情報を格納するために用いる。
-template<int Size1, int Size2, typename T = s16>
+template <int Size1, int Size2, typename T = s16>
 struct StatBoards : public std::array<std::array<T, Size2>, Size1> {
-
 	// ある値でこの2次元配列を丸ごと埋める。
 	void fill(const T& v) {
 		T* p = &(*this)[0][0];
@@ -20,7 +19,6 @@ struct StatBoards : public std::array<std::array<T, Size2>, Size1> {
 	// bonus値に基づくupdate
 	// Dはbonusの絶対値の上限。
 	void update(T& entry, int bonus, const int D) {
-
 		// bonusの絶対値をD以内に保つことで、このentryの値の範囲を[-32 * D , 32 * D]に保つ。
 		ASSERT_LV3(abs(bonus) <= D);
 
@@ -51,18 +49,12 @@ typedef StatBoards<SQ_NB, PIECE_NB> PieceToBoards;
 // reductionと指し手オーダリングの決定のために用いられる。
 // ButterflyBoardsをこの情報の格納のために用いる。
 struct ButterflyHistory : public ButterflyBoards {
-
-	void update(Color c, Move m, int bonus) {
-		StatBoards::update((*this)[from_to(m)][c], bonus, 324);
-	}
+	void update(Color c, Move m, int bonus) { StatBoards::update((*this)[from_to(m)][c], bonus, 324); }
 };
 
 /// PieceToHistoryは、ButterflyHistoryに似ているが、PieceToBoardsに基づく。
 struct PieceToHistory : public PieceToBoards {
-
-	void update(Piece pc, Square to, int bonus) {
-		StatBoards::update((*this)[to][pc], bonus, 936);
-	}
+	void update(Piece pc, Square to, int bonus) { StatBoards::update((*this)[to][pc], bonus, 936); }
 };
 
 // CounterMoveStatは、直前の指し手の[to][piece]でindexされるcounter moves(応手)である。
@@ -76,15 +68,16 @@ typedef StatBoards<SQ_NB, PIECE_NB, Move> CounterMoveStat;
 typedef StatBoards<SQ_NB, PIECE_NB, PieceToHistory> ContinuationHistory;
 
 enum Stages : int;
-namespace Search { struct Stack; }
+namespace Search {
+struct Stack;
+}
 
 // -----------------------
 //   MovePicker
 // -----------------------
 
 // 指し手オーダリング器
-struct MovePicker
-{
+struct MovePicker {
 	// このクラスは指し手生成バッファが大きいので、コピーして使うような使い方は禁止。
 	MovePicker(const MovePicker&) = delete;
 	MovePicker& operator=(const MovePicker&) = delete;
@@ -99,20 +92,21 @@ struct MovePicker
 
 	// 通常探索(search)から呼び出されるとき用。
 	// cm = counter move , killers_p = killerの指し手へのポインタ
-	MovePicker(const Position& pos_, Move ttMove_, Depth depth_, const ButterflyHistory*, const PieceToHistory**, Move cm, Move* killers_p);
-
+	MovePicker(const Position& pos_, Move ttMove_, Depth depth_, const ButterflyHistory*, const PieceToHistory**,
+	           Move cm, Move* killers_p);
 
 	// 呼び出されるごとに新しいpseudo legalな指し手をひとつ返す。
 	// 指し手が尽きればMOVE_NONEが返る。
 	// 置換表の指し手(ttMove)を返したあとは、それを取り除いた指し手を返す。
 	Move next_move(bool skipQuiets = false);
 
-private:
+   private:
 	// 指し手のオーダリング用
 	// GenType == CAPTURES : 捕獲する指し手のオーダリング
 	// GenType == QUIETS   : 捕獲しない指し手のオーダリング
 	// GenType == EVASIONS : 王手回避の指し手のオーダリング
-	template<MOVE_GEN_TYPE> void score();
+	template <MOVE_GEN_TYPE>
+	void score();
 
 	// range-based forを使いたいので。
 	ExtMove* begin() { return moves; }
@@ -122,7 +116,7 @@ private:
 
 	// コンストラクタで渡されたhistroyのポインタを保存しておく変数。
 	const ButterflyHistory* mainHistory;
-	const PieceToHistory** contHistory;
+	const PieceToHistory**  contHistory;
 
 	// 置換表の指し手
 	Move ttMove;
@@ -151,7 +145,7 @@ private:
 	// 指し手生成バッファ
 	ExtMove moves[MAX_MOVES];
 
-#if defined (MUST_CAPTURE_SHOGI_ENGINE)
+#if defined(MUST_CAPTURE_SHOGI_ENGINE)
 	// 合法な駒を捕獲する指し手が1手でもあるのか
 	bool mustCapture;
 
@@ -162,7 +156,6 @@ private:
 	// next_move()はmustCaptureのチェックを行なう関数と差し替える。
 	Move next_move2();
 #endif
-
 };
 
-#endif // _MOVE_PICKER_H_
+#endif  // _MOVE_PICKER_H_

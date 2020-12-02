@@ -18,7 +18,7 @@
 // オリジナルの思考エンジンをユーザーが作成する場合は、USER_ENGINE を defineして 他のエンジンのソースコードを参考に
 //  engine/user-engine/ フォルダの中身を書くべし。
 
-#if !defined (USE_MAKEFILE)
+#if !defined(USE_MAKEFILE)
 
 #define YANEURAOU_ENGINE_NNUE  // やねうら王 通常探索部 NNUE評価関数
 //#define MATE_ENGINE  // 詰め将棋solverとしてリリースする場合。(開発中2017/05/06～)
@@ -74,13 +74,11 @@
 
 // #define USE_OLD_YANEURAOU_EFFECT
 
-
 #else
 
 // Makefileを使ってbuildする手順は docs/解説.txt を見ること。
 
 #endif
-
 
 // 通例hash keyは64bitだが、これを128にするとPosition::state()->long_key()から128bit hash keyが
 // 得られるようになる。研究時に局面が厳密に合致しているかどうかを判定したいときなどに用いる。
@@ -88,7 +86,6 @@
 #define HASH_KEY_BITS 64
 //#define HASH_KEY_BITS 128
 //#define HASH_KEY_BITS 256
-
 
 // 通常探索時の最大探索深さ
 constexpr int MAX_PLY_NUM = 246;
@@ -115,7 +112,6 @@ constexpr int MAX_PLY_NUM = 246;
 // ASSERTに引っかかったときに、それを"Error : x=1"のように標準出力に出力する。
 
 //#define USE_DEBUG_ASSERT
-
 
 // --- USI拡張コマンドの"test"コマンドを有効にする。
 // 非常にたくさんのテストコードが書かれているのでコードサイズが膨らむため、
@@ -233,8 +229,9 @@ constexpr int MAX_PLY_NUM = 246;
 
 // 評価関数パラメーターを共有メモリを用いて他プロセスのものと共有する。
 // 少ないメモリのマシンで思考エンジンを何十個も立ち上げようとしたときにメモリ不足になるので
-// 評価関数をshared memoryを用いて他のプロセスと共有する機能。(対応しているのはいまのところKPPT評価関数のみ。かつWindows限定)
-// #define USE_SHARED_MEMORY_IN_EVAL
+// 評価関数をshared
+// memoryを用いて他のプロセスと共有する機能。(対応しているのはいまのところKPPT評価関数のみ。かつWindows限定) #define
+// USE_SHARED_MEMORY_IN_EVAL
 
 // USIプロトコルでgameoverコマンドが送られてきたときに gameover_handler()を呼び出す。
 // #define USE_GAMEOVER_HANDLER
@@ -278,121 +275,120 @@ constexpr int MAX_PLY_NUM = 246;
 
 // --- 通常の思考エンジンとして実行ファイルを公開するとき用の設定集
 
-#if defined(YANEURAOU_ENGINE_KPPT) || defined(YANEURAOU_ENGINE_KPP_KKPT) || defined(YANEURAOU_ENGINE_NNUE) || defined(YANEURAOU_ENGINE_MATERIAL)
+#if defined(YANEURAOU_ENGINE_KPPT) || defined(YANEURAOU_ENGINE_KPP_KKPT) || defined(YANEURAOU_ENGINE_NNUE) || \
+    defined(YANEURAOU_ENGINE_MATERIAL)
 
-	#define ENGINE_NAME "YaneuraOu"
+#define ENGINE_NAME "YaneuraOu"
 
-	// 探索部は通常のやねうら王エンジンを用いる。
-	#define YANEURAOU_ENGINE
+// 探索部は通常のやねうら王エンジンを用いる。
+#define YANEURAOU_ENGINE
 
-	// EvalHashを用いるのは3駒型のみ。それ以外は差分計算用の状態が大きすぎてhitしたところでどうしようもない。
-	#if defined(YANEURAOU_ENGINE_KPPT) || defined(YANEURAOU_ENGINE_KPP_KKPT)
-	#define USE_EVAL_HASH
-	#endif
+// EvalHashを用いるのは3駒型のみ。それ以外は差分計算用の状態が大きすぎてhitしたところでどうしようもない。
+#if defined(YANEURAOU_ENGINE_KPPT) || defined(YANEURAOU_ENGINE_KPP_KKPT)
+#define USE_EVAL_HASH
+#endif
 
-	#define USE_SEE
-	#define USE_MATE_1PLY
-	#define USE_ENTERING_KING_WIN
-	#define USE_TIME_MANAGEMENT
-	#define KEEP_PIECE_IN_GENERATE_MOVES
+#define USE_SEE
+#define USE_MATE_1PLY
+#define USE_ENTERING_KING_WIN
+#define USE_TIME_MANAGEMENT
+#define KEEP_PIECE_IN_GENERATE_MOVES
 
-	// 評価関数を共用して複数プロセス立ち上げたときのメモリを節約。(いまのところWindows限定)
-	#define USE_SHARED_MEMORY_IN_EVAL
+// 評価関数を共用して複数プロセス立ち上げたときのメモリを節約。(いまのところWindows限定)
+#define USE_SHARED_MEMORY_IN_EVAL
 
-	// 学習機能を有効にするオプション。
-	// 教師局面の生成、定跡コマンド(makebook thinkなど)を用いる時には、これを
-	// 有効化してコンパイルしなければならない。
-	//#define EVAL_LEARN
+// 学習機能を有効にするオプション。
+// 教師局面の生成、定跡コマンド(makebook thinkなど)を用いる時には、これを
+// 有効化してコンパイルしなければならない。
+//#define EVAL_LEARN
 
-	// デバッグ絡み
-	//#define ASSERT_LV 3
-	//#define USE_DEBUG_ASSERT
+// デバッグ絡み
+//#define ASSERT_LV 3
+//#define USE_DEBUG_ASSERT
 
+#define ENABLE_TEST_CMD
+// 学習絡みのオプション
+#define USE_SFEN_PACKER
 
-	#define ENABLE_TEST_CMD
-	// 学習絡みのオプション
-	#define USE_SFEN_PACKER
+// 定跡生成絡み
+#define ENABLE_MAKEBOOK_CMD
 
-	// 定跡生成絡み
-	#define ENABLE_MAKEBOOK_CMD
+// パラメーターの自動調整絡み
+#define USE_GAMEOVER_HANDLER
+//#define LONG_EFFECT_LIBRARY
 
-	// パラメーターの自動調整絡み
-	#define USE_GAMEOVER_HANDLER
-	//#define LONG_EFFECT_LIBRARY
+// GlobalOptionsは有効にしておく。
+#define USE_GLOBAL_OPTIONS
 
-	// GlobalOptionsは有効にしておく。
-	#define USE_GLOBAL_OPTIONS
+// -- 各評価関数ごとのconfiguration
 
-	// -- 各評価関数ごとのconfiguration
+#if defined(YANEURAOU_ENGINE_MATERIAL)
 
-	#if defined(YANEURAOU_ENGINE_MATERIAL)
+#define EVAL_MATERIAL
+// 駒割のみの評価関数ではサポートされていない機能をundefする。
+#undef USE_EVAL_HASH
+#undef EVAL_LEARN
+#undef USE_SHARED_MEMORY_IN_EVAL
 
-		#define EVAL_MATERIAL
-		// 駒割のみの評価関数ではサポートされていない機能をundefする。
-		#undef USE_EVAL_HASH
-		#undef EVAL_LEARN
-		#undef USE_SHARED_MEMORY_IN_EVAL
+// 実験用評価関数
+// 駒得評価関数の拡張扱いをする。
+#if MATERIAL_LEVEL >= 002
+// evaluate()のために利きが必要。
+#define LONG_EFFECT_LIBRARY
+#endif
+#endif
 
-		// 実験用評価関数
-		// 駒得評価関数の拡張扱いをする。
-		#if MATERIAL_LEVEL >= 002
-			// evaluate()のために利きが必要。
-			#define LONG_EFFECT_LIBRARY
-		#endif
-	#endif
+#if defined(YANEURAOU_ENGINE_KPPT)
+#define EVAL_KPPT
+#endif
 
-	#if defined(YANEURAOU_ENGINE_KPPT)
-		#define EVAL_KPPT
-	#endif
+#if defined(YANEURAOU_ENGINE_KPP_KKPT)
+#define EVAL_KPP_KKPT
+#endif
 
-	#if defined(YANEURAOU_ENGINE_KPP_KKPT)
-		#define EVAL_KPP_KKPT
-	#endif
+#if defined(YANEURAOU_ENGINE_NNUE)
+#define EVAL_NNUE
+// 現状、評価関数のメモリ共有はNNUEではサポートされていない。
+#undef USE_SHARED_MEMORY_IN_EVAL
 
-	#if defined(YANEURAOU_ENGINE_NNUE)
-		#define EVAL_NNUE
-		// 現状、評価関数のメモリ共有はNNUEではサポートされていない。
-		#undef USE_SHARED_MEMORY_IN_EVAL
+// 学習のためにOpenBLASを使う
+// "../openblas/lib/libopenblas.dll.a"をlibとして追加すること。
+//#define USE_BLAS
 
-		// 学習のためにOpenBLASを使う
-		// "../openblas/lib/libopenblas.dll.a"をlibとして追加すること。
-		//#define USE_BLAS
+// NNUEの使いたい評価関数アーキテクチャの選択
+//
+// EVAL_NNUE_HALFKP256  : 標準NNUE型(評価関数ファイル60MB程度)
+// EVAL_NNUE_KP256      : KP256(評価関数1MB未満)
+// EVAL_NNUE_HALFKPE9   : 標準NNUE型のおよそ9倍(540MB程度)
 
-		// NNUEの使いたい評価関数アーキテクチャの選択
-		//
-		// EVAL_NNUE_HALFKP256  : 標準NNUE型(評価関数ファイル60MB程度)
-		// EVAL_NNUE_KP256      : KP256(評価関数1MB未満)
-		// EVAL_NNUE_HALFKPE9   : 標準NNUE型のおよそ9倍(540MB程度)
+// #define EVAL_NNUE_HALFKP256
+// #define EVAL_NNUE_KP256
+// #define EVAL_NNUE_HALFKPE9
+#endif
 
-		// #define EVAL_NNUE_HALFKP256
-		// #define EVAL_NNUE_KP256
-		// #define EVAL_NNUE_HALFKPE9
-	#endif
-
-#endif // defined(YANEURAOU_ENGINE_KPPT) || ...
-
+#endif  // defined(YANEURAOU_ENGINE_KPPT) || ...
 
 // --- 詰将棋エンジンとして実行ファイルを公開するとき用の設定集
 
 #if defined(MATE_ENGINE)
-	#define ENGINE_NAME "YaneuraOu mate solver"
-	#define KEEP_LAST_MOVE
-	#undef  MAX_PLY_NUM
-	#define MAX_PLY_NUM 2000
-	#define USE_SEE
-	#define USE_MATE_1PLY
-	#define EVAL_MATERIAL
-	//#define LONG_EFFECT_LIBRARY
-	#define USE_KEY_AFTER
-	#define ENABLE_TEST_CMD
+#define ENGINE_NAME "YaneuraOu mate solver"
+#define KEEP_LAST_MOVE
+#undef MAX_PLY_NUM
+#define MAX_PLY_NUM 2000
+#define USE_SEE
+#define USE_MATE_1PLY
+#define EVAL_MATERIAL
+//#define LONG_EFFECT_LIBRARY
+#define USE_KEY_AFTER
+#define ENABLE_TEST_CMD
 #endif
 
 // --- ユーザーの自作エンジンとして実行ファイルを公開するとき用の設定集
 
 #if defined(USER_ENGINE)
-	#define ENGINE_NAME "YaneuraOu user engine"
-	#define USE_SEE
-	#define EVAL_MATERIAL
+#define ENGINE_NAME "YaneuraOu user engine"
+#define USE_SEE
+#define EVAL_MATERIAL
 #endif
 
 // --------------------
@@ -401,11 +397,11 @@ constexpr int MAX_PLY_NUM = 246;
 
 // トーナメント(大会)用に、対局に不要なものをすべて削ぎ落とす。
 #if defined(FOR_TOURNAMENT)
-	#undef ASSERT_LV
-	#undef EVAL_LEARN
-	#undef ENABLE_TEST_CMD
-	#undef USE_GLOBAL_OPTIONS
-	#undef KEEP_LAST_MOVE
+#undef ASSERT_LV
+#undef EVAL_LEARN
+#undef ENABLE_TEST_CMD
+#undef USE_GLOBAL_OPTIONS
+#undef KEEP_LAST_MOVE
 #endif
 
 // --------------------
@@ -415,7 +411,7 @@ constexpr int MAX_PLY_NUM = 246;
 // 学習時にはEVAL_HASHを無効化しておかないと、rmseの計算のときなどにeval hashにhitしてしまい、
 // 正しく計算できない。そのため、EVAL_HASHを動的に無効化するためのオプションを用意する。
 #if defined(EVAL_LEARN)
-	#define USE_GLOBAL_OPTIONS
+#define USE_GLOBAL_OPTIONS
 #endif
 
 // --------------------
@@ -424,8 +420,7 @@ constexpr int MAX_PLY_NUM = 246;
 
 #if defined(USE_GLOBAL_OPTIONS)
 
-struct GlobalOptions_
-{
+struct GlobalOptions_ {
 	// eval hashを有効/無効化する。
 	// (USE_EVAL_HASHがdefineされていないと有効にはならない。)
 	bool use_eval_hash;
@@ -434,10 +429,7 @@ struct GlobalOptions_
 	// (無効化するとTT.probe()が必ずmiss hitするようになる)
 	bool use_hash_probe;
 
-	GlobalOptions_()
-	{
-		use_eval_hash = use_hash_probe = true;
-	}
+	GlobalOptions_() { use_eval_hash = use_hash_probe = true; }
 };
 
 extern GlobalOptions_ GlobalOptions;
@@ -454,14 +446,25 @@ extern GlobalOptions_ GlobalOptions;
 // 故意にメモリアクセス違反を起こすコード。
 // USE_DEBUG_ASSERTが有効なときには、ASSERTの内容を出力したあと、3秒待ってから
 // アクセス違反になるようなコードを実行する。
-#if !defined (USE_DEBUG_ASSERT)
-#define ASSERT(X) { if (!(X)) *(int*)1 = 0; }
+#if !defined(USE_DEBUG_ASSERT)
+#define ASSERT(X)         \
+	{                     \
+		if (!(X))         \
+			*(int*)1 = 0; \
+	}
 #else
 #include <iostream>
 #include <chrono>
 #include <thread>
-#define ASSERT(X) { if (!(X)) { std::cout << "\nError : ASSERT(" << #X << "), " << __FILE__ << "(" << __LINE__ << "): " << __func__ << std::endl; \
- std::this_thread::sleep_for(std::chrono::microseconds(3000)); *(int*)1 =0;} }
+#define ASSERT(X)                                                                                               \
+	{                                                                                                           \
+		if (!(X)) {                                                                                             \
+			std::cout << "\nError : ASSERT(" << #X << "), " << __FILE__ << "(" << __LINE__ << "): " << __func__ \
+			          << std::endl;                                                                             \
+			std::this_thread::sleep_for(std::chrono::microseconds(3000));                                       \
+			*(int*)1 = 0;                                                                                       \
+		}                                                                                                       \
+	}
 #endif
 
 // ASSERT LVに応じたassert
@@ -469,7 +472,11 @@ extern GlobalOptions_ GlobalOptions;
 #define ASSERT_LV 0
 #endif
 
-#define ASSERT_LV_EX(L, X) { if (L <= ASSERT_LV) ASSERT(X); }
+#define ASSERT_LV_EX(L, X)  \
+	{                       \
+		if (L <= ASSERT_LV) \
+			ASSERT(X);      \
+	}
 #define ASSERT_LV1(X) ASSERT_LV_EX(1, X)
 #define ASSERT_LV2(X) ASSERT_LV_EX(2, X)
 #define ASSERT_LV3(X) ASSERT_LV_EX(3, X)
@@ -482,9 +489,13 @@ extern GlobalOptions_ GlobalOptions;
 
 // デバッグ時は普通にしとかないと変なアドレスにジャンプして原因究明に時間がかかる。
 #if defined(_MSC_VER)
-#define UNREACHABLE ASSERT_LV3(false); __assume(0);
+#define UNREACHABLE    \
+	ASSERT_LV3(false); \
+	__assume(0);
 #elif defined(__GNUC__)
-#define UNREACHABLE ASSERT_LV3(false); __builtin_unreachable();
+#define UNREACHABLE    \
+	ASSERT_LV3(false); \
+	__builtin_unreachable();
 #else
 #define UNREACHABLE ASSERT_LV3(false);
 #endif
@@ -496,20 +507,19 @@ extern GlobalOptions_ GlobalOptions;
 #if defined(_MSC_VER)
 #define ALIGNED(X) __declspec(align(X))
 #elif defined(__GNUC__)
-#define ALIGNED(X) __attribute__ ((aligned(X)))
+#define ALIGNED(X) __attribute__((aligned(X)))
 #else
-#define ALIGNED(X) 
+#define ALIGNED(X)
 #endif
 
 // --- output for Japanese notation
 
 // PRETTY_JPが定義されているかどうかによって三項演算子などを使いたいので。
-#if defined (PRETTY_JP)
+#if defined(PRETTY_JP)
 constexpr bool pretty_jp = true;
 #else
 constexpr bool pretty_jp = false;
 #endif
-
 
 // --- hash key bits
 
@@ -524,7 +534,7 @@ constexpr bool pretty_jp = false;
 // --- Dropbit
 
 // USE_DROPBIT_IN_STATSがdefineされているときは、Moveの上位16bitに格納するPieceとして駒打ちは +32(PIECE_DROP)　にする。
-#if defined (USE_DROPBIT_IN_STATS)
+#if defined(USE_DROPBIT_IN_STATS)
 #define PIECE_DROP 32
 #else
 #define PIECE_DROP 0
@@ -534,7 +544,7 @@ constexpr bool pretty_jp = false;
 
 // KIF形式に変換するときにPositionクラスにその局面へ至る直前の指し手が保存されていないと
 // "同"金のように出力できなくて困る。
-#if defined (USE_KIF_CONVERT_TOOLS)
+#if defined(USE_KIF_CONVERT_TOOLS)
 #define KEEP_LAST_MOVE
 #endif
 
@@ -555,57 +565,56 @@ constexpr bool Is64Bit = false;
 // TARGET_CPU、Makefileのほうで"ZEN2"のようにダブルコーテーション有りの文字列として定義されているはずだが、
 // それが定義されていないならここでUSE_XXXオプションから推定する。
 #if !defined(TARGET_CPU)
-	#if defined(USE_BMI2)
-	#define BMI2_STR "BMI2"
-	#else
-	#define BMI2_STR ""
-	#endif
+#if defined(USE_BMI2)
+#define BMI2_STR "BMI2"
+#else
+#define BMI2_STR ""
+#endif
 
-	#if defined(USE_AVX512VNNI)
-	#define TARGET_CPU "AVX512VNNI" BMI2_STR
-	#elif defined(USE_AVX512)
-	#define TARGET_CPU "AVX512" BMI2_STR
-	#elif defined(USE_AVX2)
-	#define TARGET_CPU "AVX2" BMI2_STR
-	#elif defined(USE_SSE42)
-	#define TARGET_CPU "SSE4.2"
-	#elif defined(USE_SSE41)
-	#define TARGET_CPU "SSE4.1"
-	#elif defined(USE_SSSE3)
-	#define TARGET_CPU "SSSE3"
-	#elif defined(USE_SSE2)
-	#define TARGET_CPU "SSE2"
-	#else
-	#define TARGET_CPU "noSSE"
-	#endif
+#if defined(USE_AVX512VNNI)
+#define TARGET_CPU "AVX512VNNI" BMI2_STR
+#elif defined(USE_AVX512)
+#define TARGET_CPU "AVX512" BMI2_STR
+#elif defined(USE_AVX2)
+#define TARGET_CPU "AVX2" BMI2_STR
+#elif defined(USE_SSE42)
+#define TARGET_CPU "SSE4.2"
+#elif defined(USE_SSE41)
+#define TARGET_CPU "SSE4.1"
+#elif defined(USE_SSSE3)
+#define TARGET_CPU "SSSE3"
+#elif defined(USE_SSE2)
+#define TARGET_CPU "SSE2"
+#else
+#define TARGET_CPU "noSSE"
+#endif
 #endif
 
 // 上位のCPUをターゲットとするなら、その下位CPUの命令はすべて使えるはずなので…。
 
-#if defined (USE_AVX512VNNI)
+#if defined(USE_AVX512VNNI)
 #define USE_AVX512
 #endif
 
-#if defined (USE_AVX512)
+#if defined(USE_AVX512)
 #define USE_AVX2
 #endif
 
-#if defined (USE_AVX2)
+#if defined(USE_AVX2)
 #define USE_SSE42
 #endif
 
-#if defined (USE_SSE42)
+#if defined(USE_SSE42)
 #define USE_SSE41
 #endif
 
-#if defined (USE_SSE41)
+#if defined(USE_SSE41)
 #define USE_SSSE3
 #endif
 
-#if defined (USE_SSSE3)
+#if defined(USE_SSSE3)
 #define USE_SSE2
 #endif
-
 
 // --------------------
 //    for 32bit OS
@@ -630,28 +639,28 @@ constexpr bool Is64Bit = false;
 
 // -- 評価関数の種類によりエンジン名に使用する文字列を変更する。
 #if defined(EVAL_MATERIAL)
-	#if defined(MATERIAL_LEVEL)
-	// MATERIAL_LEVELの番号を"Level"として出力してやる。
-		#define EVAL_TYPE_NAME "MaterialLv" << MATERIAL_LEVEL
-	#else
-	// 適切な評価関数がないので単にEVAL_MATERIALを指定しているだけだから、EVAL_TYPE_NAMEとしては空欄でいいかと。
-		#define EVAL_TYPE_NAME ""
-	#endif
-#elif defined(EVAL_KPPT)
-	#define EVAL_TYPE_NAME "KPPT"
-#elif defined(EVAL_KPP_KKPT)
-	#define EVAL_TYPE_NAME "KPP_KKPT"
-#elif defined(EVAL_NNUE_KP256)
-	#define EVAL_TYPE_NAME "NNUE KP256"
-#elif defined(EVAL_NNUE_HALFKPE9)
-	#define EVAL_TYPE_NAME "NNUE halfKPE9"
-	// hafeKPE9には利きが必要
-	#define LONG_EFFECT_LIBRARY
-	#define USE_BOARD_EFFECT_PREV
-#elif defined(EVAL_NNUE) // それ以外のNNUEなので標準NNUE halfKP256だと思われる。
-	#define EVAL_TYPE_NAME "NNUE"
+#if defined(MATERIAL_LEVEL)
+// MATERIAL_LEVELの番号を"Level"として出力してやる。
+#define EVAL_TYPE_NAME "MaterialLv" << MATERIAL_LEVEL
 #else
-	#define EVAL_TYPE_NAME ""
+// 適切な評価関数がないので単にEVAL_MATERIALを指定しているだけだから、EVAL_TYPE_NAMEとしては空欄でいいかと。
+#define EVAL_TYPE_NAME ""
+#endif
+#elif defined(EVAL_KPPT)
+#define EVAL_TYPE_NAME "KPPT"
+#elif defined(EVAL_KPP_KKPT)
+#define EVAL_TYPE_NAME "KPP_KKPT"
+#elif defined(EVAL_NNUE_KP256)
+#define EVAL_TYPE_NAME "NNUE KP256"
+#elif defined(EVAL_NNUE_HALFKPE9)
+#define EVAL_TYPE_NAME "NNUE halfKPE9"
+// hafeKPE9には利きが必要
+#define LONG_EFFECT_LIBRARY
+#define USE_BOARD_EFFECT_PREV
+#elif defined(EVAL_NNUE)  // それ以外のNNUEなので標準NNUE halfKP256だと思われる。
+#define EVAL_TYPE_NAME "NNUE"
+#else
+#define EVAL_TYPE_NAME ""
 #endif
 
 // -- do_move()のときに移動した駒の管理をして差分計算
@@ -680,19 +689,27 @@ constexpr bool Is64Bit = false;
 #define USE_FV38
 #endif
 
-
 // -- 評価関数の種類により、盤面の利きの更新ときの処理が異なる。(このタイミングで評価関数の差分計算をしたいので)
 
 // 盤面上の利きを更新するときに呼び出したい関数。(評価関数の差分更新などのために差し替え可能にしておく。)
 
 // color = 手番 , sq = 升 , e = 利きの加算量
-#define ADD_BOARD_EFFECT(color_,sq_,e1_) { board_effect[color_].e[sq_] += (uint8_t)e1_; }
+#define ADD_BOARD_EFFECT(color_, sq_, e1_) \
+	{ board_effect[color_].e[sq_] += (uint8_t)e1_; }
 // e1 = color側の利きの加算量 , e2 = ~color側の利きの加算量
-#define ADD_BOARD_EFFECT_BOTH(color_,sq_,e1_,e2_) { board_effect[color_].e[sq_] += (uint8_t)e1_; board_effect[~color_].e[sq_] += (uint8_t)e2_; }
+#define ADD_BOARD_EFFECT_BOTH(color_, sq_, e1_, e2_)  \
+	{                                                 \
+		board_effect[color_].e[sq_] += (uint8_t)e1_;  \
+		board_effect[~color_].e[sq_] += (uint8_t)e2_; \
+	}
 
 // ↑の関数のundo_move()時用。こちらは、評価関数の差分更新を行わない。(評価関数の値を巻き戻すのは簡単であるため)
-#define ADD_BOARD_EFFECT_REWIND(color_,sq_,e1_) { board_effect[color_].e[sq_] += (uint8_t)e1_; }
-#define ADD_BOARD_EFFECT_BOTH_REWIND(color_,sq_,e1_,e2_) { board_effect[color_].e[sq_] += (uint8_t)e1_; board_effect[~color_].e[sq_] += (uint8_t)e2_; }
+#define ADD_BOARD_EFFECT_REWIND(color_, sq_, e1_) \
+	{ board_effect[color_].e[sq_] += (uint8_t)e1_; }
+#define ADD_BOARD_EFFECT_BOTH_REWIND(color_, sq_, e1_, e2_) \
+	{                                                       \
+		board_effect[color_].e[sq_] += (uint8_t)e1_;        \
+		board_effect[~color_].e[sq_] += (uint8_t)e2_;       \
+	}
 
-#endif // ifndef _CONFIG_H_INCLUDED
-
+#endif  // ifndef _CONFIG_H_INCLUDED

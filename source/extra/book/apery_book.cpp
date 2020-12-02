@@ -27,7 +27,7 @@
 namespace Book {
 
 Key AperyBook::ZobPiece[PIECE_NB - 1][SQ_NB];
-Key AperyBook::ZobHand[PIECE_HAND_NB - 1][19]; // 持ち駒の同一種類の駒の数ごと
+Key AperyBook::ZobHand[PIECE_HAND_NB - 1][19];  // 持ち駒の同一種類の駒の数ごと
 Key AperyBook::ZobTurn;
 
 void AperyBook::init() {
@@ -35,52 +35,51 @@ void AperyBook::init() {
 	// 未初期化乱数でhashが毎回変更されるのを防ぐため、init()が呼ばれる度に乱数は初期化する。
 	// （そもそもinit()を呼ぶのは1回きりでも良いのだけど、今の実装ではコンストラクタから毎回呼ばれるので。）
 	MT64bit mt64bit_;
-    for (Piece p = PIECE_ZERO; p < PIECE_NB - 1; ++p) {
-        for (Square sq = SQ_ZERO; sq < SQ_NB; ++sq)
-            ZobPiece[p][sq] = mt64bit_.random() * (p != NO_PIECE);
-    }
-    for (Piece hp = PIECE_ZERO; hp < PIECE_HAND_NB - 1; ++hp) {
-        for (int num = 0; num < 19; ++num)
-            ZobHand[hp][num] = mt64bit_.random();
-    }
-    ZobTurn = mt64bit_.random();
+	for (Piece p = PIECE_ZERO; p < PIECE_NB - 1; ++p) {
+		for (Square sq = SQ_ZERO; sq < SQ_NB; ++sq)
+			ZobPiece[p][sq] = mt64bit_.random() * (p != NO_PIECE);
+	}
+	for (Piece hp = PIECE_ZERO; hp < PIECE_HAND_NB - 1; ++hp) {
+		for (int num = 0; num < 19; ++num)
+			ZobHand[hp][num] = mt64bit_.random();
+	}
+	ZobTurn = mt64bit_.random();
 }
 
 AperyBook::AperyBook(const std::string& filename) {
-    init();
+	init();
 
-    std::ifstream file(filename, std::ifstream::in | std::ifstream::binary);
+	std::ifstream file(filename, std::ifstream::in | std::ifstream::binary);
 
-    if (!file.is_open())
-        sync_cout << "info string could not open an apery book file. " << filename << sync_endl;
+	if (!file.is_open())
+		sync_cout << "info string could not open an apery book file. " << filename << sync_endl;
 
-    AperyBookEntry entry;
-    while (file.read(reinterpret_cast<char*>(&entry), sizeof(entry))) {
-        book_[entry.key].push_back(entry);
-    }
+	AperyBookEntry entry;
+	while (file.read(reinterpret_cast<char*>(&entry), sizeof(entry))) {
+		book_[entry.key].push_back(entry);
+	}
 }
 
 Key AperyBook::bookKey(const Position& pos) {
-    static constexpr int hand_piece_map[] = {
-        -1, 0, 1, 2, 3, 5, 6, 4
-    };
+	static constexpr int hand_piece_map[] = {-1, 0, 1, 2, 3, 5, 6, 4};
 
-    Key key = 0;
-    for (Square sq = SQ_ZERO; sq < SQ_NB; ++sq) {
-        key ^= ZobPiece[pos.piece_on(sq)][sq];
-    }
-    const Hand hand = pos.hand_of(pos.side_to_move());
-    for (PieceType hp = PAWN; hp < PIECE_HAND_NB; ++hp)
-        key ^= ZobHand[hand_piece_map[hp]][hand_count(hand, hp)];
-    if (pos.side_to_move() == WHITE)
-        key ^= ZobTurn;
-    return key;
+	Key key = 0;
+	for (Square sq = SQ_ZERO; sq < SQ_NB; ++sq) {
+		key ^= ZobPiece[pos.piece_on(sq)][sq];
+	}
+	const Hand hand = pos.hand_of(pos.side_to_move());
+	for (PieceType hp = PAWN; hp < PIECE_HAND_NB; ++hp)
+		key ^= ZobHand[hand_piece_map[hp]][hand_count(hand, hp)];
+	if (pos.side_to_move() == WHITE)
+		key ^= ZobTurn;
+	return key;
 }
 
 const std::vector<AperyBookEntry>& AperyBook::get_entries(const Position& pos) const {
-    const auto it = book_.find(bookKey(pos));
-    if (it == book_.end()) return empty_entries_;
-    return it->second;
+	const auto it = book_.find(bookKey(pos));
+	if (it == book_.end())
+		return empty_entries_;
+	return it->second;
 }
 
-}
+}  // namespace Book
