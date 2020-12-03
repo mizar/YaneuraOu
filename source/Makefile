@@ -134,13 +134,14 @@ else
 	endif
 endif
 
+TARGETDIR = .
 ifeq ($(OS),Windows_NT)
 	CPPFLAGS += $(WCPPFLAGS)
 	LDFLAGS += -static -Wl,--stack,25000000
-	TARGET = YaneuraOu-by-gcc.exe
+	TARGET = $(TARGETDIR)/YaneuraOu-by-gcc.exe
 else
 	CPPFLAGS += -D_LINUX
-	TARGET = YaneuraOu-by-gcc
+	TARGET = $(TARGETDIR)/YaneuraOu-by-gcc
 endif
 
 # リンク時最適化。
