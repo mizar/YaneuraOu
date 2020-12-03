@@ -616,7 +616,7 @@ Bitboard Position::slider_blockers(Color c, Square s , Bitboard& pinners) const 
 	// ^王 歩 角 飛
 	// このような状況で飛車に対して角を取り除いてから敵玉への射線を考えるので、
 	// 歩がslider_blocker扱いになってしまう。つまり、このコードは間違っているのでは？
-	
+
 	while (snipers)
 	{
 		Square sniperSq = snipers.pop();
@@ -1192,7 +1192,7 @@ void Position::do_move_impl(Move m, StateInfo& new_st, bool givesCheck)
 
 #if defined (KEEP_LAST_MOVE)
 	st->lastMove = m;
-	st->lastMovedPieceType = is_drop(m) ? (PieceType)move_from(m) : type_of(piece_on(move_from(m)));
+	st->lastMovedPieceType = is_drop(m) ? (PieceType)from_sq(m) : type_of(piece_on(from_sq(m)));
 #endif
 
 	// ----------------------
@@ -1506,7 +1506,7 @@ Key Position::key_after(Move m) const {
 	auto h = st->hand_key_;
 
 	// 移動先の升
-	Square to = move_to(m);
+	Square to = to_sq(m);
 	ASSERT_LV2(is_ok(to));
 
 	if (is_drop(m))
@@ -1524,7 +1524,7 @@ Key Position::key_after(Move m) const {
 	else
 	{
 		// -- 駒の移動
-		Square from = move_from(m);
+		Square from = from_sq(m);
 		ASSERT_LV2(is_ok(from));
 
 		// 移動させる駒
@@ -2051,7 +2051,7 @@ RepetitionState Position::is_repetition(int repPly /* = 16 */) const
 	// いるかチェックする必要があるが、そこまでする必要があるとは思えない。ゆえに、このチェックを省略する。
 
 	// 【計測資料 35.】is_repetition() 同一局面をrootより遡って見つけたときに即座に千日手として扱うか。
-	
+
 	// pliesFromNullが未初期化になっていないかのチェックのためのassert
 	ASSERT_LV3(st->pliesFromNull >= 0);
 
