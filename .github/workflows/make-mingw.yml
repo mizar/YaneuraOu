@@ -65,7 +65,10 @@ jobs:
             target: gensfen
           # 32bit compiler x 64bit archcpu
           - compiler: i686-w64-mingw32-g++-posix
-            archcpu: "AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1"
+            archcpu: "AVX512VNNI,AVX512,AVX2,SSE42,SSE41,SSSE3,SSE2,OTHER,ZEN1,ZEN2"
+          # 64bit compiler x 32bit archcpu
+          - compiler: x86_64-w64-mingw32-g++-posix
+            archcpu: NO_SSE
           # Ubuntu-20.04 MinGW は archcpu ZEN3,AVXVNNI のサポートを行わない
           # ubuntu-20.04 MinGW will not support the archcpu ZEN3,AVXVNNI
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
@@ -73,9 +76,6 @@ jobs:
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
           # `-march=znver3`: LLVM12 support
           - archcpu: "ZEN3,AVXVNNI"
-          # 64bit compiler x 32bit archcpu
-          - compiler: x86_64-w64-mingw32-g++-posix
-            archcpu: NO_SSE
 
     steps:
       - name: Checkout own repository
