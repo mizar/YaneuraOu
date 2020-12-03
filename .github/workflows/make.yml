@@ -11,9 +11,10 @@ on:
 
 jobs:
   build:
-    # ubuntu-latest = ubuntu-18.04
+    # ubuntu-latest = ubuntu-18.04 => ubuntu-20.04
+    # https://github.com/actions/virtual-environments/issues/1816
     # https://docs.github.com/ja/free-pro-team@latest/actions/reference/specifications-for-github-hosted-runners
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
@@ -63,8 +64,9 @@ jobs:
             archcpu: "ZEN3,AVXVNNI"
           - compiler: clang++-10
             archcpu: "ZEN3,AVXVNNI"
-          # g++-10 は Ubuntu20.04LTSイメージ移行後に
-          - compiler: g++-10
+          # enable g++-10 / disable g++-8
+          - compiler: g++-8
+          #- compiler: g++-10
           # Linux 32bit archcpu 向けのビルドは通常はしない
           # don't usually build for Linux 32bit archcpu
           - archcpu: NO_SSE
