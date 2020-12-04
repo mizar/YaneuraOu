@@ -176,9 +176,11 @@ LOCAL_SRC_FILES := \
 	../source/movepick.cpp                                               \
 	../source/timeman.cpp                                                \
 	../source/benchmark.cpp                                              \
-	../source/extra/book/apery_book.cpp                                  \
-	../source/extra/book/book.cpp                                        \
-	../source/extra/book/makebook2019.cpp                                \
+	../source/book/apery_book.cpp                                        \
+	../source/book/book.cpp                                              \
+	../source/book/makebook2015.cpp                                      \
+	../source/book/makebook2019.cpp                                      \
+	../source/book/makebook2021.cpp                                      \
 	../source/extra/bitop.cpp                                            \
 	../source/extra/long_effect.cpp                                      \
 	../source/extra/mate/mate1ply_with_effect.cpp                        \
