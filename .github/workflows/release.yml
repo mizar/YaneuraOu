@@ -33,8 +33,16 @@ jobs:
         exclude:
           # Release target exclude: edition USER_ENGINE
           - edition: USER_ENGINE
-          # Release target exclude: compiler g++
+          # Release target exclude: compiler g++ normal/tournament
           - compiler: g++
+            target: normal
+          - compiler: g++
+            target: tournament
+          # Release target exclude: compiler clang++ evallearn/gensfen
+          - compiler: clang++
+            target: evallearn
+          - compiler: clang++
+            target: gensfen
           # Release target exclude: archcpu ZEN3,AVXVNNI,OTHER
           # `-march=cascadelake`: LLVM8, GCC9 support (AVX512VNNI)
           # `-march=alderlake` : LLVM12, GCC11 support (AVX-VNNI)
