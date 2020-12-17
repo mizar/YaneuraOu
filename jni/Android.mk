@@ -178,6 +178,7 @@ LOCAL_SRC_FILES := \
 	../source/benchmark.cpp                                              \
 	../source/book/apery_book.cpp                                        \
 	../source/book/book.cpp                                              \
+	../source/book/makebook.cpp                                          \
 	../source/book/makebook2015.cpp                                      \
 	../source/book/makebook2019.cpp                                      \
 	../source/book/makebook2021.cpp                                      \
