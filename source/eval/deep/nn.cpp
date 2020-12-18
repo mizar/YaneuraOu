@@ -4,7 +4,7 @@
 
 #if defined (ONNXRUNTIME)
 	#include "nn_onnx_runtime.h"
-#else
+#elif defined (TENSORRT)
 	#include <cuda_runtime.h> // cudaHostAlloc()
 	#include "nn_tensorrt.h"
 #endif
@@ -22,8 +22,10 @@ namespace Eval::dlshogi
 		void* ptr;
 #if defined (ONNXRUNTIME)
 		ptr = (void*)new u8[size];
-#else
+#elif defined (TENSORRT)
 		checkCudaErrors(cudaHostAlloc(&ptr, size, cudaHostAllocPortable));
+#else
+		ASSERT_LV5(false)
 #endif
 		return ptr;
 	}
@@ -34,18 +36,20 @@ namespace Eval::dlshogi
 
 #if defined (ONNXRUNTIME)
 		delete[] (u8*)ptr;
-#else
+#elif defined (TENSORRT)
 		checkCudaErrors(cudaFreeHost(ptr));
+#else
+		ASSERT_LV5(false)
 #endif
 	}
-	
+
 	// モデルファイル名を渡すとそれに応じたNN派生クラスをbuildして返してくれる。デザパタで言うところのbuilder。
 	std::shared_ptr<NN> NN::build_nn(const std::string& model_path , int gpu_id , int batch_size)
 	{
 		shared_ptr<NN> nn;
 #if defined (ONNXRUNTIME)
 		nn = std::make_unique<NNOnnxRuntime>();
-#else
+#elif defined (TENSORRT)
 		// フォルダ名に"onnx"と入ってると誤爆するのでそれを回避する必要がある。
 		auto file_name = Path::GetFileName(model_path);
 		if (file_name.find("onnx") != string::npos)
@@ -61,6 +65,8 @@ namespace Eval::dlshogi
 		//	nn = std::make_unique<NNSENet10>();
 		//else
 		//	nn = std::make_unique<NNWideResnet10>();
+#else
+	ASSERT_LV5(false)
 #endif
 
 		if (!nn)

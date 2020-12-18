@@ -394,9 +394,11 @@ constexpr int MAX_PLY_NUM = 246;
 	#define USE_EVAL
 	#define USE_TIME_MANAGEMENT
 
-	// ONNXRUNTIMEを用いて推論を行うときは、これをdefineすること。
-	// ※　GPUがなくても動作する。
-	//#define ONNXRUNTIME
+	#if !defined(ONNXRUNTIME) && !defined(TENSORRT)
+		// ONNXRUNTIMEを用いて推論を行うときは、これをdefineすること。
+		// ※　GPUがなくても動作する。
+		#define ONNXRUNTIME
+	#endif
 
 
 #endif
@@ -527,7 +529,7 @@ extern GlobalOptions_ GlobalOptions;
 #elif defined(__GNUC__)
 #define ALIGNED(X) __attribute__ ((aligned(X)))
 #else
-#define ALIGNED(X) 
+#define ALIGNED(X)
 #endif
 
 // --- output for Japanese notation
@@ -673,8 +675,10 @@ constexpr bool pretty_jp = false;
 #elif defined(EVAL_DEEP)
 	#if defined(ONNXRUNTIME)
 		#define EVAL_TYPE_NAME "ONNX-" << EVAL_DEEP
+	#elif defined(TENSORRT)
+		#define EVAL_TYPE_NAME "TENSORRT-" << EVAL_DEEP
 	#else
-	#define EVAL_TYPE_NAME EVAL_DEEP
+		#define EVAL_TYPE_NAME EVAL_DEEP
 	#endif
 
 #else
