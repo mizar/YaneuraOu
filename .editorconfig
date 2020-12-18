@@ -18,7 +18,7 @@ charset = utf-8-bom
 end_of_line = lf
 
 # Visual Studio XML files
-[*.{csproj,xml,xslt,vcxproj,vcxproj.*}]
+[*.{csproj,xml,xslt,vcxproj,vcxproj.*,props}]
 charset = utf-8-bom
 end_of_line = crlf
 insert_final_newline = false
