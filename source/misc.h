@@ -1,6 +1,7 @@
 ﻿#ifndef MISC_H_INCLUDED
 #define MISC_H_INCLUDED
 
+#include <atomic>
 #include <chrono>
 #include <vector>
 #include <functional>
