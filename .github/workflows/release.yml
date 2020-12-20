@@ -19,8 +19,11 @@ jobs:
         target: [normal, tournament, evallearn, gensfen]
         archcpu:
           [
-            "ZEN2,ZEN1,AVX512VNNI,AVX512,AVX2,SSE42",
-            "SSE41,SSSE3,SSE2,NO_SSE",
+            "ZEN2,ZEN1",
+            "AVX512VNNI,AVX512",
+            "AVX2,SSE42",
+            "SSE41,SSSE3",
+            "SSE2,NO_SSE",
             "ZEN3,AVXVNNI,OTHER",
           ]
         edition:
@@ -49,11 +52,17 @@ jobs:
           - archcpu: "ZEN3,AVXVNNI,OTHER"
           # Release target exclude: archcpu 'SSE41,SSSE3,SSE2,NO_SSE' and target 'tournament,evallearn'
           - target: tournament
-            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
+            archcpu: "SSE41,SSSE3"
+          - target: tournament
+            archcpu: "SSE2,NO_SSE"
           - target: evallearn
-            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
+            archcpu: "SSE41,SSSE3"
+          - target: evallearn
+            archcpu: "SSE2,NO_SSE"
           - target: gensfen
-            archcpu: "SSE41,SSSE3,SSE2,NO_SSE"
+            archcpu: "SSE41,SSSE3"
+          - target: gensfen
+            archcpu: "SSE2,NO_SSE"
           # 以下のエディションには機械学習の実装が存在しない
           # There is no machine learning implementation for the following editions
           - edition: YANEURAOU_ENGINE_MATERIAL*
@@ -99,8 +108,12 @@ jobs:
         target: [normal, tournament, evallearn, gensfen]
         archcpu:
           [
-            "ZEN2,ZEN1,AVX2,SSE42",
-            "SSE2,NO_SSE",
+            ZEN2,
+            ZEN1,
+            AVX2,
+            SSE42,
+            SSE2,
+            NO_SSE,
           ]
         edition:
           - YANEURAOU_ENGINE_MATERIAL*
@@ -120,11 +133,17 @@ jobs:
             target: gensfen
           # Release target exclude: archcpu 'SSE2,NO_SSE' and target 'tournament,evallearn'
           - target: tournament
-            archcpu: "SSE2,NO_SSE"
+            archcpu: SSE2
           - target: evallearn
-            archcpu: "SSE2,NO_SSE"
+            archcpu: SSE2
           - target: gensfen
-            archcpu: "SSE2,NO_SSE"
+            archcpu: SSE2
+          - target: tournament
+            archcpu: NO_SSE
+          - target: evallearn
+            archcpu: NO_SSE
+          - target: gensfen
+            archcpu: NO_SSE
           # 以下のエディションには機械学習の実装が存在しない
           # There is no machine learning implementation for the following editions
           - edition: YANEURAOU_ENGINE_MATERIAL*
