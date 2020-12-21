@@ -1,4 +1,4 @@
-﻿#include "mate.h"
+#include "mate.h"
 #if defined(USE_MATE_1PLY)
 #include "../position.h"
 
@@ -246,6 +246,11 @@ namespace Mate {
 		}
 		return MOVE_NONE;
 	}
+
+	// mated_even_ply() 定義前の宣言。
+	// 明示的なテンプレート引数を持つ関数呼び出しで、事前に宣言されていない関数テンプレート名を使用することは、C++20 の拡張機能です。
+	template <bool GEN_ALL>
+	Move mated_even_ply(Position& pos, const int ply);
 
 	// mate_odd_ply()の王手がかかっているかをtemplateにしたやつ。
 	// ※　dlshogiのmateMoveInOddPlyReturnMove()を参考にさせていただいています。
