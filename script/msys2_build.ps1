@@ -106,7 +106,7 @@ $TGCOMPILERS = @('clang++';'g++';);
     BUILDDIR = 'MATE';
     EDITION = 'MATE_ENGINE';
     BUILDNAME = 'tanuki_MATE';
-    TARGET = @('normal';'tournament';'gensfen';);
+    TARGET = @('normal';'tournament';);
   };
   @{
     BUILDDIR = 'USER';
