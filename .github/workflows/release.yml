@@ -86,7 +86,7 @@ jobs:
         run: |
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
-          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m openblas:m openmp:m toolchain:m base-devel: msys2-devel:'
+          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m clang-tools-extra:m openblas:x openmp:x toolchain:m base-devel: msys2-devel:'
 
       - name: make
         run: |
@@ -168,7 +168,7 @@ jobs:
         run: |
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
           C:\msys64\usr\bin\bash.exe -lc 'pacman --needed --noconfirm -Sy pactoys-git'
-          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m openblas:m openmp:m toolchain:m base-devel: msys2-devel:'
+          C:\msys64\usr\bin\bash.exe -lc 'pacboy --needed --noconfirm -S clang:m clang-tools-extra:m openblas:x openmp:x toolchain:m base-devel: msys2-devel:'
 
       - name: make
         run: |
