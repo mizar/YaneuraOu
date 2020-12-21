@@ -184,12 +184,14 @@ LOCAL_SRC_FILES := \
 	../source/book/makebook2021.cpp                                      \
 	../source/extra/bitop.cpp                                            \
 	../source/extra/long_effect.cpp                                      \
-	../source/extra/mate/mate1ply_with_effect.cpp                        \
-	../source/extra/mate/mate1ply_without_effect.cpp                     \
-	../source/extra/mate/mate_n_ply.cpp                                  \
 	../source/extra/test_cmd.cpp                                         \
 	../source/extra/sfen_packer.cpp                                      \
 	../source/extra/kif_converter/kif_convert_tools.cpp                  \
+	../source/extra/super_sort.cpp                                       \
+	../source/mate/mate.cpp                                              \
+	../source/mate/mate1ply_with_effect.cpp                              \
+	../source/mate/mate1ply_without_effect.cpp                           \
+	../source/mate/mate_n_ply.cpp                                        \
 	../source/eval/evaluate_bona_piece.cpp                               \
 	../source/eval/evaluate.cpp                                          \
 	../source/eval/evaluate_io.cpp                                       \
@@ -254,15 +256,11 @@ endif
 # 開発用branch
 ifeq ($(findstring dev,$(ENGINE_BRANCH)),dev)
 CPPFLAGS += -DDEV_BRANCH
-LOCAL_SRC_FILES += \
-	../source/extra/super_sort.cpp
 endif
 
 # abe
 ifeq ($(findstring abe,$(ENGINE_BRANCH)),abe)
-CPPFLAGS += -DPV_OUTPUT_DRAW_ONLY
-LOCAL_SRC_FILES += \
-	../source/extra/super_sort.cpp
+CPPFLAGS += -DPV_OUTPUT_DRAW_ONLY -DFORCE_BIND_THIS_THREAD
 endif
 
 
