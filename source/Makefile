@@ -83,7 +83,7 @@ COMPILER = clang++
 # 標準的なコンパイルオプション (standard compile options)
 CPPFLAGS   = -std=c++17 -fno-exceptions -fno-rtti -Wextra -Ofast -MMD -MP -fpermissive
 WCPPFLAGS  =
-LDFLAGS  =
+LDFLAGS  = $(EXTRA_LDFLAGS)
 LIBS     =
 INCLUDE  = # -I../include
 
@@ -271,6 +271,44 @@ ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_MATERIAL)
 		engine/yaneuraou-engine/yaneuraou-search.cpp
 
 	CPPFLAGS += -DMATERIAL_LEVEL=$(MATERIAL_LEVEL)
+endif
+
+ifeq ($(findstring YANEURAOU_ENGINE_DEEP,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_DEEP)
+	ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP)
+	else
+		# YANEURAOU_EDITIONがYANEURAOU_ENGINE_DEEPの後ろに文字が入っている名前なら、
+		# とりあえず"YANEURAOU_ENGINE_DEEP"というシンボルを定義してやる。
+		CPPFLAGS += -DYANEURAOU_ENGINE_DEEP
+
+		ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_TENSOR_RT)
+			CPPFLAGS += -DTENSOR_RT
+			LDFLAGS += -lnvinfer -lnvparsers -lnvonnxparser -lcuda -lcudnn -lcudart -lcublas
+			# CPPFLAGS += -I/usr/local/cuda/include
+			# LDFLAGS += -L/usr/local/cuda/lib64
+
+		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_CPU)
+			CPPFLAGS += -DORT_CPU
+
+		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_DML)
+			CPPFLAGS += -DORT_DML
+
+		else ifeq ($(YANEURAOU_EDITION),YANEURAOU_ENGINE_DEEP_ORT_MKL)
+			CPPFLAGS += -DORT_MKL
+
+		endif
+	endif
+
+	# 大して大きなファイルではないので全部してしまう。
+	SOURCES += \
+		eval/deep/nn_types.cpp                                          \
+		eval/deep/nn.cpp                                                \
+		eval/deep/nn_onnx_runtime.cpp                                   \
+		eval/deep/nn_tensorrt.cpp                                       \
+		engine/dlshogi-engine/dlshogi_searcher.cpp                      \
+		engine/dlshogi-engine/PrintInfo.cpp                             \
+		engine/dlshogi-engine/UctSearch.cpp                             \
+		engine/dlshogi-engine/Node.cpp                                  \
+		engine/dlshogi-engine/YaneuraOu_dlshogi_bridge.cpp
 endif
 
 ifeq ($(findstring YANEURAOU_ENGINE_NNUE,$(YANEURAOU_EDITION)),YANEURAOU_ENGINE_NNUE)
