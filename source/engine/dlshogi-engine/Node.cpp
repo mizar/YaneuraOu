@@ -18,7 +18,7 @@ namespace dlshogi
 				found = true;
 				// 子ノードへのedgeは見つかっているけど実体がまだ。
 				if (!uct_child.node)
-	                uct_child.node = std::make_unique<Node>();
+					uct_child.node = std::make_unique<Node>();
 
 				// 0番目の要素に移動させる。
 				if (i != 0)
@@ -27,7 +27,7 @@ namespace dlshogi
 			else {
 				// 子ノードを削除（ガベージコレクタに追加）
 				if (uct_child.node)
-	                gc->AddToGcQueue(std::move(uct_child.node));
+					gc->AddToGcQueue(std::move(uct_child.node));
 			}
 		}
 
@@ -37,7 +37,7 @@ namespace dlshogi
 			return child[0].node.get();
 		}
 		else {
-	        // 子ノードが見つからなかった場合、新しいノードを作成する
+			// 子ノードが見つからなかった場合、新しいノードを作成する
 			CreateSingleChildNode(move);
 			child[0].node = std::make_unique<Node>();
 			return child[0].node.get();
@@ -89,14 +89,14 @@ namespace dlshogi
 			prev_head = current_head;
 			// 指し手以外の子ノードを開放する
 			current_head = current_head->ReleaseChildrenExceptOne(gc,move);
-			
+
 			// 途中でold_headが見つかったならseen_old_headをtrueに。
 			seen_old_head |= old_head == current_head;
 		}
 
 		// TODO ここの処理、あとでよくかんがえる
 
-		// MakeMoveは兄弟が存在しないことを保証する 
+		// MakeMoveは兄弟が存在しないことを保証する
 		// ただし、古いヘッドが現れない場合は、以前に検索された位置の祖先である位置がある可能性があることを意味する
 		// つまり、古い子が以前にトリミングされていても、current_head_は古いデータを保持する可能性がある
 		// その場合、current_head_をリセットする必要がある

@@ -394,7 +394,7 @@ namespace dlshogi
 		{
 			// 定跡にhitしている以上、合法手がここに格納されているはず。
 			Move bestMove   = th->rootMoves[0].pv[0];
-			     ponderMove = th->rootMoves[0].pv[1];
+				 ponderMove = th->rootMoves[0].pv[1];
 
 			return bestMove;
 		}
@@ -559,7 +559,7 @@ namespace dlshogi
 			interrupt();
 			return;
 		}
-			
+
 		// リミットなしなので"stop"が来るまで停止しない。
 		// ただしhashfullの判定は先にやっておかないと、メモリ使い切ってしまう。
 		if (s.infinite)
@@ -568,7 +568,7 @@ namespace dlshogi
 		// "go ponder"で呼び出されて、"ponderhit"が来ていないなら持ち時間制御の対象外。
 		if (Threads.main()->ponder)
 			return;
-			
+
 		// -- 時間制御
 
 		// 探索時間固定
@@ -665,7 +665,7 @@ namespace dlshogi
 		// 残り時間 = optimum - elapsed
 		// なので、
 		// rest_po = (node_searched - pre_simulated)*(optimum - elapsed) / (e + 1)
-		
+
 		auto elapsed = s.time_manager.elapsed();
 		s64 rest_po = (s64)(s.nodes_searched * (optimum - elapsed_from_ponderhit) / (elapsed + 1) );
 

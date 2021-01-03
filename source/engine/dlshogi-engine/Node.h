@@ -291,7 +291,7 @@ namespace dlshogi
 
 		// GC対象のTree。ここから数珠つなぎに開放していく。
 		// 一度にそんなにたくさん積まれないので、そこまで大きなコンテナにはならない。
-	    std::vector<std::unique_ptr<Node>> subtrees_to_gc;
+		std::vector<std::unique_ptr<Node>> subtrees_to_gc;
 
 		std::atomic<bool> stop{ false };
 		std::thread gc_thread;
