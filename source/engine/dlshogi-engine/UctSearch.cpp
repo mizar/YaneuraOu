@@ -34,7 +34,7 @@ struct MoveIntFloat
 	bool operator < (const MoveIntFloat& rhs) const {
 		return nnrate < rhs.nnrate;
 	}
-	
+
 	std::string to_string()
 	{
 		return to_usi_string(move) + " " + std::to_string(label) + " " + std::to_string(nnrate);
@@ -223,7 +223,7 @@ namespace dlshogi
 	{
 #if defined(LOG_PRINT)
 		logger.print("sfen "+pos->sfen(0));
-#endif		
+#endif
 
 		//cout << "QueuingNode:" << index << ":" << current_policy_value_queue_index << ":" << current_policy_value_batch_index << endl;
 		//cout << pos->toSFEN() << endl;
@@ -369,13 +369,13 @@ namespace dlshogi
 	// (leaf nodeで呼び出すものとする)
 	//   pos          : UCT探索を行う開始局面
 	//   current      : UCT探索を行う開始局面
-	//   depth        : 
+	//   depth        :
 	//   trajectories : 探索開始局面(tree.GetCurrentHead())から、currentに至る手順。あるNodeで何番目のchildを選択したかというpair。
 	//
 	// 返し値 : currentの局面の期待勝率を返すが、以下の特殊な定数を取ることがある。
 	//   QUEUING      : 評価関数を呼び出した。(呼び出しはqueuingされていて、完了はしていない)
 	//   DISCARDED    : 他のスレッドがすでにこのnodeの評価関数の呼び出しをしたあとであったので、何もせずにリターンしたことを示す。
-	// 
+	//
 	float UctSearcher::UctSearch(Position* pos, Node* current, const int depth, std::vector<NodeTrajectory>& trajectories)
 	{
 		// policy計算中のため破棄する(他のスレッドが同じノードを先に展開中である場合)
@@ -567,7 +567,7 @@ namespace dlshogi
 	//  UCBが最大となる子ノードのインデックスを返す関数
 	//    pos     : 調べたい局面
 	//    current : 調べたい局面
-	//    depth   : root(探索開始局面から)からの手数。0ならposとcurrentがrootであることを意味する。 
+	//    depth   : root(探索開始局面から)からの手数。0ならposとcurrentがrootであることを意味する。
 	//  current->value_winに、子ノードを調べた結果が代入される。
 	int UctSearcher::SelectMaxUcbChild(const Position *pos, Node* current, const int depth)
 	{
