@@ -169,7 +169,7 @@ namespace dlshogi
 			policy_value_batch = nullptr;
 		}
 
-		~UctSearcher() { 
+		~UctSearcher() {
 			if (features1) // move counstructorによって解体後でないことをチェック
 			{
 				grp->gpu_memfree<NN_Input1       >(features1);
