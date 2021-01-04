@@ -122,6 +122,12 @@ $TGCOMPILERS = @('clang++';'g++';);
     TARGET = @('normal';'tournament';);
   };
   @{
+    BUILDDIR = 'Deep_TensorRT';
+    EDITION = 'YANEURAOU_ENGINE_DEEP_TENSOR_RT';
+    BUILDNAME = 'YaneuraOu_Deep_TensorRT';
+    TARGET = @('normal';'tournament';);
+  };
+  @{
     BUILDDIR = 'USER';
     EDITION = 'USER_ENGINE';
     BUILDNAME = 'user';
