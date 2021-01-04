@@ -77,6 +77,9 @@
     <Filter Include="リソース ファイル\engine\yaneuraou-mate-engine">
       <UniqueIdentifier>{83e2b88b-605b-4d0d-9ade-bdfb8d89efdd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="props">
+      <UniqueIdentifier>{0aa3be0d-36d5-435e-a3c8-94c380ae1a04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="evaluate.h">
@@ -553,5 +556,98 @@
     <None Include="..\.gitignore" />
     <None Include="..\README.md" />
     <None Include="..\script\bench.py" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\onnxruntime.dll" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\mklml.dll" />
+    <None Include="$(MSBuildThisFileDirectory)..\..\runtimes\win-x64\native\libiomp5md.dll" />
+    <None Include="props\YaneuraOu-common.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuCpu-x64-avx2.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuCpu-x64-sse2.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuCpu-x64-sse41.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuCpu-x64-sse42.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuCpu-x86-nosse.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-Deep-ORT-CPU.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-Deep-ORT-DML.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-Deep-ORT-MKL.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-Deep-TensorRT.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-KPP_KKPT.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-KPPT.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-Material.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-NNUE.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-tanuki-mate.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-user.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuEdition-yaneuraou-mate.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOu-EvalLearn.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuSolution-debug-win32.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuSolution-debug-x64.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuSolution-release-win32.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="props\YaneuraOuSolution-release-x64.props">
+      <Filter>props</Filter>
+    </None>
+    <None Include="..\script\analyze_learning_log.py">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\android_build.ps1">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\android_build.sh">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\build.sh">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\mingw_gcc.sh">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\msys2_build.ps1">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\msys2_build.sh">
+      <Filter>script</Filter>
+    </None>
+    <None Include="..\script\msys2_build32.sh">
+      <Filter>script</Filter>
+    </None>
   </ItemGroup>
 </Project>
