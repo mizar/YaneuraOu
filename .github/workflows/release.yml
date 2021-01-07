@@ -422,9 +422,20 @@ jobs:
                 - ORT-CPU : ONNX Runtime (ORT) のデフォルト、CPU向け。（MKL向けの設定を別途適切に行えば、おそらくORT-MKLのが高速）
                 - ORT-MKL : Intel(R) Math Kernel Library (MKL) を使用、CPU向け。
                   cf. [ONNX Runtimeを使ってみる その2(性能測定)](https://tadaoyamaoka.hatenablog.com/entry/2020/06/06/190259)
-                - ORT-DML : Windows 10 DirectML (DML) 対応のGPU向け。（対応環境であればおそらくTensorRTのが高速）
-                  cf. [DirectML の概要](https://docs.microsoft.com/ja-jp/windows/win32/direct3d12/dml-intro)
+                - ORT-DML : Windows 10 DirectML (DML) 対応のGPU向け。（TensorRT対応環境であればおそらくTensorRTのが高速）
+                  cf. [Direct ML#minimum_requirements - onnx runtime](https://www.onnxruntime.ai/docs/reference/execution-providers/DirectML-ExecutionProvider.html#minimum-requirements)
+                  > The DirectML execution provider requires any DirectX 12 capable device. Almost all commercially-available graphics cards released in the last several years support DirectX 12. Examples of compatible hardware include:
+                  >
+                  > - NVIDIA Kepler (GTX 600 series) and above
+                  > - AMD GCN 1st Gen (Radeon HD 7000 series) and above
+                  > - Intel Haswell (4th-gen core) HD Integrated Graphics and above
+                  >
+                  > DirectML is compatible with Windows 10, version 1709 (10.0.16299; RS3, “Fall Creators Update”) and newer.
                 - ~~TensorRT : TensorRT 対応、NVIDIA GPU向け。~~ 現在、TensorRT版は自動ビルドの対象外です。
+                - 必要な評価関数やライブラリ等の導入方法については、以下の記事も参考にしてください。
+                  - [TadaoYamaokaの日記 - 「GCT電竜」とdlshogi(NVIDIA GPU非搭載PC対応版)の公開](https://tadaoyamaoka.hatenablog.com/entry/2020/11/25/223328)
+                  - [Release 世界将棋AI 電竜戦バージョン（「GCT電竜」同梱） · TadaoYamaoka/DeepLearningShogi · GitHub](https://github.com/TadaoYamaoka/DeepLearningShogi/releases/tag/denryu2020)
+                  - ふかうら王のデフォルト設定では、GCT電竜の評価関数ファイル model-0000167.onnx を導入する場合、 eval\model.onnx に配置する必要があります。
             - [${{ steps.version.outputs.filename }}-android.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-android.zip) (${{ steps.archive_size.outputs.android_zip }})
             - [${{ steps.version.outputs.filename }}-android.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-android.7z) (${{ steps.archive_size.outputs.android_7z }})
               - 1.2.3.4.5.の実行ファイルAndroid版 各CPU向け(arm64-v8a/armeabi-v7a/x86_64/x86)
