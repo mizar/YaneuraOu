@@ -95,16 +95,20 @@ namespace Eval::dlshogi
 		// load()でメモリ確保を行った場合、inputBindings.size() == 4のはず。
 		if (inputBindings.size())
 		{
-			// 安全のため、GPU IDをスレッドと関連付けてから開放する。
-			// ※　これは本来しなくても良いと思うのだが、ドライバー側の実装次第では
-			//     何か地雷を踏む可能性がなくはないので安全側に倒しておく。
-			set_device(gpu_id);
-
+			// 別のCUDAデバイスを使用しているスレッドから呼ばれる場合がある。
+			// そのため、現在使用しているCUDAデバイスのIDを一旦退避する。
+			int dev;
+			checkCudaErrors(cudaGetDevice(&dev));
+			// メモリを確保した時のCUDAデバイスを設定する。
+			checkCudaErrors(cudaSetDevice(gpu_id));
+			// メモリの開放
 			checkCudaErrors(cudaFree(x1_dev));
 			checkCudaErrors(cudaFree(x2_dev));
 			checkCudaErrors(cudaFree(y1_dev));
 			checkCudaErrors(cudaFree(y2_dev));
 			inputBindings.resize(0);
+			// CUDAデバイスを元に戻す。
+			checkCudaErrors(cudaSetDevice(dev));
 		}
 	}
 
@@ -285,4 +289,3 @@ namespace Eval::dlshogi
 } // namespace Eval::dlshogi
 
 #endif // defined(YANEURAOU_ENGINE_DEEP) && defined (TENSOR_RT)
-
