@@ -422,8 +422,8 @@ jobs:
                 - ORT-CPU : ONNX Runtime (ORT) のデフォルト、CPU向け。（MKL向けの設定を別途適切に行えば、おそらくORT-MKLのが高速）
                 - ORT-MKL : Intel(R) Math Kernel Library (MKL) を使用、CPU向け。
                   cf. [ONNX Runtimeを使ってみる その2(性能測定)](https://tadaoyamaoka.hatenablog.com/entry/2020/06/06/190259)
-                - ORT-DML : Windows 10 DirectML (DML) 対応のGPU向け。（対応環境であればおそらくTensorRTのが高速）
-                  cf. [DirectML の概要](https://docs.microsoft.com/ja-jp/windows/win32/direct3d12/dml-intro)
+                - ORT-DML : Windows 10 DirectML (DML) 対応のGPU向け。（TensorRT対応環境であればおそらくTensorRTのが高速）
+                  cf. [Direct ML#minimum_requirements - onnx runtime](https://www.onnxruntime.ai/docs/reference/execution-providers/DirectML-ExecutionProvider.html#minimum-requirements)
                 - ~~TensorRT : TensorRT 対応、NVIDIA GPU向け。~~ 現在、TensorRT版は自動ビルドの対象外です。
             - [${{ steps.version.outputs.filename }}-android.zip](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-android.zip) (${{ steps.archive_size.outputs.android_zip }})
             - [${{ steps.version.outputs.filename }}-android.7z](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.version }}/${{ steps.version.outputs.filename }}-android.7z) (${{ steps.archive_size.outputs.android_7z }})
