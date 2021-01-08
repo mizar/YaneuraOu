@@ -34,7 +34,7 @@ struct MoveIntFloat
 	bool operator < (const MoveIntFloat& rhs) const {
 		return nnrate < rhs.nnrate;
 	}
-	
+
 	std::string to_string()
 	{
 		return to_usi_string(move) + " " + std::to_string(label) + " " + std::to_string(nnrate);
@@ -157,7 +157,7 @@ namespace dlshogi
 		}
 
 		// スレッド数に変更があるか、batchサイズが前回から変更があったならばUctSearcherのインスタンス自体を生成しなおす。
-		if (searchers.size() != new_thread || policy_value_batch_maxsize != this->policy_value_batch_maxsize)
+		if (searchers.size() != (size_t)new_thread || policy_value_batch_maxsize != this->policy_value_batch_maxsize)
 		{
 			searchers.clear();
 			searchers.reserve(new_thread); // いまから追加する要素数はわかっているので事前に確保しておく。
@@ -223,7 +223,7 @@ namespace dlshogi
 	{
 #if defined(LOG_PRINT)
 		logger.print("sfen "+pos->sfen(0));
-#endif		
+#endif
 
 		//cout << "QueuingNode:" << index << ":" << current_policy_value_queue_index << ":" << current_policy_value_batch_index << endl;
 		//cout << pos->toSFEN() << endl;
@@ -240,9 +240,9 @@ namespace dlshogi
 		// 現在のNodeと手番を保存しておく。
 		policy_value_batch[current_policy_value_batch_index] = { node, pos->side_to_move() /* , pos->key() */ , value_win};
 
-	#ifdef MAKE_BOOK
+#if defined(MAKE_BOOK)
 		policy_value_book_key[current_policy_value_batch_index] = Book::bookKey(*pos);
-	#endif
+#endif
 
 		current_policy_value_batch_index++;
 		// これが、policy_value_batch_maxsize分だけ溜まったら、nn->forward()を呼び出す。
@@ -388,7 +388,7 @@ namespace dlshogi
 	// 返し値 : currentの局面の期待勝率を返すが、以下の特殊な定数を取ることがある。
 	//   QUEUING      : 評価関数を呼び出した。(呼び出しはqueuingされていて、完了はしていない)
 	//   DISCARDED    : 他のスレッドがすでにこのnodeの評価関数の呼び出しをしたあとであったので、何もせずにリターンしたことを示す。
-	// 
+	//
 	float UctSearcher::UctSearch(Position* pos, ChildNode* parent , Node* current, NodeVisitor& visitor)
 	{
 		auto ds = grp->get_dlsearcher();
