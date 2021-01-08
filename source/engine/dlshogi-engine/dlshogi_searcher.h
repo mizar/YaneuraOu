@@ -32,7 +32,7 @@ namespace dlshogi
 		// 探索したノード数
 		// 0 なら制限されていない。これが0以外の時は、↓↓の項目が有効。
 		NodeCountType nodes_limit = 0;
-		
+
 		// 探索している時間を計測する用のtimer
 		// 探索開始時にresetされる。
 		// →　やねうら王ではtime_managerで行うので削除。
@@ -64,8 +64,8 @@ namespace dlshogi
 		// hashfullの計測用にここに持っておく必要がある。
 		Node* current_root;
 
-		// --- ↓これだけ探索中に書き換える。(増えていく) 
-		
+		// --- ↓これだけ探索中に書き換える。(増えていく)
+
 		// 現在の探索ノード数
 		// これは"go","go ponder"に対してゼロに初期化される。
 		// 前回、rootの局面に対して訪問していた回数は考慮されない。
@@ -119,7 +119,7 @@ namespace dlshogi
 
 		// エンジンオプションの"Draw_Value_From_Black"の値。
 		// これがtrueでかつrootColor == WHITEなら、draw_value_blackとdraw_value_whiteを入れ替えて考える。
-		bool draw_value_from_black = false; 
+		bool draw_value_from_black = false;
 
 		// 投了する勝率。これを下回った時に投了する。
 		// エンジンオプションの"Resign_Threshold"を1000で割った値
@@ -399,7 +399,7 @@ namespace dlshogi
 
 		// 前回の探索開始局面などを保持するためのtree
 		std::unique_ptr<NodeTree> tree;
-		
+
 		// ガーベジコレクタ
 		std::unique_ptr<NodeGarbageCollector> gc;
 
