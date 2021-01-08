@@ -383,7 +383,7 @@ namespace dlshogi
 		{
 			// 定跡にhitしている以上、合法手がここに格納されているはず。
 			Move bestMove   = th->rootMoves[0].pv[0];
-			     ponderMove = th->rootMoves[0].pv[1];
+				 ponderMove = th->rootMoves[0].pv[1];
 
 			return bestMove;
 		}
@@ -560,7 +560,7 @@ namespace dlshogi
 		// "go ponder"で呼び出されて、"ponderhit"が来ていないなら持ち時間制御の対象外。
 		if (Threads.main()->ponder)
 			return;
-			
+
 		// -- 時間制御
 
 		// 探索時間固定
@@ -575,16 +575,19 @@ namespace dlshogi
 
 		// 終了時刻が確定しているなら、そこ以降の時刻であれば停止させないといけない。
 		if (s.time_manager.search_end)
+		{
 			if (elapsed_from_ponderhit >= s.time_manager.search_end)
 			{
 				// 終了予定時刻より時間が超過している。
 				interrupt();
 				return;
 			}
-			else {
+			else
+			{
 				// 探索終了時刻は設定されているのでこれ以上、探索打ち切りの判定は不要。
 				return;
 			}
+		}
 
 		const Node* current_root = tree->GetCurrentHead();
 		const int child_num = current_root->child_num;
@@ -657,7 +660,7 @@ namespace dlshogi
 		// 残り時間 = optimum - elapsed
 		// なので、
 		// rest_po = (node_searched - pre_simulated)*(optimum - elapsed) / (e + 1)
-		
+
 		auto elapsed = s.time_manager.elapsed();
 		s64 rest_po = (s64)(s.nodes_searched * (optimum - elapsed_from_ponderhit) / (elapsed + 1) );
 
