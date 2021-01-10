@@ -75,23 +75,31 @@ namespace dlshogi
 
 		// モデルの読み込み
 		TimePoint tpmodelloadbegin = now();
+		// GPUの数が多いと初期化に時間が掛かるため、並列に初期化する。
+		std::vector<std::thread> initthreads;
 		for (int i = 0; i < max_gpu; i++) {
 			if (new_thread[i] > 0) {
-				int policy_value_batch_maxsize = policy_value_batch_maxsizes[i];
+				initthreads.push_back(std::thread([&, i] {
+					int policy_value_batch_maxsize = policy_value_batch_maxsizes[i];
 
-				//	DNN_Batch_Size2～8は、0が設定されている場合、DNN_Batch_Size1の値が採用される。(そのスレッド数が1以上であるとき)
-				if (policy_value_batch_maxsize == 0)
-					policy_value_batch_maxsize = policy_value_batch_maxsizes[0];
+					//	DNN_Batch_Size2～8は、0が設定されている場合、DNN_Batch_Size1の値が採用される。(そのスレッド数が1以上であるとき)
+					if (policy_value_batch_maxsize == 0)
+						policy_value_batch_maxsize = policy_value_batch_maxsizes[0];
 
-				std::string path = model_paths[i];
+					std::string path = model_paths[i];
 
-				// paths[1]..paths[7]は、空であればpaths[0]と同様であるものとする。
-				if (i > 0 && path == "")
-					path = model_paths[0];
+					// paths[1]..paths[7]は、空であればpaths[0]と同様であるものとする。
+					if (i > 0 && path == "")
+						path = model_paths[0];
 
-				search_groups[i].Initialize(path , new_thread[i],/* gpu_id = */i, policy_value_batch_maxsize);
+					search_groups[i].Initialize(path, new_thread[i], /* gpu_id = */i, policy_value_batch_maxsize);
+				}));
 			}
 		}
+		for (std::thread& th : initthreads) {
+			th.join();
+		}
+		initthreads.resize(0);
 		TimePoint tpmodelloadend = now();
 		sync_cout << "info string All model files have been loaded. " << tpmodelloadend - tpmodelloadbegin << "ms." << sync_endl;
 
