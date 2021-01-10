@@ -37,7 +37,7 @@ namespace dlshogi::UctPrint
 		// +1して、NOT_EXPANDEDは0とみなしてして大小比較するか。
 		const NodeCountType lm = lhs->move_count + 1;
 		const NodeCountType rm = rhs->move_count + 1;
-		
+
 		return t1 != t2  ? t1 > t2 :       // t1,t2の大きいほう。
 				lm != rm ? lm > rm :       // move_countの値が違うなら大きいほうを採用
 				lhs->nnrate > rhs->nnrate; // move_countも同じ値なら、nnrateで比べるしかない。
@@ -74,7 +74,7 @@ namespace dlshogi::UctPrint
 		// 子ノードすべてから、一番優れたChildNodeを選択してそれを返す。
 		ChildNode* child = node->child.get();
 		int best_child = 0;
-		
+
 		for (int i = 1; i < child_num; ++i)
 			if (is_superior_to(&child[i],&child[best_child]))
 				best_child = i;
@@ -159,7 +159,7 @@ namespace dlshogi::UctPrint
 			ss << " multipv " << (multipv_num + 1);
 
 		ss << " depth " << moves.size() << " score cp " << cp;
-		
+
 		// 読み筋
 		if (moves.size())
 		{
@@ -175,7 +175,7 @@ namespace dlshogi::UctPrint
 	BestMovePonder get_best_move_multipv(const Node* rootNode , const SearchLimits& po_info , const SearchOptions& options )
 	{
 		ChildNumType multiPv = options.multi_pv;
-		
+
 		// 探索にかかった時間を求める
 		auto finish_time = std::max((TimePoint)1, po_info.time_manager.elapsed());
 		std::stringstream nps;
@@ -183,7 +183,7 @@ namespace dlshogi::UctPrint
 			<< " time "     <<  finish_time
 			<< " nodes "    <<  po_info.nodes_searched
 			<< " hashfull " << (po_info.current_root->move_count * 1000LL / options.uct_node_limit);
-		
+
 		// MultiPVであれば、現在のnodeで複数の候補手を表示する。
 
 			auto bests = select_best_moves(rootNode , multiPv);
