@@ -354,7 +354,7 @@ namespace {
 		return nodes;
 	}
 
-} // namespace 
+} // namespace
 
 
 // 起動時に呼び出される。時間のかからない探索関係の初期化処理はここに書くこと。
@@ -842,7 +842,7 @@ void Thread::search()
 	{
 		// Stockfish9にはslave threadをmain threadより先行させるコードがここにあったが、
 		// Stockfish10で廃止された。
-		
+
 		// これにより短い時間(低いrootDepth)では探索効率が悪化して弱くなった。
 		// これは、rootDepthが小さいときはhelper threadがほとんど探索に寄与しないためである。
 		// しかしrootDepthが高くなってきたときには事情が異なっていて、main threadよりdepth + 3とかで
@@ -903,7 +903,7 @@ void Thread::search()
 			// より少し幅を広げたぐらいの探索窓をデフォルトとする。
 
 			// Reset aspiration window starting size
-			// aspiration windowの開始サイズをリセットする			
+			// aspiration windowの開始サイズをリセットする
 
 			// この値は 5～10ぐらいがベスト？ Stockfish7～10では、5。Stockfish 12では4
 			if (rootDepth >= 4)
@@ -1217,7 +1217,7 @@ namespace {
 #if defined(CUCKOO)
 		// この局面から数手前の局面に到達させる指し手があるなら、それによって千日手になるので
 		// このnodeで千日手スコアを即座に返すことで早期枝刈りを実施することができるらしい。
-		
+
 		Value ValueDraw = draw_value(REPETITION_DRAW, pos.side_to_move());
 		if (/* pos.rule50_count() >= 3
 			&&*/ alpha < ValueDraw
@@ -1232,7 +1232,7 @@ namespace {
 			/*
 				将棋では、1手あれば現局面よりプラスになる指し手がほぼ確実に存在するであろうから、
 				4+2n手前の局面に戻る指し手があるからと言って、draw_valueを返すのは、もったいない意味が。
-				
+
 				手番の価値(Eval::Turn)を返すのはありかな？
 
 				あと、連続王手による千日手到達に関してはdraw_value返すのはやめたほうが…。
@@ -1456,7 +1456,7 @@ namespace {
 
 		formerPv = ss->ttPv && !PvNode;
 
-	    // Update low ply history for previous move if we are near root and position is or has been in PV
+		// Update low ply history for previous move if we are near root and position is or has been in PV
 		// もし、root付近で局面がPVである場合、直前の指し手に対するlow ply historyを更新する
 
 		// depthが高くてplyが低いときは、lowPlyHistoryを更新する。
@@ -1495,7 +1495,7 @@ namespace {
 				{
 					// 【計測資料 8.】 capture()とcaputure_or_pawn_promotion()の比較
 
-	                // Bonus for a quiet ttMove that fails high
+					// Bonus for a quiet ttMove that fails high
 					// fails highした、quietな(駒を取らない)ttMove(置換表の指し手)に対してbonus。
 
 					if (!pos.capture(ttMove))
@@ -1665,7 +1665,7 @@ namespace {
 			// (千日手回避のため)
 			// 将棋ではこの処理どうなのかな…。
 
-	        // Randomize draw evaluation
+			// Randomize draw evaluation
 			//if (eval == VALUE_DRAW)
 			//	eval = value_draw(thisThread);
 
@@ -1695,7 +1695,7 @@ namespace {
 				// 将棋では終盤の手番の価値があがるので、ここは進行度に比例する値にするだとか、
 				// 評価関数からもらうだとか何とかしたほうがいい気はする。
 
-	        // Save static evaluation into transposition table
+			// Save static evaluation into transposition table
 			// 評価関数を呼び出したので置換表のエントリーはなかったことだし、何はともあれそれを保存しておく。
 			// ※　bonus分だけ加算されているが静止探索の値ということで…。
 			tte->save(posKey, VALUE_NONE, ss->ttPv, BOUND_NONE, DEPTH_NONE, MOVE_NONE, eval);
@@ -1842,7 +1842,7 @@ namespace {
 		if (!PvNode
 			&&  depth > PARAM_PROBCUT_DEPTH/*4*/
 			&&  abs(beta) < VALUE_TB_WIN_IN_MAX_PLY
-			
+
 			// if value from transposition table is lower than probCutBeta, don't attempt probCut
 			// there and in further interactions with transposition table cutoff depth is set to depth - 3
 			// because probCut search has depth set to depth - 4 but we also do a move before it
@@ -2161,7 +2161,7 @@ namespace {
 			// ほとんどの指し手がsingularと判定されてしまう。
 			// これでは効果がないので、1割ぐらいの指し手がsingularとなるぐらいの係数に調整する。
 
-			// note : 
+			// note :
 			// singular延長で強くなるのは、あるnodeで1手だけが特別に良い場合、相手のプレイヤーもそのnodeでは
 			// その指し手を選択する可能性が高く、それゆえ、相手のPVもそこである可能性が高いから、そこを相手よりわずかにでも
 			// 読んでいて詰みを回避などできるなら、その相手に対する勝率は上がるという理屈。
@@ -2238,7 +2238,7 @@ namespace {
 			// ※　将棋においてはこれはやりすぎの可能性も..
 
 			// 【計測資料 33.】王手延長のコード、pos.blockers_for_king(~us) & from_sq(move)も延長する/しない
-			
+
 			// Stockfish9では、	&& !moveCountPruning が条件式に入っていた。
 			// Stockfish10のコードは、敵側のpin駒を取る指し手か、駒得になる王手に限定して延長している。
 			// pin駒を剥がす指し手は、こちらの利きはあるということなので2枚利いていることが多く、駒得でなくとも有効。
@@ -2290,7 +2290,7 @@ namespace {
 			pos.do_move(move, st, givesCheck);
 
 			// -----------------------
-			// Step 15. Reduced depth search (LMR, ~200 Elo). 
+			// Step 15. Reduced depth search (LMR, ~200 Elo).
 			// -----------------------
 			// depthを減らした探索。LMR(Late Move Reduction)
 
@@ -2308,7 +2308,7 @@ namespace {
 					|| moveCountPruning
 					|| ss->staticEval + CapturePieceValue[pos.captured_piece()] <= alpha
 					|| cutNode
-	              || (!PvNode && !formerPv && thisThread->captureHistory[to_sq(move)][movedPiece][type_of(pos.captured_piece())] < 4506)
+					|| (!PvNode && !formerPv && thisThread->captureHistory[to_sq(move)][movedPiece][type_of(pos.captured_piece())] < 4506)
 					|| thisThread->ttHitAverage < 432 * TtHitAverageResolution * TtHitAverageWindow / 1024))
 			{
 				// Reduction量
@@ -2376,7 +2376,7 @@ namespace {
 					// Decrease reduction for moves that escape a capture. Filter out
 					// castling moves, because they are coded as "king captures rook" and
 					// hence break make_move(). (~2 Elo)
-						  
+
 					// 当たりを避ける手(捕獲から逃れる指し手)はreduction量を減らす。
 
 					// do_move()したあとなのでtoの位置には今回移動させた駒が来ている。
@@ -2637,7 +2637,7 @@ namespace {
 		if (!moveCount)
 			bestValue = excludedMove ? alpha : mated_in(ss->ply);
 
-	    // If there is a move which produces search value greater than alpha we update stats of searched moves
+		// If there is a move which produces search value greater than alpha we update stats of searched moves
 		// bestMoveがあるならこの指し手に基いてhistoryのupdateを行なう。
 		else if (bestMove)
 
@@ -2678,7 +2678,7 @@ namespace {
 		//  置換表に保存する
 		// -----------------------
 
-	    // Write gathered information in transposition table
+		// Write gathered information in transposition table
 		// 集めた情報を置換表に書き込む
 
 		// betaを超えているということはbeta cutされるわけで残りの指し手を調べていないから真の値はまだ大きいと考えられる。
@@ -2938,7 +2938,7 @@ namespace {
 			// 王手がかかっていないケースにおいては、この時点での静的なevalの値がbetaを上回りそうならこの時点で帰る。
 			if (bestValue >= beta)
 			{
-	            // Save gathered info in transposition table
+				// Save gathered info in transposition table
 				if (!ss->ttHit)
 					tte->save(posKey, value_to_tt(bestValue, ss->ply), false /* ss->ttHit == false */, BOUND_LOWER,
 								DEPTH_NONE, MOVE_NONE, ss->staticEval);
@@ -3129,7 +3129,7 @@ namespace {
 		// どうせ指し手がないということだから、次にこのnodeに訪問しても、指し手生成後に詰みであることは
 		// わかるわけだし、そもそもこのnodeが詰みだとわかるとこのnodeに再訪問する確率は極めて低く、
 		// 置換表に保存しても置換表を汚すだけでほとんど得をしない。(レアケースなのでほとんど損もしないが)
-		 
+
 		// ※　計測したところ、置換表に保存したほうがわずかに強かったが、有意差ではなさげだし、
 		// Stockfish10のコードが保存しないコードになっているので保存しないことにする。
 
@@ -3137,7 +3137,7 @@ namespace {
 		if (ss->inCheck && bestValue == -VALUE_INFINITE)
 			return mated_in(ss->ply); // rootからの手数による詰みである。
 
-	    // Save gathered info in transposition table
+		// Save gathered info in transposition table
 		// 詰みではなかったのでこれを書き出す。
 		tte->save(posKey, value_to_tt(bestValue, ss->ply), pvHit,
 				  bestValue >= beta ? BOUND_LOWER :
@@ -3238,7 +3238,7 @@ namespace {
 
 		if (!pos.capture_or_promotion(bestMove))
 		{
-	        // Increase stats for the best move in case it was a quiet move
+			// Increase stats for the best move in case it was a quiet move
 			update_quiet_stats(pos, ss, bestMove, bonus2, depth);
 
 			// Decrease all the non-best quiet moves
@@ -3265,7 +3265,7 @@ namespace {
 			&& !pos.captured_piece())
 			update_continuation_histories(ss - 1, pos.piece_on(prevSq), prevSq, -bonus1);
 
-	    // Decrease stats for all non-best capture moves
+		// Decrease stats for all non-best capture moves
 		// 捕獲する指し手でベストではなかったものをすべて減点する。
 
 		for (int i = 0; i < captureCount; ++i)
@@ -3458,7 +3458,7 @@ void init_param()
 		std::fstream fs;
 
 		std::string path = Path::Combine(Directory::GetCurrentFolder(), PARAM_FILE);
-		
+
 		fs.open( path.c_str(), std::ios::in);
 		if (fs.fail())
 		{
@@ -3742,7 +3742,7 @@ namespace Learner
 	// v.firstに評価値、v.secondにPVが得られる。
 	// multi pvが有効のときは、pos.this_thread()->rootMoves[N].pvにそのPV(読み筋)の配列が得られる。
 	// multi pvの指定はこの関数の引数multiPVで行なう。(Options["MultiPV"]の値は無視される)
-	// 
+	//
 	// rootでの宣言勝ち判定はしないので(扱いが面倒なので)、ここでは行わない。
 	// 呼び出し側で処理すること。
 	//
