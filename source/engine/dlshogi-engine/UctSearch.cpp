@@ -137,12 +137,20 @@ namespace dlshogi
 	{
 		// gpu_idは呼び出しごとに変更される可能性はないと仮定してよい。
 		// (固定で確保しているので)
+		auto gpu_id_prev = this->gpu_id;
 		this->gpu_id = gpu_id;
+
+		sync_cout
+			<< "info string model_path: " << model_path
+			<< ", gpu_id_prev:" << gpu_id_prev
+			<< ", gpu_id:" << gpu_id
+			<< ", batch_maxsize: " << policy_value_batch_maxsize
+			<< sync_endl;
 
 		// モデルpath名に変更があるなら、それを読み直す。
 		// ※　先にNNが構築されていないと、このあとNNからalloc()できないのでUctSearcherより先に構築する。
 		// batch sizeに変更があった場合も、このbatch size分だけGPU側にメモリを確保したいので、この時もNNのインスタンスを作りなおす。
-		if (this->model_path != model_path || policy_value_batch_maxsize != this->policy_value_batch_maxsize)
+		if (this->model_path != model_path || gpu_id_prev != gpu_id || this->policy_value_batch_maxsize != policy_value_batch_maxsize)
 		{
 			std::lock_guard<std::mutex> lk(mutex_gpu);
 
