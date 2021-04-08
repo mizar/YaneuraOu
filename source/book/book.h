@@ -164,10 +164,13 @@ namespace Book
 
 		// [ASYNC] Aperyの定跡ファイルを読み込む
 		// ・この関数はread_bookの下請けとして存在する。外部から直接呼び出すのは定跡のコンバートの時ぐらい。
-		Tools::Result read_apery_book(const std::string& filename);
+		Tools::Result read_apery_book(const std::string& filename, int unreg_depth = 1);
+
+		// [ASYNC] Aperyの定跡ファイルに書き出す
+		Tools::Result write_apery_book(const std::string& filename);
 
 		// --------------------------------------------------------------------------
-		//     以下のメンバは、普段は外部から普段は直接アクセスすべきではない 
+		//     以下のメンバは、普段は外部から普段は直接アクセスすべきではない
 		//
 		//   定跡を書き換えてwrite_book()で書き出すような作業を行なうときだけアクセスする。
 		// --------------------------------------------------------------------------
