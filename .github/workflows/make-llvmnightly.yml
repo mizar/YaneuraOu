@@ -1,5 +1,5 @@
 # for Linux environment
-name: Make CI (for Ubuntu Linux)
+name: Make CI (for Ubuntu Linux + LLVM nightly)
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
           - YANEURAOU_MATE_ENGINE
           - TANUKI_MATE_ENGINE
           - USER_ENGINE
-        compiler: [clang++-12, clang++-11, g++-10]
+        compiler: [clang++-13]
         target: ["normal,tournament", gensfen, evallearn]
         archcpu:
           [
