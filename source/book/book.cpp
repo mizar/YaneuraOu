@@ -846,21 +846,44 @@ namespace Book
 		if (fs.fail())
 			return Tools::Result(Tools::ResultCode::FileOpenError);
 
-		cout << endl << "write " + filename;
+		std::cout << std::endl << "write " + filename;
 
-		Position pos;
+		std::vector<std::pair<Key, BookMovesPtr> > vectored_book;
 
-		// Zob初期化
-		AperyBook::init();
-
-		for (auto& it : book_body)
 		{
-			auto sfen = it.first;
-			auto& move_list = *it.second;
+			// 検索キー生成
 
-			StateInfo si;
-			pos.set(sfen, &si, Threads.main());
-			Key key = AperyBook::bookKey(pos);
+			// ZobristHash初期化
+			AperyBook::init();
+
+			Position pos;
+
+			for (auto& it : book_body)
+			{
+				std::string sfen = it.first;
+				BookMovesPtr movesptr = it.second;
+
+				StateInfo si;
+				pos.set(sfen, &si, Threads.main());
+				Key key = AperyBook::bookKey(pos);
+
+				vectored_book.emplace_back(key, movesptr);
+			}
+		}
+
+		// key順でsort
+		std::sort(vectored_book.begin(), vectored_book.end(),
+			[](const std::pair<Key, BookMovesPtr>&lhs, const std::pair<Key, BookMovesPtr>&rhs) {
+			return lhs.first < rhs.first;
+		});
+
+		for (auto& it : vectored_book)
+		{
+			Key key = it.first;
+			BookMoves& move_list = *it.second;
+
+			// 何らかsortしておく。
+			move_list.sort_moves();
 
 			for (auto& bp : move_list)
 			{
@@ -879,7 +902,10 @@ namespace Book
 
 		fs.close();
 
-		cout << endl << "done!" << endl;
+		if (fs.fail())
+			return Tools::Result(Tools::ResultCode::FileCloseError);
+
+		std::cout << std::endl << "done!" << std::endl;
 
 		return Tools::Result::Ok();
 	}
