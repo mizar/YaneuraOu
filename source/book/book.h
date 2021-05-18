@@ -162,11 +162,11 @@ namespace Book
 		// また、事前にis_ready()は呼び出されているものとする。
 		Tools::Result write_book(const std::string& filename /*, bool sort = false*/) const;
 
-		// [ASYNC] Aperyの定跡ファイルを読み込む
-		// ・この関数はread_bookの下請けとして存在する。外部から直接呼び出すのは定跡のコンバートの時ぐらい。
+		// [ASYNC] Aperyの定跡ファイルを読み込む（定跡コンバート用）
+		// ・Aperyの定跡ファイルはAperyBookで別途読み込んでいるため、read_apery_bookは定跡のコンバート専用。
 		Tools::Result read_apery_book(const std::string& filename, int unreg_depth = 1);
 
-		// [ASYNC] Aperyの定跡ファイルに書き出す
+		// [ASYNC] Aperyの定跡ファイルに書き出す（定跡コンバート用）
 		Tools::Result write_apery_book(const std::string& filename);
 
 		// --------------------------------------------------------------------------
