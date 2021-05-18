@@ -755,9 +755,9 @@ namespace Book
 				<< endl;
 		};
 
-		function<void(Position&, int, int)> search = [&](Position& pos, int unregdepthmax, int unregdepthnow) {
+		function<void(Position&, int)> search = [&](Position& pos, int unreg_depth_current) {
 			const string sfen = pos.sfen();
-			if (unregdepthmax == unregdepthnow) {
+			if (unreg_depth == unreg_depth_current) {
 				const string sfen_for_key = StringExtension::trim_number(sfen);
 				if (seen.count(sfen_for_key)) return;
 				seen.insert(sfen_for_key);
@@ -767,9 +767,9 @@ namespace Book
 
 			const auto& entries = apery_book.get_entries(pos);
 			if (entries.empty()) {
-				if (unregdepthnow < 1) return;
+				if (unreg_depth_current < 1) return;
 			} else {
-				if (unregdepthmax != unregdepthnow) {
+				if (unreg_depth != unreg_depth_current) {
 					const string sfen_for_key = StringExtension::trim_number(sfen);
 
 					if (seen.count(sfen_for_key))
@@ -794,7 +794,7 @@ namespace Book
 			StateInfo st;
 			for (const auto move : MoveList<LEGAL_ALL>(pos)) {
 				pos.do_move(move, st);
-				search(pos, unregdepthmax, entries.empty() ? unregdepthnow - 1 : unregdepthmax);
+				search(pos, entries.empty() ? unreg_depth_current - 1 : unreg_depth);
 				pos.undo_move(move);
 			}
 
@@ -825,7 +825,7 @@ namespace Book
 		Position pos;
 		StateInfo si;
 		pos.set_hirate(&si,Threads.main());
-		search(pos, unreg_depth, unreg_depth);
+		search(pos, unreg_depth);
 		report();
 
 		/*
